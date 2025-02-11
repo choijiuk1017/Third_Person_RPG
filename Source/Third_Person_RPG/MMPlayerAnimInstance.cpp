@@ -8,7 +8,13 @@ UMMPlayerAnimInstance::UMMPlayerAnimInstance()
 
 }
 
-//void UMMPlayerAnimInstance::NativeInitializeAnimation()
-//{
-//	Super::NativeInitializeAnimation();
-//}
+
+void UMMPlayerAnimInstance::NativeInitializeAnimation()
+{
+	Super::NativeInitializeAnimation();
+}
+
+void UMMPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+}

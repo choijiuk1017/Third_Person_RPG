@@ -17,4 +17,10 @@ class THIRD_PERSON_RPG_API UMMPlayerAnimInstance : public UMMBaseAnimInstance
 public:
 	UMMPlayerAnimInstance();
 
+protected:
+	// Initialize
+	virtual void NativeInitializeAnimation() override;
+
+	// Update
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 };

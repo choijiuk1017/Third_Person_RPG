@@ -89,7 +89,11 @@ void APlayerCharacter::EndSprint()
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 }
 
+void APlayerCharacter::RollStart()
+{
 
+
+}
 // Called to bind functionality to input
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {

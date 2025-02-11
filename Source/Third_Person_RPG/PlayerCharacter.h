@@ -25,6 +25,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UCameraComponent* CameraComp;
 
+	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UAnimMontage> RollMontage;
+
+
+	uint8 bIsRoll : 1;
+
+
+	
+protected:
 	void MoveForward(float InputAxis);
 
 	void MoveRight(float InputAxis);
@@ -36,11 +45,6 @@ protected:
 	void RollStart();
 
 	void RollEnd(class UAnimMontage* Montage, bool IsEnded);
-
-	//UPROPERTY(VisibleAnywhere, Category = Input)
-
-
-
 
 
 public:	
