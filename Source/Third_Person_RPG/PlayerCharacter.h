@@ -33,6 +33,12 @@ protected:
 
 	void EndSprint();
 
+	void RollStart();
+
+	void RollEnd(class UAnimMontage* Montage, bool IsEnded);
+
+	//UPROPERTY(VisibleAnywhere, Category = Input)
+
 
 
 
