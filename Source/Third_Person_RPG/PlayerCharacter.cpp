@@ -91,9 +91,34 @@ void APlayerCharacter::EndSprint()
 
 void APlayerCharacter::RollStart()
 {
+	// 구르기 중이면 리턴
+	if (bIsRoll) return;
 
+	// 애님 인스턴스 가져오기
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		// Roll Check (구르기 활성화)
+		bIsRoll = true;
 
+		// 몽타주 재생
+		AnimInstance->Montage_Play(RollMontage, 1.3f);
+
+		// 몽타주 재생 종료 바인딩
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &APlayerCharacter::RollEnd);
+
+		// RollMontage 종료 시 EndDelegate에 연동된 함수 호출
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, RollMontage);
+	}
 }
+
+void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
+{
+	// Roll UnCheck (구르기 비활성화)
+	bIsRoll = false;
+}
+
 // Called to bind functionality to input
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -109,5 +134,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &APlayerCharacter::StopJumping);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::BeginSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::EndSprint);
+	PlayerInputComponent->BindAction("Roll", IE_Released, this, &APlayerCharacter::RollStart);
 }
 
