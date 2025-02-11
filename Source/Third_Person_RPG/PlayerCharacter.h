@@ -25,11 +25,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UCameraComponent* CameraComp;
 
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_Roll;
-
 	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UAnimMontage> RollMontage;
+
 	
 
 	uint8 bIsRoll : 1;
@@ -43,7 +41,15 @@ protected:
 	void EndSprint();
 
 	void RollStart();
+
 	void RollEnd(class UAnimMontage* Montage, bool IsEnded);
+
+	void Attack();
+
+private:
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta=(AllowPrivateAccess = true))
+	bool IsAttacking;
+
 
 public:	
 	// Called every frame

@@ -31,7 +31,7 @@ APlayerCharacter::APlayerCharacter()
 
 	GetCharacterMovement()->bIgnoreBaseRotation = true;
 
-
+	IsAttacking = false;
 }
 
 // Called when the game starts or when spawned
@@ -119,6 +119,27 @@ void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
 	bIsRoll = false;
 }
 
+void APlayerCharacter::Attack()
+{
+	if (IsAttacking) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		IsAttacking = true;
+
+		// 몽타주 재생
+		AnimInstance->Montage_Play(RollMontage, 1.3f);
+
+		// 몽타주 재생 종료 바인딩
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &APlayerCharacter::RollEnd);
+
+		// RollMontage 종료 시 EndDelegate에 연동된 함수 호출
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, RollMontage);
+	}
+}
+
 // Called to bind functionality to input
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -134,6 +155,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &APlayerCharacter::StopJumping);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::BeginSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::EndSprint);
-	PlayerInputComponent->BindAction("Roll", IE_Released, this, &APlayerCharacter::RollStart);
+	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &APlayerCharacter::RollStart);
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &APlayerCharacter::RollStart);
 }
 
