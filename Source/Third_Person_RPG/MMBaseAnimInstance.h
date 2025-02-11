@@ -14,4 +14,28 @@ class THIRD_PERSON_RPG_API UMMBaseAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 	
+public:
+	UMMBaseAnimInstance();
+
+protected:
+	//Initialize
+	virtual void NativeInitializeAnimation() override;
+
+
+	//Update
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+//Base Move
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<class ACharacter> Owner;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<class UCharacterMovementComponent> Movement;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	uint8 bIsMove : 1;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FVector Velocity;
 };
