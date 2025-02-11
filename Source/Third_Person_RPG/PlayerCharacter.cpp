@@ -31,7 +31,6 @@ APlayerCharacter::APlayerCharacter()
 
 	GetCharacterMovement()->bIgnoreBaseRotation = true;
 
-	IsAttacking = false;
 }
 
 // Called when the game starts or when spawned
@@ -119,24 +118,111 @@ void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
 	bIsRoll = false;
 }
 
-void APlayerCharacter::Attack()
+void APlayerCharacter::BasicAttack()
 {
-	if (IsAttacking) return;
+	if (bIsRoll) return;
+
+	if (CurrentComboCount == 0)
+	{
+		ComboStart();
+		bIsAttacking = true;
+		return;
+	}
+
+	if (ComboTimerHandle.IsValid())
+	{
+		bHasComboInput = true;
+	}
+	else
+	{
+		bHasComboInput = false;
+	}
+}
+
+void APlayerCharacter::ComboStart()
+{
+	CurrentComboCount = 1;
+
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+
+	const float AttackSpeedRate = 1.0f;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
-		IsAttacking = true;
+		AnimInstance->Montage_Play(BasicComboMontage, AttackSpeedRate);
 
-		// 몽타주 재생
-		AnimInstance->Montage_Play(RollMontage, 1.3f);
-
-		// 몽타주 재생 종료 바인딩
 		FOnMontageEnded EndDelegate;
-		EndDelegate.BindUObject(this, &APlayerCharacter::RollEnd);
 
-		// RollMontage 종료 시 EndDelegate에 연동된 함수 호출
-		AnimInstance->Montage_SetEndDelegate(EndDelegate, RollMontage);
+		EndDelegate.BindUObject(this, &APlayerCharacter::ComboEnd);
+
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, BasicComboMontage);
+
+		ComboTimerHandle.Invalidate();
+
+		SetComboTimer();
+	}
+}
+
+void APlayerCharacter::ComboEnd(UAnimMontage* Montage, bool IsEnded)
+{
+	CurrentComboCount = 0;
+
+	bHasComboInput = false;
+
+	bIsAttacking = false;
+
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+}
+
+void APlayerCharacter::ComboCheck()
+{
+	ComboTimerHandle.Invalidate();
+
+	if (bHasComboInput)
+	{
+		CurrentComboCount = FMath::Clamp(CurrentComboCount + 1, 1, BasicComboData->MaxComboCount);
+
+		// 애님 인스턴스 가져오기
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			// 다음 섹션의 이름 만들기
+			FName SectionName = *FString::Printf(TEXT("%s%d"), *BasicComboData->SectionPrefix, CurrentComboCount);
+
+			// 다음 섹션으로 이동하기
+			AnimInstance->Montage_JumpToSection(SectionName, BasicComboMontage);
+
+			// 타이머 재설정
+			SetComboTimer();
+			// 콤보 입력 판별 초기화
+			bHasComboInput = false;
+		}
+	}
+}
+
+void APlayerCharacter::SetComboTimer()
+{
+	// 인덱스 조정
+	// * 콤보 인덱스 : 1, 2, 3, 4
+	// * 배열 인덱스 : 0, 1, 2, 3
+	int32 ComboIndex = CurrentComboCount - 1;
+
+	// 인덱스가 유효한지 체크
+	if (BasicComboData->ComboFrame.IsValidIndex(ComboIndex))
+	{
+		// TODO : 공격 속도가 추가되면 값 가져와 지정하기
+		const float AttackSpeedRate = 1.0f;
+
+		// 실제 콤보가 입력될 수 있는 시간 구하기
+		float ComboAvailableTime = (BasicComboData->ComboFrame[ComboIndex] / BasicComboData->FrameRate) / AttackSpeedRate;
+
+		// 타이머 설정하기
+		if (ComboAvailableTime > 0.0f)
+		{
+			// ComboAvailableTime시간이 지나면 ComboCheck() 함수 호출
+			GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &APlayerCharacter::ComboCheck, ComboAvailableTime, false);
+		}
 	}
 }
 
@@ -156,6 +242,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::BeginSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::EndSprint);
 	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &APlayerCharacter::RollStart);
-	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &APlayerCharacter::RollStart);
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &APlayerCharacter::BasicAttack);
 }
 
