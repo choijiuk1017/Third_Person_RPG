@@ -2,9 +2,15 @@
 
 
 #include "PlayerCharacter.h"
+
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "InputAction.h"
+#include "InputMappingContext.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 
 
 // Sets default values
@@ -31,6 +37,26 @@ APlayerCharacter::APlayerCharacter()
 
 	GetCharacterMovement()->bIgnoreBaseRotation = true;
 
+
+
+	GetCapsuleComponent()->InitCapsuleSize(35.0f, 90.f);
+
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("MMCapsule"));
+
+	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
+
+
+	static ConstructorHelpers::FObjectFinder<UInputMappingContext>IMC_BasicRef(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/IMC_BasicPlayer.IMC_BasicPlayer'"));
+	if (IMC_BasicRef.Object)
+	{
+		IMC_Basic = IMC_BasicRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_AttackRef(TEXT("/Script/EnhancedInput.InputAction'/Game/IA_Attack.IA_Attack'"));
+	if (IA_AttackRef.Object)
+	{
+		IA_Attack = IA_AttackRef.Object;
+	}
 }
 
 // Called when the game starts or when spawned
@@ -38,6 +64,20 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+
+	if (PlayerController && IMC_Basic)
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* SubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			SubSystem->AddMappingContext(IMC_Basic, 0);
+
+			EnableInput(PlayerController);
+		}
+
+	}
+
+
 }
 
 // Called every frame
@@ -143,23 +183,30 @@ void APlayerCharacter::ComboStart()
 {
 	CurrentComboCount = 1;
 
+	// 공격 시 플레이어 이동 불가
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
+	// TODO : 공격 속도가 추가되면 값 가져와 지정하기
 	const float AttackSpeedRate = 1.0f;
 
+
+	// 애님 인스턴스 가져오기
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
+		// 몽타주 재생
 		AnimInstance->Montage_Play(BasicComboMontage, AttackSpeedRate);
 
+		// 몽타주 재생 종료 바인딩
 		FOnMontageEnded EndDelegate;
-
 		EndDelegate.BindUObject(this, &APlayerCharacter::ComboEnd);
 
+		// BasicComboMontage가 종료되면 EndDelegate에 연동된 ComboEnd함수 호출
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, BasicComboMontage);
 
+		// 타이머 초기화
 		ComboTimerHandle.Invalidate();
-
+		// 타이머 설정
 		SetComboTimer();
 	}
 }
@@ -181,13 +228,14 @@ void APlayerCharacter::ComboCheck()
 
 	if (bHasComboInput)
 	{
+		//콤보 수 증가
 		CurrentComboCount = FMath::Clamp(CurrentComboCount + 1, 1, BasicComboData->MaxComboCount);
 
 		// 애님 인스턴스 가져오기
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
-			// 다음 섹션의 이름 만들기
+			// 다음 섹션의 이름
 			FName SectionName = *FString::Printf(TEXT("%s%d"), *BasicComboData->SectionPrefix, CurrentComboCount);
 
 			// 다음 섹션으로 이동하기
@@ -204,8 +252,8 @@ void APlayerCharacter::ComboCheck()
 void APlayerCharacter::SetComboTimer()
 {
 	// 인덱스 조정
-	// * 콤보 인덱스 : 1, 2, 3, 4
-	// * 배열 인덱스 : 0, 1, 2, 3
+	// * 콤보 인덱스 : 1, 2, 3 
+	// * 배열 인덱스 : 0, 1, 2
 	int32 ComboIndex = CurrentComboCount - 1;
 
 	// 인덱스가 유효한지 체크
@@ -231,6 +279,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &APlayerCharacter::AddControllerYawInput);
@@ -242,6 +292,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::BeginSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::EndSprint);
 	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &APlayerCharacter::RollStart);
-	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &APlayerCharacter::BasicAttack);
+
+	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
+	//PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &APlayerCharacter::BasicAttack);
 }
 
