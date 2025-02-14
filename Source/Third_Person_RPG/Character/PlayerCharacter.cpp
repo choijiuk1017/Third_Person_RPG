@@ -11,6 +11,7 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Third_Person_RPG/Data/MMComboActionData.h"
 
 
 // Sets default values
@@ -37,7 +38,13 @@ APlayerCharacter::APlayerCharacter()
 
 	GetCharacterMovement()->bIgnoreBaseRotation = true;
 
+	// 컨트롤러의 Rotation에 영향 X
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
 
+	// 움직임에 따른 회전 On
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 
 	GetCapsuleComponent()->InitCapsuleSize(35.0f, 90.f);
 
@@ -46,13 +53,39 @@ APlayerCharacter::APlayerCharacter()
 	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
 
 
-	static ConstructorHelpers::FObjectFinder<UInputMappingContext>IMC_BasicRef(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/IMC_BasicPlayer.IMC_BasicPlayer'"));
+
+	//Input
+	static ConstructorHelpers::FObjectFinder<UInputMappingContext>IMC_BasicRef(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/Input_Action/IMC_BasicPlayer.IMC_BasicPlayer'"));
 	if (IMC_BasicRef.Object)
 	{
 		IMC_Basic = IMC_BasicRef.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_AttackRef(TEXT("/Script/EnhancedInput.InputAction'/Game/IA_Attack.IA_Attack'"));
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_BasicMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_BasicMove.IA_BasicMove'"));
+	if (IA_BasicMoveRef.Object)
+	{
+		IA_BasicMove = IA_BasicMoveRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_BasicLookRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_BasicLook.IA_BasicLook'"));
+	if (IA_BasicLookRef.Object)
+	{
+		IA_BasicLook = IA_BasicLookRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_SprintRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Sprint.IA_Sprint'"));
+	if (IA_SprintRef.Object)
+	{
+		IA_Sprint = IA_SprintRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_RollRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Roll.IA_Roll'"));
+	if (IA_RollRef.Object)
+	{
+		IA_Roll = IA_RollRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_AttackRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Attack.IA_Attack'"));
 	if (IA_AttackRef.Object)
 	{
 		IA_Attack = IA_AttackRef.Object;
@@ -68,15 +101,33 @@ void APlayerCharacter::BeginPlay()
 
 	if (PlayerController && IMC_Basic)
 	{
+		//서브 시스템 불러오기
 		if (UEnhancedInputLocalPlayerSubsystem* SubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
+			//매핑 컨텍스트 추가
 			SubSystem->AddMappingContext(IMC_Basic, 0);
 
+			//입력 시작
 			EnableInput(PlayerController);
 		}
 
 	}
+}
 
+// Called to bind functionality to input
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+
+	EnhancedInputComponent->BindAction(IA_BasicMove, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicMove);
+	EnhancedInputComponent->BindAction(IA_BasicLook, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicLook);
+	EnhancedInputComponent->BindAction(IA_Sprint, ETriggerEvent::Triggered, this, &APlayerCharacter::BeginSprint);
+	EnhancedInputComponent->BindAction(IA_Sprint, ETriggerEvent::Completed, this, &APlayerCharacter::EndSprint);
+	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
+	EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &APlayerCharacter::RollStart);
+	
 
 }
 
@@ -87,34 +138,32 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 }
 
-void APlayerCharacter::MoveForward(float AxisValue)
+void APlayerCharacter::BasicMove(const FInputActionValue& Value)
 {
-	if ((Controller != nullptr) && (AxisValue != 0.0f))
-	{
-		// 앞쪽 찾기
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+	// 입력받은 Value로부터 MovementVector 가져오기
+	FVector2D MovementVector = Value.Get<FVector2D>();
 
-		// 앞쪽 벡터 구하기
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(Direction, AxisValue);
-	}
+	// 컨트롤러의 회전 중 Yaw(Z)를 가져와 저장
+	const FRotator Rotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+	// 회전(Yaw)을 기반으로 전방 및 오른쪽 방향을 받아오기 (X : 전방, Y : 오른쪽)
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+	// Movement에 값 전달 (방향, 이동량)
+	AddMovementInput(ForwardDirection, MovementVector.X);
+	AddMovementInput(RightDirection, MovementVector.Y);
 }
 
-void APlayerCharacter::MoveRight(float AxisValue)
+void APlayerCharacter::BasicLook(const FInputActionValue& Value)
 {
-	if ((Controller != nullptr) && (AxisValue != 0.0f))
-	{
-		// 오른쪽 찾기
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+	// 입력받은 Value로부터 LookVector 가져오기
+	FVector2D LookVector = Value.Get<FVector2D>();
 
-		// 오른쪽 벡터 구하기
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// 해당 방향으로 이동 추가
-		AddMovementInput(Direction, AxisValue);
-	}
+	// Controller에 값 전달
+	AddControllerYawInput(LookVector.X);
+	AddControllerPitchInput(LookVector.Y);
 }
 
 
@@ -244,6 +293,7 @@ void APlayerCharacter::ComboCheck()
 			// 타이머 재설정
 			SetComboTimer();
 			// 콤보 입력 판별 초기화
+			// 콤보 입력 판별 초기화
 			bHasComboInput = false;
 		}
 	}
@@ -272,28 +322,5 @@ void APlayerCharacter::SetComboTimer()
 			GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &APlayerCharacter::ComboCheck, ComboAvailableTime, false);
 		}
 	}
-}
-
-// Called to bind functionality to input
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
-
-	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
-	PlayerInputComponent->BindAxis("Turn", this, &APlayerCharacter::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &APlayerCharacter::AddControllerPitchInput);
-
-
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &APlayerCharacter::StopJumping);
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::BeginSprint);
-	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::EndSprint);
-	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &APlayerCharacter::RollStart);
-
-	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
-	//PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &APlayerCharacter::BasicAttack);
 }
 
