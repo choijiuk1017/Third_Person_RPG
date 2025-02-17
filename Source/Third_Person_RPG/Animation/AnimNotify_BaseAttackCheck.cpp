@@ -2,7 +2,7 @@
 
 
 #include "Third_Person_RPG/Animation/AnimNotify_BaseAttackCheck.h"
-#include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "Third_Person_RPG/Interface/AnimationAttackInterface.h"
 
 void UAnimNotify_BaseAttackCheck::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
@@ -10,10 +10,10 @@ void UAnimNotify_BaseAttackCheck::Notify(USkeletalMeshComponent* MeshComp, UAnim
 
 	if (MeshComp)
 	{
-		APlayerCharacter* Player = Cast<APlayerCharacter>(MeshComp->GetOwner());
-		if (Player)
+		IAnimationAttackInterface* AttackPawn = Cast<IAnimationAttackInterface>(MeshComp->GetOwner());
+		if (AttackPawn)
 		{
-			Player->BaseAttackCheck();
+			AttackPawn->BaseAttackCheck();
 		}
 	}
 }

@@ -4,12 +4,14 @@
 #include "InputActionValue.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Third_Person_RPG/Interface/AnimationAttackInterface.h"
+
 #include "PlayerCharacter.generated.h"
 
 
 
 UCLASS()
-class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter
+class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimationAttackInterface
 {
 	GENERATED_BODY()
 
@@ -22,9 +24,6 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	//공격 체크 함수
-	void BaseAttackCheck();
 
 protected:
 	// Called when the game starts or when spawned
@@ -101,9 +100,8 @@ protected:
 	//콤보 체크 호출 시간 설정 함수
 	void SetComboTimer();
 
-
-
-
+	//공격 체크 함수
+	virtual void BaseAttackCheck() override;
 
 	//Variable Section
 	//구르기 확인 변수
