@@ -23,6 +23,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	//공격 체크 함수
+	void BaseAttackCheck();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

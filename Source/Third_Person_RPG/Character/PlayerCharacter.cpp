@@ -3,6 +3,7 @@
 
 #include "PlayerCharacter.h"
 
+#include "Engine/EngineTypes.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -13,6 +14,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Third_Person_RPG/Data/MMComboActionData.h"
 
+#define CHANNEL_MMACTION ECollisionChannel::ECC_GameTraceChannel1
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -324,5 +326,47 @@ void APlayerCharacter::SetComboTimer()
 			GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &APlayerCharacter::ComboCheck, ComboAvailableTime, false);
 		}
 	}
+}
+
+void APlayerCharacter::BaseAttackCheck()
+{
+	//충돌 결과를 반환하기 위한 배열
+	TArray<FHitResult> OutHitResults;
+
+	//공격 반경
+	float AttackRange = 100.0f;
+
+	//공격 체크를 위한 구체의 반지름
+	float AttackRadius = 50.0f;
+
+	//충돌 탐지를 위한 시작 지점
+	FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
+
+	FVector End = Start + (GetActorForwardVector() * AttackRange);
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
+
+	bool bHasHit = GetWorld()->SweepMultiByChannel(
+		OutHitResults,
+		Start,
+		End,
+		FQuat::Identity,
+		CHANNEL_MMACTION,
+		FCollisionShape::MakeSphere(AttackRadius),
+		Params
+	);
+
+	//공격 판정 시 데미지 처리 예정
+	if (bHasHit)
+	{
+		// TODO : 데미지 전달
+	}
+
+	// Capsule 모양의 디버깅 체크
+	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
+	float CapsuleHalfHeight = AttackRange * 0.5f;
+	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
+
+	DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, AttackRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
 }
 
