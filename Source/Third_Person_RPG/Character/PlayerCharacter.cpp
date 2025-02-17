@@ -17,6 +17,43 @@
 // Sets default values
 APlayerCharacter::APlayerCharacter()
 {
+	//Input
+	static ConstructorHelpers::FObjectFinder<UInputMappingContext>IMC_BasicRef(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/Input_Action/IMC_BasicPlayer.IMC_BasicPlayer'"));
+	if (IMC_BasicRef.Object)
+	{
+		IMC_Basic = IMC_BasicRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_BasicMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_BasicMove.IA_BasicMove'"));
+	if (IA_BasicMoveRef.Object)
+	{
+		IA_BasicMove = IA_BasicMoveRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_BasicLookRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_BasicLook.IA_BasicLook'"));
+	if (IA_BasicLookRef.Object)
+	{
+		IA_BasicLook = IA_BasicLookRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_SprintRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Sprint.IA_Sprint'"));
+	if (IA_SprintRef.Object)
+	{
+		IA_Sprint = IA_SprintRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_RollRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Roll.IA_Roll'"));
+	if (IA_RollRef.Object)
+	{
+		IA_Roll = IA_RollRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_AttackRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Attack.IA_Attack'"));
+	if (IA_AttackRef.Object)
+	{
+		IA_Attack = IA_AttackRef.Object;
+	}
+
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -54,42 +91,7 @@ APlayerCharacter::APlayerCharacter()
 
 
 
-	//Input
-	static ConstructorHelpers::FObjectFinder<UInputMappingContext>IMC_BasicRef(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/Input_Action/IMC_BasicPlayer.IMC_BasicPlayer'"));
-	if (IMC_BasicRef.Object)
-	{
-		IMC_Basic = IMC_BasicRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_BasicMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_BasicMove.IA_BasicMove'"));
-	if (IA_BasicMoveRef.Object)
-	{
-		IA_BasicMove = IA_BasicMoveRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_BasicLookRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_BasicLook.IA_BasicLook'"));
-	if (IA_BasicLookRef.Object)
-	{
-		IA_BasicLook = IA_BasicLookRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_SprintRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Sprint.IA_Sprint'"));
-	if (IA_SprintRef.Object)
-	{
-		IA_Sprint = IA_SprintRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_RollRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Roll.IA_Roll'"));
-	if (IA_RollRef.Object)
-	{
-		IA_Roll = IA_RollRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_AttackRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Attack.IA_Attack'"));
-	if (IA_AttackRef.Object)
-	{
-		IA_Attack = IA_AttackRef.Object;
-	}
+	
 }
 
 // Called when the game starts or when spawned
