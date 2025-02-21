@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MMComboActionData.h"
+#include "Third_Person_RPG/Data/MMComboActionData.h"
 
 UMMComboActionData::UMMComboActionData()
 {

@@ -28,6 +28,10 @@
 		{
 			"Name": "MotionTrajectory",
 			"Enabled": true
+		},
+		{
+			"Name": "CascadeToNiagaraConverter",
+			"Enabled": true
 		}
 	]
 }

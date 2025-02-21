@@ -59,6 +59,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> IA_Attack;
 
+	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> IA_Skill;
+
 
 
 
@@ -71,10 +74,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UAnimMontage> BasicComboMontage;
 
+	
+
 	//Data Section
 	//콤보 공격 데이터
 	UPROPERTY(EditAnywhere, Category = ComboData, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UMMComboActionData> BasicComboData;
+
+	//스킬 공격 데이터
+	UPROPERTY(EditAnywhere, Category = SkillData, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class USkillData> SkillData;
 
 
 
@@ -102,8 +111,14 @@ protected:
 	//콤보 체크 호출 시간 설정 함수
 	void SetComboTimer();
 
+	//스킬 함수
+	void SkillEffect();
+
 	//공격 체크 함수, 인터페이스에서 상속 받음
 	virtual void BaseAttackCheck() override;
+
+	//스킬 공격 함수, 인터페이스에서 상속 받음
+	virtual void SkillCheck() override;
 
 	//Variable Section
 	//구르기 확인 변수

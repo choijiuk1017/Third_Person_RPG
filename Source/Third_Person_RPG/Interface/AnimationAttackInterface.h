@@ -23,4 +23,6 @@ class THIRD_PERSON_RPG_API IAnimationAttackInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	virtual void BaseAttackCheck() = 0;
+
+	virtual void SkillCheck() = 0;
 };

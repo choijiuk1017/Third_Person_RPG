@@ -13,6 +13,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Third_Person_RPG/Data/MMComboActionData.h"
+#include "Third_Person_RPG/Data/SkillData.h"
 
 #define CHANNEL_MMACTION ECollisionChannel::ECC_GameTraceChannel1
 
@@ -54,6 +55,12 @@ APlayerCharacter::APlayerCharacter()
 	if (IA_AttackRef.Object)
 	{
 		IA_Attack = IA_AttackRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_SkillRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Skill.IA_Skill'"));
+	if (IA_SkillRef.Object)
+	{
+		IA_Skill = IA_SkillRef.Object;
 	}
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -131,6 +138,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(IA_Sprint, ETriggerEvent::Completed, this, &APlayerCharacter::EndSprint);
 	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
 	EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &APlayerCharacter::RollStart);
+	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Triggered, this, &APlayerCharacter::SkillEffect);
 	
 
 }
@@ -229,6 +237,26 @@ void APlayerCharacter::BasicAttack()
 	else
 	{
 		bHasComboInput = false;
+	}
+}
+
+void APlayerCharacter::SkillEffect()
+{
+	if (bIsRoll) return;
+
+	// 애님 인스턴스 가져오기
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+
+		// 몽타주 재생
+		AnimInstance->Montage_Play(SkillData->SkillMontage);
+
+		// 몽타주 재생 종료 바인딩
+		FOnMontageEnded EndDelegate;
+
+		// RollMontage 종료 시 EndDelegate에 연동된 함수 호출
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, RollMontage);
 	}
 }
 
@@ -337,7 +365,7 @@ void APlayerCharacter::BaseAttackCheck()
 	float AttackRange = 100.0f;
 
 	//공격 체크를 위한 구체의 반지름
-	float AttackRadius = 50.0f;
+	float AttackRadius = 70.0f;
 
 	//충돌 탐지를 위한 시작 지점
 	FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
@@ -369,5 +397,42 @@ void APlayerCharacter::BaseAttackCheck()
 	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
 
 	DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, AttackRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
+}
+
+void APlayerCharacter::SkillCheck()
+{
+	//충돌 결과를 반환하기 위한 배열
+	TArray<FHitResult> OutHitResults;
+
+	//충돌 탐지를 위한 시작 지점
+	FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
+
+	//충돌 탐지 끝 지점
+	FVector End = Start + (GetActorForwardVector() * SkillData->SkillRange);
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
+
+	bool bHasHit = GetWorld()->SweepMultiByChannel(
+		OutHitResults,
+		Start,
+		End,
+		FQuat::Identity,
+		CHANNEL_MMACTION,
+		FCollisionShape::MakeSphere(SkillData->SkillRadius),
+		Params
+	);
+
+	//공격 판정 시 데미지 처리 예정
+	if (bHasHit)
+	{
+
+	}
+
+	// Capsule 모양의 디버깅 체크
+	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
+	float CapsuleHalfHeight = SkillData->SkillRange * 0.5f;
+	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
+
+	DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, SkillData->SkillRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
 }
 
