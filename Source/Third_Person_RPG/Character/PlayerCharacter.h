@@ -80,7 +80,9 @@ protected:
 
 
 	//Function Section
+	//기본 이동 함수
 	void BasicMove(const FInputActionValue& Value);
+	//카메라 시점 함수
 	void BasicLook(const FInputActionValue& Value);
 
 	void BeginSprint();
@@ -100,7 +102,7 @@ protected:
 	//콤보 체크 호출 시간 설정 함수
 	void SetComboTimer();
 
-	//공격 체크 함수
+	//공격 체크 함수, 인터페이스에서 상속 받음
 	virtual void BaseAttackCheck() override;
 
 	//Variable Section

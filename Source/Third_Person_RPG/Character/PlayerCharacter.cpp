@@ -342,6 +342,7 @@ void APlayerCharacter::BaseAttackCheck()
 	//충돌 탐지를 위한 시작 지점
 	FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
 
+	//충돌 탐지 끝 지점
 	FVector End = Start + (GetActorForwardVector() * AttackRange);
 
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
@@ -359,7 +360,7 @@ void APlayerCharacter::BaseAttackCheck()
 	//공격 판정 시 데미지 처리 예정
 	if (bHasHit)
 	{
-		// TODO : 데미지 전달
+
 	}
 
 	// Capsule 모양의 디버깅 체크
