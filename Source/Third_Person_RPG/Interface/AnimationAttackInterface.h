@@ -24,5 +24,5 @@ class THIRD_PERSON_RPG_API IAnimationAttackInterface
 public:
 	virtual void BaseAttackCheck() = 0;
 
-	virtual void SkillCheck() = 0;
+	virtual void SkillAttackCheck() = 0;
 };

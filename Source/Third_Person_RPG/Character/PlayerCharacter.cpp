@@ -14,6 +14,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Third_Person_RPG/Data/MMComboActionData.h"
 #include "Third_Person_RPG/Data/SkillData.h"
+#include "Kismet/GameplayStatics.h"
 
 #define CHANNEL_MMACTION ECollisionChannel::ECC_GameTraceChannel1
 
@@ -138,7 +139,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(IA_Sprint, ETriggerEvent::Completed, this, &APlayerCharacter::EndSprint);
 	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
 	EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &APlayerCharacter::RollStart);
-	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Triggered, this, &APlayerCharacter::SkillEffect);
+	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Triggered, this, &APlayerCharacter::SkillStart);
 	
 
 }
@@ -240,14 +241,18 @@ void APlayerCharacter::BasicAttack()
 	}
 }
 
-void APlayerCharacter::SkillEffect()
+void APlayerCharacter::SkillStart()
 {
 	if (bIsRoll) return;
+
+	// 공격 시 플레이어 이동 불가
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
 	// 애님 인스턴스 가져오기
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
+		bIsAttacking = true;
 
 		// 몽타주 재생
 		AnimInstance->Montage_Play(SkillData->SkillMontage);
@@ -257,7 +262,24 @@ void APlayerCharacter::SkillEffect()
 
 		// RollMontage 종료 시 EndDelegate에 연동된 함수 호출
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, RollMontage);
+
 	}
+}
+
+void APlayerCharacter::SpawnSkillEffect()
+{
+	if (!SkillData || !SkillData->SkillEffect) return;
+
+	FVector SpawnLocation = GetActorLocation() + GetActorForwardVector() * 200.0f; 
+	FRotator SpawnRotation = GetActorRotation();
+
+	// 캐스케이드 파티클 소환
+	UGameplayStatics::SpawnEmitterAtLocation(
+		GetWorld(),
+		SkillData->SkillEffect,
+		SpawnLocation,
+		SpawnRotation
+	);
 }
 
 void APlayerCharacter::ComboStart()
@@ -399,13 +421,15 @@ void APlayerCharacter::BaseAttackCheck()
 	DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, AttackRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
 }
 
-void APlayerCharacter::SkillCheck()
+void APlayerCharacter::SkillAttackCheck()
 {
+
+	SpawnSkillEffect();
 	//충돌 결과를 반환하기 위한 배열
 	TArray<FHitResult> OutHitResults;
 
 	//충돌 탐지를 위한 시작 지점
-	FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
+	FVector Start = GetActorLocation() + GetActorForwardVector() * 200.0f;
 
 	//충돌 탐지 끝 지점
 	FVector End = Start + (GetActorForwardVector() * SkillData->SkillRange);
@@ -434,5 +458,7 @@ void APlayerCharacter::SkillCheck()
 	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
 
 	DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, SkillData->SkillRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
+
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 }
 

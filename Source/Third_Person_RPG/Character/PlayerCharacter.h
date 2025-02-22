@@ -112,13 +112,15 @@ protected:
 	void SetComboTimer();
 
 	//스킬 함수
-	void SkillEffect();
+	void SkillStart();
+	//스킬 이펙트 소환 함수
+	void SpawnSkillEffect();
 
 	//공격 체크 함수, 인터페이스에서 상속 받음
 	virtual void BaseAttackCheck() override;
 
 	//스킬 공격 함수, 인터페이스에서 상속 받음
-	virtual void SkillCheck() override;
+	virtual void SkillAttackCheck() override;
 
 	//Variable Section
 	//구르기 확인 변수
