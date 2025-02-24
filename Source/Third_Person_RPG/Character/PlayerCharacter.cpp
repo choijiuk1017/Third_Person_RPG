@@ -203,7 +203,7 @@ void APlayerCharacter::RollStart()
 		bIsRoll = true;
 
 		// 몽타주 재생
-		AnimInstance->Montage_Play(RollMontage, 1.3f);
+		AnimInstance->Montage_Play(RollMontage, 1.7f);
 
 		// 몽타주 재생 종료 바인딩
 		FOnMontageEnded EndDelegate;
@@ -255,7 +255,7 @@ void APlayerCharacter::SkillStart()
 		bIsAttacking = true;
 
 		// 몽타주 재생
-		AnimInstance->Montage_Play(SkillData->SkillMontage);
+		AnimInstance->Montage_Play(SkillData->SkillMontage, 1.5f);
 
 		// 몽타주 재생 종료 바인딩
 		FOnMontageEnded EndDelegate;
