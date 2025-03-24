@@ -16,7 +16,7 @@
 #include "Third_Person_RPG/Data/SkillData.h"
 #include "Kismet/GameplayStatics.h"
 
-#define CHANNEL_MMACTION ECollisionChannel::ECC_GameTraceChannel1
+#define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel1
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -250,6 +250,7 @@ void APlayerCharacter::SkillStart()
 
 	// 애님 인스턴스 가져오기
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
 	if (AnimInstance)
 	{
 		bIsAttacking = true;
@@ -402,7 +403,7 @@ void APlayerCharacter::BaseAttackCheck()
 		Start,
 		End,
 		FQuat::Identity,
-		CHANNEL_MMACTION,
+		CHANNEL_ACTION,
 		FCollisionShape::MakeSphere(AttackRadius),
 		Params
 	);
@@ -441,7 +442,7 @@ void APlayerCharacter::SkillAttackCheck()
 		Start,
 		End,
 		FQuat::Identity,
-		CHANNEL_MMACTION,
+		CHANNEL_ACTION,
 		FCollisionShape::MakeSphere(SkillData->SkillRadius),
 		Params
 	);
