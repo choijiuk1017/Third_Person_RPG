@@ -25,6 +25,12 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	class ATPRWeapon* CurrentWeapon;
+
+	bool CanSetWeapon();
+	void SetWeapon(class ATPRWeapon* NewWeapon);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -86,7 +92,7 @@ protected:
 	TObjectPtr<class USkillData> SkillData;
 
 
-
+	
 
 	//Function Section
 	//기본 이동 함수

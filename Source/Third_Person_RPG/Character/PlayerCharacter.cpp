@@ -14,9 +14,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "Third_Person_RPG/Data/MMComboActionData.h"
 #include "Third_Person_RPG/Data/SkillData.h"
+#include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"	
 #include "Kismet/GameplayStatics.h"
 
-#define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel1
+#define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -139,7 +140,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(IA_Sprint, ETriggerEvent::Completed, this, &APlayerCharacter::EndSprint);
 	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
 	EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &APlayerCharacter::RollStart);
-	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Triggered, this, &APlayerCharacter::SkillStart);
+	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Started, this, &APlayerCharacter::SkillStart);
 	
 
 }
@@ -461,5 +462,28 @@ void APlayerCharacter::SkillAttackCheck()
 	DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, SkillData->SkillRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+}
+
+bool APlayerCharacter::CanSetWeapon()
+{
+	return (nullptr == CurrentWeapon);
+}
+
+void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
+{
+	check(nullptr != NewWeapon && nullptr == CurrentWeapon);
+
+	FName WeaponSocket(TEXT("WeaponSocket"));
+	if (nullptr != NewWeapon) {
+		NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+
+		NewWeapon->SetActorRelativeLocation(NewWeapon->RelativeLocation);
+		NewWeapon->SetActorRelativeRotation(NewWeapon->RelativeRotation);
+		NewWeapon->SetActorScale3D(NewWeapon->RelativeScale);
+		NewWeapon->SetOwner(this);
+		CurrentWeapon = NewWeapon;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("¹«±â ÀåÂø"));
 }
 
