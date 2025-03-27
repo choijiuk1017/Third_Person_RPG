@@ -32,4 +32,5 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Effects, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UParticleSystem> SkillEffect;
+
 };

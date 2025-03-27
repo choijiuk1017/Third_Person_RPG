@@ -88,7 +88,7 @@ protected:
 	TObjectPtr<class UMMComboActionData> BasicComboData;
 
 	//스킬 공격 데이터
-	UPROPERTY(EditAnywhere, Category = SkillData, Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SkillData, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USkillData> SkillData;
 
 

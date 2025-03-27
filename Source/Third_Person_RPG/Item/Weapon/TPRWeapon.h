@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Third_Person_RPG/Data/SkillData.h"
 #include "TPRWeapon.generated.h"
 
 UENUM(BlueprintType)
@@ -45,5 +46,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attachment")
 	FVector RelativeScale = FVector(1.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill")
+	USkillData* SkillData;
 
 };

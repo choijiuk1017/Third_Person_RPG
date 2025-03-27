@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "PlayerCharacter.h"
@@ -86,12 +86,15 @@ APlayerCharacter::APlayerCharacter()
 
 	GetCharacterMovement()->bIgnoreBaseRotation = true;
 
-	// ÄÁÆ®·Ñ·¯ÀÇ Rotation¿¡ ¿µÇâ X
+	CurrentWeapon = nullptr;
+	SkillData = nullptr;
+
+	// ì»¨íŠ¸ë¡¤ëŸ¬ì˜ Rotationì— ì˜í–¥ X
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	// ¿òÁ÷ÀÓ¿¡ µû¸¥ È¸Àü On
+	// ì›€ì§ì„ì— ë”°ë¥¸ íšŒì „ On
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
 	GetCapsuleComponent()->InitCapsuleSize(35.0f, 90.f);
@@ -114,13 +117,13 @@ void APlayerCharacter::BeginPlay()
 
 	if (PlayerController && IMC_Basic)
 	{
-		//¼­ºê ½Ã½ºÅÛ ºÒ·¯¿À±â
+		//ì„œë¸Œ ì‹œìŠ¤í…œ ë¶ˆëŸ¬ì˜¤ê¸°
 		if (UEnhancedInputLocalPlayerSubsystem* SubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
-			//¸ÅÇÎ ÄÁÅØ½ºÆ® Ãß°¡
+			//ë§¤í•‘ ì»¨í…ìŠ¤íŠ¸ ì¶”ê°€
 			SubSystem->AddMappingContext(IMC_Basic, 0);
 
-			//ÀÔ·Â ½ÃÀÛ
+			//ì…ë ¥ ì‹œì‘
 			EnableInput(PlayerController);
 		}
 
@@ -154,28 +157,28 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 void APlayerCharacter::BasicMove(const FInputActionValue& Value)
 {
-	// ÀÔ·Â¹ŞÀº Value·ÎºÎÅÍ MovementVector °¡Á®¿À±â
+	// ì…ë ¥ë°›ì€ Valueë¡œë¶€í„° MovementVector ê°€ì ¸ì˜¤ê¸°
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	// ÄÁÆ®·Ñ·¯ÀÇ È¸Àü Áß Yaw(Z)¸¦ °¡Á®¿Í ÀúÀå
+	// ì»¨íŠ¸ë¡¤ëŸ¬ì˜ íšŒì „ ì¤‘ Yaw(Z)ë¥¼ ê°€ì ¸ì™€ ì €ì¥
 	const FRotator Rotation = Controller->GetControlRotation();
 	const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-	// È¸Àü(Yaw)À» ±â¹İÀ¸·Î Àü¹æ ¹× ¿À¸¥ÂÊ ¹æÇâÀ» ¹Ş¾Æ¿À±â (X : Àü¹æ, Y : ¿À¸¥ÂÊ)
+	// íšŒì „(Yaw)ì„ ê¸°ë°˜ìœ¼ë¡œ ì „ë°© ë° ì˜¤ë¥¸ìª½ ë°©í–¥ì„ ë°›ì•„ì˜¤ê¸° (X : ì „ë°©, Y : ì˜¤ë¥¸ìª½)
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-	// Movement¿¡ °ª Àü´Ş (¹æÇâ, ÀÌµ¿·®)
+	// Movementì— ê°’ ì „ë‹¬ (ë°©í–¥, ì´ë™ëŸ‰)
 	AddMovementInput(ForwardDirection, MovementVector.X);
 	AddMovementInput(RightDirection, MovementVector.Y);
 }
 
 void APlayerCharacter::BasicLook(const FInputActionValue& Value)
 {
-	// ÀÔ·Â¹ŞÀº Value·ÎºÎÅÍ LookVector °¡Á®¿À±â
+	// ì…ë ¥ë°›ì€ Valueë¡œë¶€í„° LookVector ê°€ì ¸ì˜¤ê¸°
 	FVector2D LookVector = Value.Get<FVector2D>();
 
-	// Controller¿¡ °ª Àü´Ş
+	// Controllerì— ê°’ ì „ë‹¬
 	AddControllerYawInput(LookVector.X);
 	AddControllerPitchInput(LookVector.Y);
 }
@@ -193,31 +196,31 @@ void APlayerCharacter::EndSprint()
 
 void APlayerCharacter::RollStart()
 {
-	// ±¸¸£±â ÁßÀÌ¸é ¸®ÅÏ
+	// êµ¬ë¥´ê¸° ì¤‘ì´ë©´ ë¦¬í„´
 	if (bIsRoll) return;
 
-	// ¾Ö´Ô ÀÎ½ºÅÏ½º °¡Á®¿À±â
+	// ì• ë‹˜ ì¸ìŠ¤í„´ìŠ¤ ê°€ì ¸ì˜¤ê¸°
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
-		// Roll Check (±¸¸£±â È°¼ºÈ­)
+		// Roll Check (êµ¬ë¥´ê¸° í™œì„±í™”)
 		bIsRoll = true;
 
-		// ¸ùÅ¸ÁÖ Àç»ı
+		// ëª½íƒ€ì£¼ ì¬ìƒ
 		AnimInstance->Montage_Play(RollMontage, 1.7f);
 
-		// ¸ùÅ¸ÁÖ Àç»ı Á¾·á ¹ÙÀÎµù
+		// ëª½íƒ€ì£¼ ì¬ìƒ ì¢…ë£Œ ë°”ì¸ë”©
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindUObject(this, &APlayerCharacter::RollEnd);
 
-		// RollMontage Á¾·á ½Ã EndDelegate¿¡ ¿¬µ¿µÈ ÇÔ¼ö È£Ãâ
+		// RollMontage ì¢…ë£Œ ì‹œ EndDelegateì— ì—°ë™ëœ í•¨ìˆ˜ í˜¸ì¶œ
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, RollMontage);
 	}
 }
 
 void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
 {
-	// Roll UnCheck (±¸¸£±â ºñÈ°¼ºÈ­)
+	// Roll UnCheck (êµ¬ë¥´ê¸° ë¹„í™œì„±í™”)
 	bIsRoll = false;
 }
 
@@ -244,26 +247,26 @@ void APlayerCharacter::BasicAttack()
 
 void APlayerCharacter::SkillStart()
 {
-	if (bIsRoll) return;
+	if (bIsRoll || !SkillData || !SkillData->SkillMontage) return;
 
-	// °ø°İ ½Ã ÇÃ·¹ÀÌ¾î ÀÌµ¿ ºÒ°¡
+	// ê³µê²© ì‹œ í”Œë ˆì´ì–´ ì´ë™ ë¶ˆê°€
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
-	// ¾Ö´Ô ÀÎ½ºÅÏ½º °¡Á®¿À±â
+	// ì• ë‹˜ ì¸ìŠ¤í„´ìŠ¤ ê°€ì ¸ì˜¤ê¸°
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
 	if (AnimInstance)
 	{
 		bIsAttacking = true;
 
-		// ¸ùÅ¸ÁÖ Àç»ı
-		AnimInstance->Montage_Play(SkillData->SkillMontage, 1.5f);
+		// ëª½íƒ€ì£¼ ì¬ìƒ
+		AnimInstance->Montage_Play(SkillData->SkillMontage, 2.0f);
 
-		// ¸ùÅ¸ÁÖ Àç»ı Á¾·á ¹ÙÀÎµù
+		// ëª½íƒ€ì£¼ ì¬ìƒ ì¢…ë£Œ ë°”ì¸ë”©
 		FOnMontageEnded EndDelegate;
 
-		// RollMontage Á¾·á ½Ã EndDelegate¿¡ ¿¬µ¿µÈ ÇÔ¼ö È£Ãâ
-		AnimInstance->Montage_SetEndDelegate(EndDelegate, RollMontage);
+		// RollMontage ì¢…ë£Œ ì‹œ EndDelegateì— ì—°ë™ëœ í•¨ìˆ˜ í˜¸ì¶œ
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, SkillData->SkillMontage);
 
 	}
 }
@@ -275,7 +278,7 @@ void APlayerCharacter::SpawnSkillEffect()
 	FVector SpawnLocation = GetActorLocation() + GetActorForwardVector() * 200.0f; 
 	FRotator SpawnRotation = GetActorRotation();
 
-	// Ä³½ºÄÉÀÌµå ÆÄÆ¼Å¬ ¼ÒÈ¯
+	// ìºìŠ¤ì¼€ì´ë“œ íŒŒí‹°í´ ì†Œí™˜
 	UGameplayStatics::SpawnEmitterAtLocation(
 		GetWorld(),
 		SkillData->SkillEffect,
@@ -288,30 +291,30 @@ void APlayerCharacter::ComboStart()
 {
 	CurrentComboCount = 1;
 
-	// °ø°İ ½Ã ÇÃ·¹ÀÌ¾î ÀÌµ¿ ºÒ°¡
+	// ê³µê²© ì‹œ í”Œë ˆì´ì–´ ì´ë™ ë¶ˆê°€
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
-	// TODO : °ø°İ ¼Óµµ°¡ Ãß°¡µÇ¸é °ª °¡Á®¿Í ÁöÁ¤ÇÏ±â
+	// TODO : ê³µê²© ì†ë„ê°€ ì¶”ê°€ë˜ë©´ ê°’ ê°€ì ¸ì™€ ì§€ì •í•˜ê¸°
 	const float AttackSpeedRate = 1.0f;
 
 
-	// ¾Ö´Ô ÀÎ½ºÅÏ½º °¡Á®¿À±â
+	// ì• ë‹˜ ì¸ìŠ¤í„´ìŠ¤ ê°€ì ¸ì˜¤ê¸°
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
-		// ¸ùÅ¸ÁÖ Àç»ı
+		// ëª½íƒ€ì£¼ ì¬ìƒ
 		AnimInstance->Montage_Play(BasicComboMontage, AttackSpeedRate);
 
-		// ¸ùÅ¸ÁÖ Àç»ı Á¾·á ¹ÙÀÎµù
+		// ëª½íƒ€ì£¼ ì¬ìƒ ì¢…ë£Œ ë°”ì¸ë”©
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindUObject(this, &APlayerCharacter::ComboEnd);
 
-		// BasicComboMontage°¡ Á¾·áµÇ¸é EndDelegate¿¡ ¿¬µ¿µÈ ComboEndÇÔ¼ö È£Ãâ
+		// BasicComboMontageê°€ ì¢…ë£Œë˜ë©´ EndDelegateì— ì—°ë™ëœ ComboEndí•¨ìˆ˜ í˜¸ì¶œ
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, BasicComboMontage);
 
-		// Å¸ÀÌ¸Ó ÃÊ±âÈ­
+		// íƒ€ì´ë¨¸ ì´ˆê¸°í™”
 		ComboTimerHandle.Invalidate();
-		// Å¸ÀÌ¸Ó ¼³Á¤
+		// íƒ€ì´ë¨¸ ì„¤ì •
 		SetComboTimer();
 	}
 }
@@ -333,23 +336,23 @@ void APlayerCharacter::ComboCheck()
 
 	if (bHasComboInput)
 	{
-		//ÄŞº¸ ¼ö Áõ°¡
+		//ì½¤ë³´ ìˆ˜ ì¦ê°€
 		CurrentComboCount = FMath::Clamp(CurrentComboCount + 1, 1, BasicComboData->MaxComboCount);
 
-		// ¾Ö´Ô ÀÎ½ºÅÏ½º °¡Á®¿À±â
+		// ì• ë‹˜ ì¸ìŠ¤í„´ìŠ¤ ê°€ì ¸ì˜¤ê¸°
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
-			// ´ÙÀ½ ¼½¼ÇÀÇ ÀÌ¸§
+			// ë‹¤ìŒ ì„¹ì…˜ì˜ ì´ë¦„
 			FName SectionName = *FString::Printf(TEXT("%s%d"), *BasicComboData->SectionPrefix, CurrentComboCount);
 
-			// ´ÙÀ½ ¼½¼ÇÀ¸·Î ÀÌµ¿ÇÏ±â
+			// ë‹¤ìŒ ì„¹ì…˜ìœ¼ë¡œ ì´ë™í•˜ê¸°
 			AnimInstance->Montage_JumpToSection(SectionName, BasicComboMontage);
 
-			// Å¸ÀÌ¸Ó Àç¼³Á¤
+			// íƒ€ì´ë¨¸ ì¬ì„¤ì •
 			SetComboTimer();
-			// ÄŞº¸ ÀÔ·Â ÆÇº° ÃÊ±âÈ­
-			// ÄŞº¸ ÀÔ·Â ÆÇº° ÃÊ±âÈ­
+			// ì½¤ë³´ ì…ë ¥ íŒë³„ ì´ˆê¸°í™”
+			// ì½¤ë³´ ì…ë ¥ íŒë³„ ì´ˆê¸°í™”
 			bHasComboInput = false;
 		}
 	}
@@ -357,24 +360,24 @@ void APlayerCharacter::ComboCheck()
 
 void APlayerCharacter::SetComboTimer()
 {
-	// ÀÎµ¦½º Á¶Á¤
-	// * ÄŞº¸ ÀÎµ¦½º : 1, 2, 3 
-	// * ¹è¿­ ÀÎµ¦½º : 0, 1, 2
+	// ì¸ë±ìŠ¤ ì¡°ì •
+	// * ì½¤ë³´ ì¸ë±ìŠ¤ : 1, 2, 3 
+	// * ë°°ì—´ ì¸ë±ìŠ¤ : 0, 1, 2
 	int32 ComboIndex = CurrentComboCount - 1;
 
-	// ÀÎµ¦½º°¡ À¯È¿ÇÑÁö Ã¼Å©
+	// ì¸ë±ìŠ¤ê°€ ìœ íš¨í•œì§€ ì²´í¬
 	if (BasicComboData->ComboFrame.IsValidIndex(ComboIndex))
 	{
-		// TODO : °ø°İ ¼Óµµ°¡ Ãß°¡µÇ¸é °ª °¡Á®¿Í ÁöÁ¤ÇÏ±â
+		// TODO : ê³µê²© ì†ë„ê°€ ì¶”ê°€ë˜ë©´ ê°’ ê°€ì ¸ì™€ ì§€ì •í•˜ê¸°
 		const float AttackSpeedRate = 1.0f;
 
-		// ½ÇÁ¦ ÄŞº¸°¡ ÀÔ·ÂµÉ ¼ö ÀÖ´Â ½Ã°£ ±¸ÇÏ±â
+		// ì‹¤ì œ ì½¤ë³´ê°€ ì…ë ¥ë  ìˆ˜ ìˆëŠ” ì‹œê°„ êµ¬í•˜ê¸°
 		float ComboAvailableTime = (BasicComboData->ComboFrame[ComboIndex] / BasicComboData->FrameRate) / AttackSpeedRate;
 
-		// Å¸ÀÌ¸Ó ¼³Á¤ÇÏ±â
+		// íƒ€ì´ë¨¸ ì„¤ì •í•˜ê¸°
 		if (ComboAvailableTime > 0.0f)
 		{
-			// ComboAvailableTime½Ã°£ÀÌ Áö³ª¸é ComboCheck() ÇÔ¼ö È£Ãâ
+			// ComboAvailableTimeì‹œê°„ì´ ì§€ë‚˜ë©´ ComboCheck() í•¨ìˆ˜ í˜¸ì¶œ
 			GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &APlayerCharacter::ComboCheck, ComboAvailableTime, false);
 		}
 	}
@@ -382,19 +385,19 @@ void APlayerCharacter::SetComboTimer()
 
 void APlayerCharacter::BaseAttackCheck()
 {
-	//Ãæµ¹ °á°ú¸¦ ¹İÈ¯ÇÏ±â À§ÇÑ ¹è¿­
+	//ì¶©ëŒ ê²°ê³¼ë¥¼ ë°˜í™˜í•˜ê¸° ìœ„í•œ ë°°ì—´
 	TArray<FHitResult> OutHitResults;
 
-	//°ø°İ ¹İ°æ
+	//ê³µê²© ë°˜ê²½
 	float AttackRange = 100.0f;
 
-	//°ø°İ Ã¼Å©¸¦ À§ÇÑ ±¸Ã¼ÀÇ ¹İÁö¸§
+	//ê³µê²© ì²´í¬ë¥¼ ìœ„í•œ êµ¬ì²´ì˜ ë°˜ì§€ë¦„
 	float AttackRadius = 70.0f;
 
-	//Ãæµ¹ Å½Áö¸¦ À§ÇÑ ½ÃÀÛ ÁöÁ¡
+	//ì¶©ëŒ íƒì§€ë¥¼ ìœ„í•œ ì‹œì‘ ì§€ì 
 	FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
 
-	//Ãæµ¹ Å½Áö ³¡ ÁöÁ¡
+	//ì¶©ëŒ íƒì§€ ë ì§€ì 
 	FVector End = Start + (GetActorForwardVector() * AttackRange);
 
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
@@ -409,13 +412,13 @@ void APlayerCharacter::BaseAttackCheck()
 		Params
 	);
 
-	//°ø°İ ÆÇÁ¤ ½Ã µ¥¹ÌÁö Ã³¸® ¿¹Á¤
+	//ê³µê²© íŒì • ì‹œ ë°ë¯¸ì§€ ì²˜ë¦¬ ì˜ˆì •
 	if (bHasHit)
 	{
 
 	}
 
-	// Capsule ¸ğ¾çÀÇ µğ¹ö±ë Ã¼Å©
+	// Capsule ëª¨ì–‘ì˜ ë””ë²„ê¹… ì²´í¬
 	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
 	float CapsuleHalfHeight = AttackRange * 0.5f;
 	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
@@ -425,15 +428,16 @@ void APlayerCharacter::BaseAttackCheck()
 
 void APlayerCharacter::SkillAttackCheck()
 {
+	if (!SkillData) return;
 
 	SpawnSkillEffect();
-	//Ãæµ¹ °á°ú¸¦ ¹İÈ¯ÇÏ±â À§ÇÑ ¹è¿­
+	//ì¶©ëŒ ê²°ê³¼ë¥¼ ë°˜í™˜í•˜ê¸° ìœ„í•œ ë°°ì—´
 	TArray<FHitResult> OutHitResults;
 
-	//Ãæµ¹ Å½Áö¸¦ À§ÇÑ ½ÃÀÛ ÁöÁ¡
+	//ì¶©ëŒ íƒì§€ë¥¼ ìœ„í•œ ì‹œì‘ ì§€ì 
 	FVector Start = GetActorLocation() + GetActorForwardVector() * 200.0f;
 
-	//Ãæµ¹ Å½Áö ³¡ ÁöÁ¡
+	//ì¶©ëŒ íƒì§€ ë ì§€ì 
 	FVector End = Start + (GetActorForwardVector() * SkillData->SkillRange);
 
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
@@ -448,13 +452,13 @@ void APlayerCharacter::SkillAttackCheck()
 		Params
 	);
 
-	//°ø°İ ÆÇÁ¤ ½Ã µ¥¹ÌÁö Ã³¸® ¿¹Á¤
+	//ê³µê²© íŒì • ì‹œ ë°ë¯¸ì§€ ì²˜ë¦¬ ì˜ˆì •
 	if (bHasHit)
 	{
 
 	}
 
-	// Capsule ¸ğ¾çÀÇ µğ¹ö±ë Ã¼Å©
+	// Capsule ëª¨ì–‘ì˜ ë””ë²„ê¹… ì²´í¬
 	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
 	float CapsuleHalfHeight = SkillData->SkillRange * 0.5f;
 	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
@@ -474,7 +478,8 @@ void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
 	check(nullptr != NewWeapon && nullptr == CurrentWeapon);
 
 	FName WeaponSocket(TEXT("WeaponSocket"));
-	if (nullptr != NewWeapon) {
+	if (NewWeapon)
+	{
 		NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
 
 		NewWeapon->SetActorRelativeLocation(NewWeapon->RelativeLocation);
@@ -482,8 +487,10 @@ void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
 		NewWeapon->SetActorScale3D(NewWeapon->RelativeScale);
 		NewWeapon->SetOwner(this);
 		CurrentWeapon = NewWeapon;
+
+		SkillData = NewWeapon->SkillData;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("¹«±â ÀåÂø"));
+	UE_LOG(LogTemp, Warning, TEXT("ë¬´ê¸° ì¥ì°©"));
 }
 
