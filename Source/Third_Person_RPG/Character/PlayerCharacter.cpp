@@ -65,6 +65,13 @@ APlayerCharacter::APlayerCharacter()
 		IA_Skill = IA_SkillRef.Object;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_UnEquipWeapon_TestRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_UnEquipWeapon_Test.IA_UnEquipWeapon_Test'"));
+	if (IA_UnEquipWeapon_TestRef.Object)
+	{
+		IA_UnEquipWeapon_Test = IA_UnEquipWeapon_TestRef.Object;
+	}
+
+
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -99,7 +106,7 @@ APlayerCharacter::APlayerCharacter()
 
 	GetCapsuleComponent()->InitCapsuleSize(35.0f, 90.f);
 
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("MMCapsule"));
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
 
 	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
 
@@ -144,6 +151,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
 	EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &APlayerCharacter::RollStart);
 	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Started, this, &APlayerCharacter::SkillStart);
+
+	EnhancedInputComponent->BindAction(IA_UnEquipWeapon_Test, ETriggerEvent::Started, this, &APlayerCharacter::UnEquipWeapon);
 	
 
 }
@@ -260,7 +269,7 @@ void APlayerCharacter::SkillStart()
 		bIsAttacking = true;
 
 		// 몽타주 재생
-		AnimInstance->Montage_Play(SkillData->SkillMontage, 2.0f);
+		AnimInstance->Montage_Play(SkillData->SkillMontage, SkillData->SkillPlayRate);
 
 		// 몽타주 재생 종료 바인딩
 		FOnMontageEnded EndDelegate;
@@ -275,10 +284,31 @@ void APlayerCharacter::SpawnSkillEffect()
 {
 	if (!SkillData || !SkillData->SkillEffect) return;
 
-	FVector SpawnLocation = GetActorLocation() + GetActorForwardVector() * 200.0f; 
+	FVector SpawnLocation = GetActorLocation();
 	FRotator SpawnRotation = GetActorRotation();
 
-	// 캐스케이드 파티클 소환
+	switch (SkillData->SpawnType)
+	{
+	case ESkillEffectSpawnType::Self:
+		SpawnLocation = GetActorLocation();
+		break;
+
+	case ESkillEffectSpawnType::Forward:
+		SpawnLocation = GetActorLocation() + GetActorForwardVector() * 200.0f;
+		break;
+
+	case ESkillEffectSpawnType::Ground:
+		SpawnLocation = GetActorLocation() - FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+		break;
+
+	case ESkillEffectSpawnType::Custom:
+		// 혹시 필요하다면 SkillData에 별도 커스텀 위치 변수 추가 가능
+		break;
+
+	default:
+		break;
+	}
+
 	UGameplayStatics::SpawnEmitterAtLocation(
 		GetWorld(),
 		SkillData->SkillEffect,
@@ -286,7 +316,6 @@ void APlayerCharacter::SpawnSkillEffect()
 		SpawnRotation
 	);
 }
-
 void APlayerCharacter::ComboStart()
 {
 	CurrentComboCount = 1;
@@ -431,14 +460,37 @@ void APlayerCharacter::SkillAttackCheck()
 	if (!SkillData) return;
 
 	SpawnSkillEffect();
-	//충돌 결과를 반환하기 위한 배열
+
 	TArray<FHitResult> OutHitResults;
 
-	//충돌 탐지를 위한 시작 지점
-	FVector Start = GetActorLocation() + GetActorForwardVector() * 200.0f;
+	// 기본 값
+	FVector Start = GetActorLocation();
+	FVector End = Start;
 
-	//충돌 탐지 끝 지점
-	FVector End = Start + (GetActorForwardVector() * SkillData->SkillRange);
+	// 방향 계산
+	FVector Forward = GetActorForwardVector();
+
+	switch (SkillData->SpawnType)
+	{
+	case ESkillEffectSpawnType::Forward:
+		Start = GetActorLocation() + Forward * 200.0f;
+		End = Start + Forward * SkillData->SkillRange;
+		break;
+
+	case ESkillEffectSpawnType::Self:
+		Start = GetActorLocation();
+		End = Start + Forward * SkillData->SkillRange;
+		break;
+
+	case ESkillEffectSpawnType::Ground:
+		Start = GetActorLocation() - FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+		End = Start + Forward * SkillData->SkillRange;
+		break;
+
+	case ESkillEffectSpawnType::Custom:
+		// 필요시 커스텀 위치 로직 추가
+		break;
+	}
 
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
 
@@ -452,22 +504,30 @@ void APlayerCharacter::SkillAttackCheck()
 		Params
 	);
 
-	//공격 판정 시 데미지 처리 예정
 	if (bHasHit)
 	{
-
+		// 데미지 처리 예정
 	}
 
-	// Capsule 모양의 디버깅 체크
+	// Capsule 디버그 시각화
 	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
 	float CapsuleHalfHeight = SkillData->SkillRange * 0.5f;
 	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
 
-	DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, SkillData->SkillRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
+	DrawDebugCapsule(
+		GetWorld(),
+		CapsuleOrigin,
+		CapsuleHalfHeight,
+		SkillData->SkillRadius,
+		FRotationMatrix::MakeFromZ(Forward).ToQuat(),
+		DrawColor,
+		false,
+		3.0f
+	);
 
+	// 이동 다시 가능하게
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 }
-
 bool APlayerCharacter::CanSetWeapon()
 {
 	return (nullptr == CurrentWeapon);
@@ -494,3 +554,20 @@ void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
 	UE_LOG(LogTemp, Warning, TEXT("무기 장착"));
 }
 
+void APlayerCharacter::UnEquipWeapon()
+{
+	if (CurrentWeapon)
+	{
+		// 1. 먼저 무기를 소켓에서 분리
+		CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+		// 2. 월드에서 제거
+		CurrentWeapon->Destroy();
+
+		// 3. 참조 해제
+		CurrentWeapon = nullptr;
+		SkillData = nullptr;
+
+		UE_LOG(LogTemp, Warning, TEXT("무기 해제됨"));
+	}
+}

@@ -31,6 +31,8 @@ public:
 	bool CanSetWeapon();
 	void SetWeapon(class ATPRWeapon* NewWeapon);
 
+	void UnEquipWeapon();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -67,6 +69,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> IA_Skill;
+
+	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> IA_UnEquipWeapon_Test;
+
 
 
 
