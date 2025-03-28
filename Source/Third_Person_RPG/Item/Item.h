@@ -17,7 +17,9 @@ public:
 	// Sets default values for this actor's properties
 	AItem();
 
-
+	// 블루프린트에서 세팅할 무기 종류
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ItemBox")
+	TSubclassOf<ATPRWeapon> WeaponClass;
 
 protected:
 	// Called when the game starts or when spawned
@@ -28,10 +30,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	USkeletalMeshComponent* BoxMesh;
-
-	// 블루프린트에서 세팅할 무기 종류
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ItemBox")
-	TSubclassOf<ATPRWeapon> WeaponClass;
 
 	// 플레이어가 범위에 들어왔을 때 호출되는 함수
 	UFUNCTION()

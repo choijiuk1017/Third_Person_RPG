@@ -71,6 +71,12 @@ APlayerCharacter::APlayerCharacter()
 		IA_UnEquipWeapon_Test = IA_UnEquipWeapon_TestRef.Object;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_InteractionRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Interaction.IA_Interaction'"));
+	if (IA_InteractionRef.Object)
+	{
+		IA_Interaction = IA_InteractionRef.Object;
+	}
+
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -95,6 +101,8 @@ APlayerCharacter::APlayerCharacter()
 
 	CurrentWeapon = nullptr;
 	SkillData = nullptr;
+
+	WeaponComboData = nullptr;
 
 	// 컨트롤러의 Rotation에 영향 X
 	bUseControllerRotationPitch = false;
@@ -151,6 +159,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
 	EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &APlayerCharacter::RollStart);
 	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Started, this, &APlayerCharacter::SkillStart);
+	EnhancedInputComponent->BindAction(IA_Interaction, ETriggerEvent::Started, this, &APlayerCharacter::Interact);
 
 	EnhancedInputComponent->BindAction(IA_UnEquipWeapon_Test, ETriggerEvent::Started, this, &APlayerCharacter::UnEquipWeapon);
 	
@@ -206,7 +215,7 @@ void APlayerCharacter::EndSprint()
 void APlayerCharacter::RollStart()
 {
 	// 구르기 중이면 리턴
-	if (bIsRoll) return;
+	if (bIsInterating || bIsRoll || bIsSkillActing) return;
 
 	// 애님 인스턴스 가져오기
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -235,7 +244,7 @@ void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
 
 void APlayerCharacter::BasicAttack()
 {
-	if (bIsRoll) return;
+	if (bIsInterating || bIsRoll || bIsSkillActing) return;
 
 	if (CurrentComboCount == 0)
 	{
@@ -256,7 +265,7 @@ void APlayerCharacter::BasicAttack()
 
 void APlayerCharacter::SkillStart()
 {
-	if (bIsRoll || !SkillData || !SkillData->SkillMontage) return;
+	if (bIsInterating || bIsRoll || !SkillData || !SkillData->SkillMontage || bIsSkillActing) return;
 
 	// 공격 시 플레이어 이동 불가
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
@@ -266,6 +275,7 @@ void APlayerCharacter::SkillStart()
 
 	if (AnimInstance)
 	{
+		bIsSkillActing = true;
 		bIsAttacking = true;
 
 		// 몽타주 재생
@@ -318,34 +328,62 @@ void APlayerCharacter::SpawnSkillEffect()
 }
 void APlayerCharacter::ComboStart()
 {
-	CurrentComboCount = 1;
-
-	// 공격 시 플레이어 이동 불가
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-
-	// TODO : 공격 속도가 추가되면 값 가져와 지정하기
-	const float AttackSpeedRate = 1.0f;
-
-
-	// 애님 인스턴스 가져오기
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance)
+	if (CurrentWeapon)
 	{
-		// 몽타주 재생
-		AnimInstance->Montage_Play(BasicComboMontage, AttackSpeedRate);
+		CurrentComboCount = 1;
 
-		// 몽타주 재생 종료 바인딩
-		FOnMontageEnded EndDelegate;
-		EndDelegate.BindUObject(this, &APlayerCharacter::ComboEnd);
+		// 공격 시 플레이어 이동 불가
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
-		// BasicComboMontage가 종료되면 EndDelegate에 연동된 ComboEnd함수 호출
-		AnimInstance->Montage_SetEndDelegate(EndDelegate, BasicComboMontage);
+		// 애님 인스턴스 가져오기
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			// 몽타주 재생
+			AnimInstance->Montage_Play(WeaponComboData->ComboMontage, WeaponComboData->ComnboPlayRate);
 
-		// 타이머 초기화
-		ComboTimerHandle.Invalidate();
-		// 타이머 설정
-		SetComboTimer();
+			// 몽타주 재생 종료 바인딩
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &APlayerCharacter::ComboEnd);
+
+			// BasicComboMontage가 종료되면 EndDelegate에 연동된 ComboEnd함수 호출
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, WeaponComboData->ComboMontage);
+
+			// 타이머 초기화
+			ComboTimerHandle.Invalidate();
+			// 타이머 설정
+			SetComboTimer();
+		}
 	}
+	else
+	{
+		CurrentComboCount = 1;
+
+		// 공격 시 플레이어 이동 불가
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+
+
+		// 애님 인스턴스 가져오기
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			// 몽타주 재생
+			AnimInstance->Montage_Play(BasicComboData->ComboMontage, BasicComboData->ComnboPlayRate);
+
+			// 몽타주 재생 종료 바인딩
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &APlayerCharacter::ComboEnd);
+
+			// BasicComboMontage가 종료되면 EndDelegate에 연동된 ComboEnd함수 호출
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, BasicComboData->ComboMontage);
+
+			// 타이머 초기화
+			ComboTimerHandle.Invalidate();
+			// 타이머 설정
+			SetComboTimer();
+		}
+	}
+	
 }
 
 void APlayerCharacter::ComboEnd(UAnimMontage* Montage, bool IsEnded)
@@ -362,29 +400,55 @@ void APlayerCharacter::ComboEnd(UAnimMontage* Montage, bool IsEnded)
 void APlayerCharacter::ComboCheck()
 {
 	ComboTimerHandle.Invalidate();
-
-	if (bHasComboInput)
+	if (CurrentWeapon)
 	{
-		//콤보 수 증가
-		CurrentComboCount = FMath::Clamp(CurrentComboCount + 1, 1, BasicComboData->MaxComboCount);
-
-		// 애님 인스턴스 가져오기
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
+		if (bHasComboInput)
 		{
-			// 다음 섹션의 이름
-			FName SectionName = *FString::Printf(TEXT("%s%d"), *BasicComboData->SectionPrefix, CurrentComboCount);
+			//콤보 수 증가
+			CurrentComboCount = FMath::Clamp(CurrentComboCount + 1, 1, WeaponComboData->MaxComboCount);
 
-			// 다음 섹션으로 이동하기
-			AnimInstance->Montage_JumpToSection(SectionName, BasicComboMontage);
+			// 애님 인스턴스 가져오기
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				// 다음 섹션의 이름
+				FName SectionName = *FString::Printf(TEXT("%s%d"), *WeaponComboData->SectionPrefix, CurrentComboCount);
 
-			// 타이머 재설정
-			SetComboTimer();
-			// 콤보 입력 판별 초기화
-			// 콤보 입력 판별 초기화
-			bHasComboInput = false;
+				// 다음 섹션으로 이동하기
+				AnimInstance->Montage_JumpToSection(SectionName, WeaponComboData->ComboMontage);
+
+				// 타이머 재설정
+				SetComboTimer();
+				// 콤보 입력 판별 초기화
+				bHasComboInput = false;
+			}
 		}
 	}
+	else
+	{
+		if (bHasComboInput)
+		{
+			//콤보 수 증가
+			CurrentComboCount = FMath::Clamp(CurrentComboCount + 1, 1, BasicComboData->MaxComboCount);
+
+			// 애님 인스턴스 가져오기
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				// 다음 섹션의 이름
+				FName SectionName = *FString::Printf(TEXT("%s%d"), *BasicComboData->SectionPrefix, CurrentComboCount);
+
+				// 다음 섹션으로 이동하기
+				AnimInstance->Montage_JumpToSection(SectionName, BasicComboData->ComboMontage);
+
+				// 타이머 재설정
+				SetComboTimer();
+				// 콤보 입력 판별 초기화
+				bHasComboInput = false;
+			}
+		}
+	}
+	
 }
 
 void APlayerCharacter::SetComboTimer()
@@ -392,67 +456,128 @@ void APlayerCharacter::SetComboTimer()
 	// 인덱스 조정
 	// * 콤보 인덱스 : 1, 2, 3 
 	// * 배열 인덱스 : 0, 1, 2
-	int32 ComboIndex = CurrentComboCount - 1;
 
-	// 인덱스가 유효한지 체크
-	if (BasicComboData->ComboFrame.IsValidIndex(ComboIndex))
+	if (CurrentWeapon)
 	{
-		// TODO : 공격 속도가 추가되면 값 가져와 지정하기
-		const float AttackSpeedRate = 1.0f;
+		int32 ComboIndex = CurrentComboCount - 1;
 
-		// 실제 콤보가 입력될 수 있는 시간 구하기
-		float ComboAvailableTime = (BasicComboData->ComboFrame[ComboIndex] / BasicComboData->FrameRate) / AttackSpeedRate;
-
-		// 타이머 설정하기
-		if (ComboAvailableTime > 0.0f)
+		// 인덱스가 유효한지 체크
+		if (WeaponComboData->ComboFrame.IsValidIndex(ComboIndex))
 		{
-			// ComboAvailableTime시간이 지나면 ComboCheck() 함수 호출
-			GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &APlayerCharacter::ComboCheck, ComboAvailableTime, false);
+			// TODO : 공격 속도가 추가되면 값 가져와 지정하기
+			const float AttackSpeedRate = 1.0f;
+
+			// 실제 콤보가 입력될 수 있는 시간 구하기
+			float ComboAvailableTime = (WeaponComboData->ComboFrame[ComboIndex] / WeaponComboData->FrameRate) / AttackSpeedRate;
+
+			// 타이머 설정하기
+			if (ComboAvailableTime > 0.0f)
+			{
+				// ComboAvailableTime시간이 지나면 ComboCheck() 함수 호출
+				GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &APlayerCharacter::ComboCheck, ComboAvailableTime, false);
+			}
 		}
 	}
+	else
+	{
+		int32 ComboIndex = CurrentComboCount - 1;
+
+		// 인덱스가 유효한지 체크
+		if (BasicComboData->ComboFrame.IsValidIndex(ComboIndex))
+		{
+			// TODO : 공격 속도가 추가되면 값 가져와 지정하기
+			const float AttackSpeedRate = 1.0f;
+
+			// 실제 콤보가 입력될 수 있는 시간 구하기
+			float ComboAvailableTime = (BasicComboData->ComboFrame[ComboIndex] / BasicComboData->FrameRate) / AttackSpeedRate;
+
+			// 타이머 설정하기
+			if (ComboAvailableTime > 0.0f)
+			{
+				// ComboAvailableTime시간이 지나면 ComboCheck() 함수 호출
+				GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &APlayerCharacter::ComboCheck, ComboAvailableTime, false);
+			}
+		}
+	}
+	
 }
 
 void APlayerCharacter::BaseAttackCheck()
 {
-	//충돌 결과를 반환하기 위한 배열
-	TArray<FHitResult> OutHitResults;
 
-	//공격 반경
-	float AttackRange = 100.0f;
-
-	//공격 체크를 위한 구체의 반지름
-	float AttackRadius = 70.0f;
-
-	//충돌 탐지를 위한 시작 지점
-	FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
-
-	//충돌 탐지 끝 지점
-	FVector End = Start + (GetActorForwardVector() * AttackRange);
-
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
-
-	bool bHasHit = GetWorld()->SweepMultiByChannel(
-		OutHitResults,
-		Start,
-		End,
-		FQuat::Identity,
-		CHANNEL_ACTION,
-		FCollisionShape::MakeSphere(AttackRadius),
-		Params
-	);
-
-	//공격 판정 시 데미지 처리 예정
-	if (bHasHit)
+	if (CurrentWeapon)
 	{
+		//충돌 결과를 반환하기 위한 배열
+		TArray<FHitResult> OutHitResults;
 
+		//충돌 탐지를 위한 시작 지점
+		FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
+
+		//충돌 탐지 끝 지점
+		FVector End = Start + (GetActorForwardVector() * WeaponComboData->AttackRange);
+
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
+
+		bool bHasHit = GetWorld()->SweepMultiByChannel(
+			OutHitResults,
+			Start,
+			End,
+			FQuat::Identity,
+			CHANNEL_ACTION,
+			FCollisionShape::MakeSphere(WeaponComboData->AttackRadius),
+			Params
+		);
+
+		//공격 판정 시 데미지 처리 예정
+		if (bHasHit)
+		{
+
+		}
+
+		// Capsule 모양의 디버깅 체크
+		FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
+		float CapsuleHalfHeight = WeaponComboData->AttackRange * 0.5f;
+		FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
+
+		DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, WeaponComboData->AttackRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
 	}
+	else
+	{
+		//충돌 결과를 반환하기 위한 배열
+		TArray<FHitResult> OutHitResults;
 
-	// Capsule 모양의 디버깅 체크
-	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
-	float CapsuleHalfHeight = AttackRange * 0.5f;
-	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
+		//충돌 탐지를 위한 시작 지점
+		FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
 
-	DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, AttackRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
+		//충돌 탐지 끝 지점
+		FVector End = Start + (GetActorForwardVector() * BasicComboData->AttackRange);
+
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
+
+		bool bHasHit = GetWorld()->SweepMultiByChannel(
+			OutHitResults,
+			Start,
+			End,
+			FQuat::Identity,
+			CHANNEL_ACTION,
+			FCollisionShape::MakeSphere(BasicComboData->AttackRadius),
+			Params
+		);
+
+		//공격 판정 시 데미지 처리 예정
+		if (bHasHit)
+		{
+
+		}
+
+		// Capsule 모양의 디버깅 체크
+		FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
+		float CapsuleHalfHeight = BasicComboData->AttackRange * 0.5f;
+		FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
+
+		DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, BasicComboData->AttackRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
+	}
+	
 }
 
 void APlayerCharacter::SkillAttackCheck()
@@ -525,9 +650,68 @@ void APlayerCharacter::SkillAttackCheck()
 		3.0f
 	);
 
+
 	// 이동 다시 가능하게
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+
+	bIsSkillActing = false;
 }
+
+
+void APlayerCharacter::Interact()
+{
+	if (bIsRoll || bIsSkillActing || bIsAttacking) return;
+	UE_LOG(LogTemp, Warning, TEXT("상호작용 키 입력됨"));
+
+	bIsInterating = true;
+
+
+	if (OverlappingItem && OverlappingItem->WeaponClass && CanSetWeapon())
+	{
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+		// 애니메이션 재생
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+		if (AnimInstance && PickUpMontage)
+		{
+			// 장착 애니메이션 재생
+			AnimInstance->Montage_Play(PickUpMontage, 1.7f);
+
+			// 애니메이션 종료 델리게이트
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &APlayerCharacter::OnEquipAnimationEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, PickUpMontage);
+		}
+	}
+}
+
+void APlayerCharacter::OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (!OverlappingItem) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+
+	ATPRWeapon* SpawnedWeapon = World->SpawnActor<ATPRWeapon>(OverlappingItem->WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
+	if (SpawnedWeapon)
+	{
+		SetWeapon(SpawnedWeapon);
+		OverlappingItem->Destroy(); // 아이템 제거
+		OverlappingItem = nullptr;
+	}
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+
+	bIsInterating = false;
+}
+
+void APlayerCharacter::SetOverlappingItem(AItem* Item)
+{
+	OverlappingItem = Item;
+}
+
 bool APlayerCharacter::CanSetWeapon()
 {
 	return (nullptr == CurrentWeapon);
@@ -549,6 +733,8 @@ void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
 		CurrentWeapon = NewWeapon;
 
 		SkillData = NewWeapon->SkillData;
+
+		WeaponComboData = NewWeapon->ComboData;
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("무기 장착"));
@@ -567,6 +753,7 @@ void APlayerCharacter::UnEquipWeapon()
 		// 3. 참조 해제
 		CurrentWeapon = nullptr;
 		SkillData = nullptr;
+		WeaponComboData = nullptr;
 
 		UE_LOG(LogTemp, Warning, TEXT("무기 해제됨"));
 	}

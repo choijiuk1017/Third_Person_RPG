@@ -41,7 +41,13 @@ void AItem::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherAct
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor);
-	if (Player && WeaponClass && Player->CanSetWeapon()) 
+
+	if (Player)
+	{
+		Player->SetOverlappingItem(this); // 새로 만든 함수
+	}
+
+	/*if (Player && WeaponClass && Player->CanSetWeapon()) 
 	{
 		UWorld* World = GetWorld();
 		if (World)
@@ -56,6 +62,6 @@ void AItem::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherAct
 				Destroy(); 
 			}
 		}
-	}
+	}*/
 }
 

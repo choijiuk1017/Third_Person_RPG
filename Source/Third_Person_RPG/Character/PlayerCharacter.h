@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Third_Person_RPG/Interface/AnimationAttackInterface.h"
+#include "Third_Person_RPG/Item/Item.h"
+#include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"
 
 #include "PlayerCharacter.generated.h"
 
@@ -32,6 +34,8 @@ public:
 	void SetWeapon(class ATPRWeapon* NewWeapon);
 
 	void UnEquipWeapon();
+
+	void SetOverlappingItem(AItem* Item);
 
 protected:
 	// Called when the game starts or when spawned
@@ -73,8 +77,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> IA_UnEquipWeapon_Test;
 
+	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> IA_Interaction;
 
 
+	UPROPERTY()
+	class AItem* OverlappingItem;
 
 
 	//Montage Section
@@ -82,9 +90,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UAnimMontage> RollMontage;
 
-	//콤보 공격 애니메이션 몽타주
 	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UAnimMontage> BasicComboMontage;
+	TObjectPtr<class UAnimMontage> PickUpMontage;
+
 
 	
 
@@ -92,6 +100,9 @@ protected:
 	//콤보 공격 데이터
 	UPROPERTY(EditAnywhere, Category = ComboData, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UMMComboActionData> BasicComboData;
+
+	UPROPERTY(VisibleAnywhere, Category = ComboData, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UMMComboActionData> WeaponComboData;
 
 	//스킬 공격 데이터
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SkillData, Meta = (AllowPrivateAccess = "true"))
@@ -134,6 +145,10 @@ protected:
 	//스킬 공격 함수, 인터페이스에서 상속 받음
 	virtual void SkillAttackCheck() override;
 
+	void Interact(); // 상호작용 키로 호출할 함수
+
+	void OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted);
+
 	//Variable Section
 	//구르기 확인 변수
 	uint8 bIsRoll : 1;
@@ -145,6 +160,10 @@ protected:
 	uint8 bHasComboInput : 1;
 	//공격 중 구르기, 구르기 중 공격 등 다른 모션을 막기 위한 변수
 	uint8 bIsAttacking : 1;
+
+	uint8 bIsSkillActing : 1;
+
+	uint8 bIsInterating : 1;
 
 
 private:
