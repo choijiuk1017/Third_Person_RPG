@@ -163,7 +163,7 @@ protected:
 
 	uint8 bIsSkillActing : 1;
 
-	uint8 bIsInterating : 1;
+	uint8 bIsInteracting : 1;
 
 
 private:

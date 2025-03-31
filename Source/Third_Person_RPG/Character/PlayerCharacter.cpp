@@ -215,7 +215,7 @@ void APlayerCharacter::EndSprint()
 void APlayerCharacter::RollStart()
 {
 	// 구르기 중이면 리턴
-	if (bIsInterating || bIsRoll || bIsSkillActing) return;
+	if (bIsInteracting || bIsRoll || bIsSkillActing) return;
 
 	// 애님 인스턴스 가져오기
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -244,7 +244,7 @@ void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
 
 void APlayerCharacter::BasicAttack()
 {
-	if (bIsInterating || bIsRoll || bIsSkillActing) return;
+	if (bIsInteracting || bIsRoll || bIsSkillActing) return;
 
 	if (CurrentComboCount == 0)
 	{
@@ -265,7 +265,7 @@ void APlayerCharacter::BasicAttack()
 
 void APlayerCharacter::SkillStart()
 {
-	if (bIsInterating || bIsRoll || !SkillData || !SkillData->SkillMontage || bIsSkillActing) return;
+	if (bIsInteracting || bIsRoll || !SkillData || !SkillData->SkillMontage || bIsSkillActing) return;
 
 	// 공격 시 플레이어 이동 불가
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
@@ -651,10 +651,10 @@ void APlayerCharacter::SkillAttackCheck()
 	);
 
 
+	bIsSkillActing = false;
+
 	// 이동 다시 가능하게
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
-
-	bIsSkillActing = false;
 }
 
 
@@ -663,7 +663,7 @@ void APlayerCharacter::Interact()
 	if (bIsRoll || bIsSkillActing || bIsAttacking) return;
 	UE_LOG(LogTemp, Warning, TEXT("상호작용 키 입력됨"));
 
-	bIsInterating = true;
+	bIsInteracting = true;
 
 
 	if (OverlappingItem && OverlappingItem->WeaponClass && CanSetWeapon())
@@ -704,7 +704,7 @@ void APlayerCharacter::OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrup
 	}
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 
-	bIsInterating = false;
+	bIsInteracting = false;
 }
 
 void APlayerCharacter::SetOverlappingItem(AItem* Item)
