@@ -15,6 +15,9 @@
 #include "Third_Person_RPG/Data/MMComboActionData.h"
 #include "Third_Person_RPG/Data/SkillData.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"	
+#include "Third_Person_RPG/UI/InventoryUI/InventoryWidget.h"
+#include "Third_Person_RPG/Interface/InventoryInterface.h"
+#include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
 
 #define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
@@ -142,6 +145,17 @@ void APlayerCharacter::BeginPlay()
 			EnableInput(PlayerController);
 		}
 
+	}
+
+	if (InventoryWidgetClass)
+	{
+		InventoryWidgetInstance = CreateWidget<UInventoryWidget>(GetWorld(), InventoryWidgetClass);
+		if (InventoryWidgetInstance)
+		{
+			InventoryWidgetInstance->AddToViewport();
+			InventoryWidgetInstance->SetOwningActor(this); // 인터페이스 연동 시 필수
+			InventoryWidgetInstance->Init();
+		}
 	}
 }
 

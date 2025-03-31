@@ -27,6 +27,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	class ATPRWeapon* CurrentWeapon;
 
@@ -108,8 +109,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SkillData, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USkillData> SkillData;
 
-
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class UInventoryWidget> InventoryWidgetClass;
 	
+	UInventoryWidget* InventoryWidgetInstance;
 
 	//Function Section
 	//기본 이동 함수
