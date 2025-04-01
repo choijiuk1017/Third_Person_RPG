@@ -25,6 +25,8 @@
 // Sets default values
 APlayerCharacter::APlayerCharacter()
 {
+#pragma region Input
+
 	//Input
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext>IMC_BasicRef(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/Input_Action/IMC_BasicPlayer.IMC_BasicPlayer'"));
 	if (IMC_BasicRef.Object)
@@ -80,6 +82,13 @@ APlayerCharacter::APlayerCharacter()
 		IA_Interaction = IA_InteractionRef.Object;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_InventoryRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Inventory.IA_Inventory'"));
+	if (IA_InventoryRef.Object)
+	{
+		IA_Inventory = IA_InventoryRef.Object;
+	}
+
+#pragma endregion
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -146,17 +155,6 @@ void APlayerCharacter::BeginPlay()
 		}
 
 	}
-
-	if (InventoryWidgetClass)
-	{
-		InventoryWidgetInstance = CreateWidget<UInventoryWidget>(GetWorld(), InventoryWidgetClass);
-		if (InventoryWidgetInstance)
-		{
-			InventoryWidgetInstance->AddToViewport();
-			InventoryWidgetInstance->SetOwningActor(this); // 인터페이스 연동 시 필수
-			InventoryWidgetInstance->Init();
-		}
-	}
 }
 
 // Called to bind functionality to input
@@ -174,6 +172,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &APlayerCharacter::RollStart);
 	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Started, this, &APlayerCharacter::SkillStart);
 	EnhancedInputComponent->BindAction(IA_Interaction, ETriggerEvent::Started, this, &APlayerCharacter::Interact);
+	EnhancedInputComponent->BindAction(IA_Inventory, ETriggerEvent::Started, this, &APlayerCharacter::ToggleInventory);
 
 	EnhancedInputComponent->BindAction(IA_UnEquipWeapon_Test, ETriggerEvent::Started, this, &APlayerCharacter::UnEquipWeapon);
 	
@@ -770,5 +769,41 @@ void APlayerCharacter::UnEquipWeapon()
 		WeaponComboData = nullptr;
 
 		UE_LOG(LogTemp, Warning, TEXT("무기 해제됨"));
+	}
+}
+void APlayerCharacter::ToggleInventory()
+{
+	if (bIsPopupInventory)
+	{
+		CloseInventory();
+	}
+	else
+	{
+		PopUpInventory();
+	}
+}
+void APlayerCharacter::PopUpInventory()
+{
+	if (InventoryWidgetClass)
+	{
+		InventoryWidgetInstance = CreateWidget<UInventoryWidget>(GetWorld(), InventoryWidgetClass);
+		bIsPopupInventory = true;
+
+		if (InventoryWidgetInstance)
+		{
+			InventoryWidgetInstance->AddToViewport();
+			InventoryWidgetInstance->SetOwningActor(this); // 인터페이스 연동 시 필수
+			InventoryWidgetInstance->Init();
+		}
+	}
+}
+
+void APlayerCharacter::CloseInventory()
+{
+	if (InventoryWidgetInstance)
+	{
+		InventoryWidgetInstance->RemoveFromParent(); // 화면에서 제거
+		InventoryWidgetInstance = nullptr;
+		bIsPopupInventory = false;
 	}
 }

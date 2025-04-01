@@ -81,6 +81,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> IA_Interaction;
 
+	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> IA_Inventory;
+
 
 	UPROPERTY()
 	class AItem* OverlappingItem;
@@ -121,6 +124,7 @@ protected:
 	void BasicLook(const FInputActionValue& Value);
 
 	void BeginSprint();
+
 	void EndSprint();
 	//구르기 시작 함수
 	void RollStart();
@@ -152,6 +156,12 @@ protected:
 
 	void OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted);
 
+	void ToggleInventory();
+
+	void PopUpInventory();
+
+	void CloseInventory();
+
 	//Variable Section
 	//구르기 확인 변수
 	uint8 bIsRoll : 1;
@@ -167,6 +177,8 @@ protected:
 	uint8 bIsSkillActing : 1;
 
 	uint8 bIsInteracting : 1;
+
+	uint8 bIsPopupInventory : 1;
 
 
 private:
