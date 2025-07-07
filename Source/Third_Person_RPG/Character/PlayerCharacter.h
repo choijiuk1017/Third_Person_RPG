@@ -149,6 +149,11 @@ protected:
 	//공격 체크 함수, 인터페이스에서 상속 받음
 	virtual void BaseAttackCheck() override;
 
+	virtual void EnableWeaponHitBox() override;
+
+	virtual void DisableWeaponHitBox() override;
+
+
 	//스킬 공격 함수, 인터페이스에서 상속 받음
 	virtual void SkillAttackCheck() override;
 

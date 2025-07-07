@@ -517,44 +517,8 @@ void APlayerCharacter::SetComboTimer()
 
 void APlayerCharacter::BaseAttackCheck()
 {
-
-	if (CurrentWeapon)
-	{
-		//충돌 결과를 반환하기 위한 배열
-		TArray<FHitResult> OutHitResults;
-
-		//충돌 탐지를 위한 시작 지점
-		FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
-
-		//충돌 탐지 끝 지점
-		FVector End = Start + (GetActorForwardVector() * WeaponComboData->AttackRange);
-
-		FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
-
-		bool bHasHit = GetWorld()->SweepMultiByChannel(
-			OutHitResults,
-			Start,
-			End,
-			FQuat::Identity,
-			CHANNEL_ACTION,
-			FCollisionShape::MakeSphere(WeaponComboData->AttackRadius),
-			Params
-		);
-
-		//공격 판정 시 데미지 처리 예정
-		if (bHasHit)
-		{
-
-		}
-
-		// Capsule 모양의 디버깅 체크
-		FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
-		float CapsuleHalfHeight = WeaponComboData->AttackRange * 0.5f;
-		FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
-
-		DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, WeaponComboData->AttackRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
-	}
-	else
+	UE_LOG(LogTemp, Warning, TEXT("피격"));
+	if (CurrentWeapon == NULL)
 	{
 		//충돌 결과를 반환하기 위한 배열
 		TArray<FHitResult> OutHitResults;
@@ -592,6 +556,23 @@ void APlayerCharacter::BaseAttackCheck()
 	}
 	
 }
+
+void APlayerCharacter::EnableWeaponHitBox()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->EnableHitBox();
+	}
+}
+
+void APlayerCharacter::DisableWeaponHitBox()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->DisableHitBox();
+	}
+}
+
 
 void APlayerCharacter::SkillAttackCheck()
 {
@@ -748,6 +729,11 @@ void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
 		SkillData = NewWeapon->SkillData;
 
 		WeaponComboData = NewWeapon->ComboData;
+	}
+
+	if (NewWeapon->HitBox)
+	{
+		NewWeapon->DisableHitBox();
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("무기 장착"));

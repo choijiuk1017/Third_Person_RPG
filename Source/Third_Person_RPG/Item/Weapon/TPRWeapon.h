@@ -53,5 +53,17 @@ public:
 	UPROPERTY(EditAnywhere, Category = ComboData, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UMMComboActionData> ComboData;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	class UBoxComponent* HitBox;
+
+	UFUNCTION(BlueprintCallable)
+	void EnableHitBox();
+
+	UFUNCTION(BlueprintCallable)
+	void DisableHitBox();
+
+	UFUNCTION()
+	void OnHitBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 };
