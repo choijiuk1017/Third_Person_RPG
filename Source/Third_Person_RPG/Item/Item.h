@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Components/SphereComponent.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"
+#include "Third_Person_RPG/Data/ItemData/TPRItemData.h"
 #include "Third_Person_RPG/UI/InteractionWidget.h"
 #include "Item.generated.h"
 
@@ -31,6 +32,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	USkeletalMeshComponent* BoxMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ItemData")
+	UTPRItemData* ItemData;
 
 	// 플레이어가 범위에 들어왔을 때 호출되는 함수
 	UFUNCTION()
