@@ -27,7 +27,10 @@ void USlot::Init()
 
 void USlot::SetType(ESlotType InType)
 {
+	SlotType = InType;
 
+	// 타입 설정 후 자동 업데이트 하고 싶다면 이 줄도 추가
+	UpdateSlot();
 }
 
 void USlot::UpdateSlot()

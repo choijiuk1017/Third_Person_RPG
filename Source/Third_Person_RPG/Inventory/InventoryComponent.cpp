@@ -33,7 +33,7 @@ void UInventoryComponent::InitInventory()
 	// 애셋 아이디 리스트 받아오기
 	TArray<FPrimaryAssetId> Assets;
 	// * 태그 정보를 넘겨줘서 동일한 태그를 가진 애셋들의 목록을 배열로 반환받음
-	Manager.GetPrimaryAssetIdList(TEXT("MMItemData"), Assets);
+	Manager.GetPrimaryAssetIdList(TEXT("TPRItemData"), Assets);
 
 	if (Assets.Num() > 0)
 	{
@@ -42,15 +42,13 @@ void UInventoryComponent::InitInventory()
 		// TODO : 세이브 파일에서 데이터 읽어오기 (현재는 테스트 용도)
 		{
 			InventoryEquipmentArray.Add(1, { TEXT("DA_Sword"), 1 });
-			InventoryEquipmentArray.Add(0, { TEXT("DA_Axe"), 1 });
-			InventoryEquipmentArray.Add(27, { TEXT("DA_Halberd"), 1 });
 		}
 
 		for (const auto& InvItem : InventoryEquipmentArray)
 		{
 			// 특정 아이템 키 생성
 			FPrimaryAssetId Key;
-			Key.PrimaryAssetType = TEXT("MMItemData");
+			Key.PrimaryAssetType = TEXT("TPRItemData");
 			Key.PrimaryAssetName = InvItem.Value.Key;
 
 			if (Assets.Contains(Key))
@@ -80,7 +78,7 @@ void UInventoryComponent::InitInventory()
 		{
 			// 특정 아이템 키 생성
 			FPrimaryAssetId Key;
-			Key.PrimaryAssetType = TEXT("MMItemData");
+			Key.PrimaryAssetType = TEXT("TPRItemData");
 			Key.PrimaryAssetName = InvItem.Value.Key;
 
 			if (Assets.Contains(Key))
@@ -119,11 +117,11 @@ bool UInventoryComponent::AddItem(FName InItemName, int32 InItemQuantity, int32&
 	// 애셋 아이디 리스트 받아오기
 	TArray<FPrimaryAssetId> Assets;
 	// * 태그 정보를 넘겨줘서 동일한 태그를 가진 애셋들의 목록을 배열로 반환받음
-	Manager.GetPrimaryAssetIdList(TEXT("MMItemData"), Assets);
+	Manager.GetPrimaryAssetIdList(TEXT("TPRItemData"), Assets);
 
 	// 특정 아이템 키 생성
 	FPrimaryAssetId Key;
-	Key.PrimaryAssetType = TEXT("MMItemData");
+	Key.PrimaryAssetType = TEXT("TPRItemData");
 	Key.PrimaryAssetName = InItemName;
 
 	// 해당 키의 애셋이 존재한다면?

@@ -686,18 +686,36 @@ void APlayerCharacter::OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrup
 	UWorld* World = GetWorld();
 	if (!World) return;
 
-	FActorSpawnParameters Params;
-	Params.Owner = this;
-
-	ATPRWeapon* SpawnedWeapon = World->SpawnActor<ATPRWeapon>(OverlappingItem->WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
-	if (SpawnedWeapon)
+	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
+	if (Inventory && OverlappingItem->ItemData)
 	{
-		SetWeapon(SpawnedWeapon);
-		OverlappingItem->Destroy(); // 아이템 제거
-		OverlappingItem = nullptr;
+		int32 OutQuantity = 0;
+		Inventory->AddItem(OverlappingItem->ItemData->GetFName(), 1, OutQuantity);
 	}
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 
+	if (CanSetWeapon() && OverlappingItem->WeaponClass)
+	{
+		FActorSpawnParameters Params;
+		Params.Owner = this;
+
+		ATPRWeapon* SpawnedWeapon = World->SpawnActor<ATPRWeapon>(
+			OverlappingItem->WeaponClass,
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			Params
+		);
+
+		if (SpawnedWeapon)
+		{
+			SetWeapon(SpawnedWeapon);
+		}
+	}
+
+	// 3. 아이템 제거 및 마무리
+	OverlappingItem->Destroy();
+	OverlappingItem = nullptr;
+
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 	bIsInteracting = false;
 }
 

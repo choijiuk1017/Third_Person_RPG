@@ -23,6 +23,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ItemBox")
 	TSubclassOf<ATPRWeapon> WeaponClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ItemData")
+	UTPRItemData* ItemData;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -33,8 +36,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	USkeletalMeshComponent* BoxMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ItemData")
-	UTPRItemData* ItemData;
+	
 
 	// 플레이어가 범위에 들어왔을 때 호출되는 함수
 	UFUNCTION()

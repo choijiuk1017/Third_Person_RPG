@@ -8,6 +8,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridPanel.h"
+#include "Third_Person_RPG/Inventory/InventoryItem.h"
 #include "Third_Person_RPG/UI/InventoryUI/Slot.h"
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
 
@@ -30,13 +31,40 @@ void UInventoryWidget::Init()
 	if (BTN_SortItem)
 		BTN_SortItem->OnClicked.AddDynamic(this, &UInventoryWidget::SortItem);
 
-	Slots.Init(nullptr, 30); // 슬롯 30개 초기화
+	UpdateInventorySlot();
+}
 
-	if (SlotContainer && SlotClass)
+void UInventoryWidget::UpdateInventorySlot()
+{
+	if (!SlotContainer || !SlotClass) return;
+
+	// 1. 기존 슬롯 삭제
+	SlotContainer->ClearChildren();
+
+	// 2. 인벤토리 데이터 가져오기
+	IInventoryInterface* InvPlayer = Cast<IInventoryInterface>(OwningActor);
+	if (!InvPlayer) return;
+
+	TArray<UInventoryItem*> InventoryItems;
+
+	switch (InventorySlotType)
 	{
-		for (int32 Index = 0; Index < 30; ++Index)
+	case ESlotType::ST_InventoryEquipment:
+		InventoryItems = InvPlayer->GetInventoryComponent()->GetEquipmentItems();
+		break;
+	case ESlotType::ST_InventoryConsumable:
+		InventoryItems = InvPlayer->GetInventoryComponent()->GetConsumableItems();
+		break;
+	case ESlotType::ST_InventoryOther:
+		InventoryItems = InvPlayer->GetInventoryComponent()->GetOtherItems();
+		break;
+	}
+
+	// 3. 슬롯 재생성 (아이템 수 만큼)
+	for (int32 Index = 0; Index < InventoryItems.Num(); ++Index)
+	{
+		if (IsValid(InventoryItems[Index]))
 		{
-			// 슬롯 위젯 생성
 			USlot* NewSlot = CreateWidget<USlot>(GetWorld(), SlotClass);
 			if (NewSlot)
 			{
@@ -45,24 +73,12 @@ void UInventoryWidget::Init()
 				NewSlot->SetType(InventorySlotType);
 				NewSlot->Init();
 
-				// UI에 추가 (UniformGridPanel 기준)
+				// 위치 설정
 				int32 Row = Index / 5;
 				int32 Col = Index % 5;
 				SlotContainer->AddChildToUniformGrid(NewSlot, Row, Col);
-
-				Slots[Index] = NewSlot;
 			}
 		}
-	}
-}
-
-void UInventoryWidget::UpdateInventorySlot()
-{
-	// 슬롯을 현재 인벤토리 타입으로 업데이트 합니다.
-	for (const auto& InvSlot : Slots)
-	{
-		InvSlot->SetType(InventorySlotType);
-		InvSlot->UpdateSlot();
 	}
 }
 
