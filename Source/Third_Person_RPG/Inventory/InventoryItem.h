@@ -4,23 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "Third_Person_RPG/Data/ItemData/TPRItemData.h"
 #include "InventoryItem.generated.h"
 
-/**
- * 
- */
-UCLASS()
+UCLASS(Blueprintable)
 class THIRD_PERSON_RPG_API UInventoryItem : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	//UInventoryItem();
+	UPROPERTY()
+	UTPRItemData* ItemData;
 
-public:
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<class UTPRItemData> ItemData;
+	UPROPERTY()
+	int32 Quantity;
 
-	UPROPERTY(VisibleAnywhere)
-	int32 ItemQuantity;
+	UTexture2D* GetItemTexture() const
+	{
+		return ItemData ? ItemData->ItemTexture : nullptr;
+	}
 };

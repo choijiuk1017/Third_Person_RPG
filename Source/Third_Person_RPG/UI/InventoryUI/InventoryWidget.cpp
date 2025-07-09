@@ -8,111 +8,100 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridPanel.h"
+#include "Kismet/GameplayStatics.h"
 #include "Third_Person_RPG/Inventory/InventoryItem.h"
 #include "Third_Person_RPG/UI/InventoryUI/Slot.h"
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
 
 void UInventoryWidget::NativeConstruct()
 {
+    Super::NativeConstruct();
 
+    Init();
 }
-
 
 void UInventoryWidget::Init()
 {
-	SetType(ESlotType::ST_InventoryEquipment);
+    if (IInventoryInterface* Interface = Cast<IInventoryInterface>(OwningActor))
+    {
+        if (UInventoryComponent* Inventory = Interface->GetInventoryComponent())
+        {
+            // 슬롯 생성
+            CreateSlots(30);
 
-	if (BTN_Equipment)
-		BTN_Equipment->OnClicked.AddDynamic(this, &UInventoryWidget::SetEquipmentType);
-	if (BTN_Consumable)
-		BTN_Consumable->OnClicked.AddDynamic(this, &UInventoryWidget::SetConsumableType);
-	if (BTN_Other)
-		BTN_Other->OnClicked.AddDynamic(this, &UInventoryWidget::SetOtherType);
-	if (BTN_SortItem)
-		BTN_SortItem->OnClicked.AddDynamic(this, &UInventoryWidget::SortItem);
+            // 델리게이트 바인딩
+            Inventory->OnInventoryChanged.AddDynamic(this, &UInventoryWidget::UpdateInventorySlot);
+            UE_LOG(LogTemp, Warning, TEXT("Delegate Binding"));
 
-	UpdateInventorySlot();
+            // 초기화 시 슬롯도 한 번 그려줌
+            UpdateInventorySlot();
+
+        }
+    }
+}
+
+void UInventoryWidget::CreateSlots(int32 NumSlots)
+{
+    if (!SlotContainer || !SlotClass) return;
+
+    SlotList.Empty(); // 혹시 이전에 생성된 슬롯이 있다면 제거
+
+    for (int32 i = 0; i < NumSlots; ++i)
+    {
+        USlot* NewSlot = CreateWidget<USlot>(this, SlotClass);
+        if (NewSlot)
+        {
+            NewSlot->SetType(InventorySlotType);
+            NewSlot->SetIndex(i);
+
+            SlotList.Add(NewSlot);
+            SlotContainer->AddChildToUniformGrid(NewSlot, i / 5, i % 5);
+        }
+    }
 }
 
 void UInventoryWidget::UpdateInventorySlot()
 {
-	if (!SlotContainer || !SlotClass) return;
+    UE_LOG(LogTemp, Warning, TEXT("Slot Update"));
 
-	// 1. 기존 슬롯 삭제
-	SlotContainer->ClearChildren();
+    if (!SlotContainer || SlotList.Num() == 0) return;
 
-	// 2. 인벤토리 데이터 가져오기
-	IInventoryInterface* InvPlayer = Cast<IInventoryInterface>(OwningActor);
-	if (!InvPlayer) return;
+    if (IInventoryInterface* Interface = Cast<IInventoryInterface>(OwningActor))
+    {
+        if (UInventoryComponent* Inventory = Interface->GetInventoryComponent())
+        {
+            const TArray<UInventoryItem*>& Items = Inventory->GetItemsByType(ConvertSlotTypeToItemType(InventorySlotType));
+            UE_LOG(LogTemp, Warning, TEXT("item num: %d"), Items.Num());
 
-	TArray<UInventoryItem*> InventoryItems;
+            for (int32 i = 0; i < SlotList.Num(); ++i)
+            {
+                if (!SlotList[i]) continue;
 
-	switch (InventorySlotType)
+                if (i < Items.Num() && IsValid(Items[i]))
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("Slot %d Set Item: %s"), i, *Items[i]->ItemData->ItemName);
+                    SlotList[i]->SetItem(Items[i]);
+                }
+                else
+                {
+                    SlotList[i]->ClearItem();
+                }
+            }
+        }
+    }
+}
+
+EItemType UInventoryWidget::ConvertSlotTypeToItemType(ESlotType SlotType)
+{
+	switch (SlotType)
 	{
 	case ESlotType::ST_InventoryEquipment:
-		InventoryItems = InvPlayer->GetInventoryComponent()->GetEquipmentItems();
-		break;
+		return EItemType::IT_Weapon;
 	case ESlotType::ST_InventoryConsumable:
-		InventoryItems = InvPlayer->GetInventoryComponent()->GetConsumableItems();
-		break;
-	case ESlotType::ST_InventoryOther:
-		InventoryItems = InvPlayer->GetInventoryComponent()->GetOtherItems();
-		break;
-	}
-
-	// 3. 슬롯 재생성 (아이템 수 만큼)
-	for (int32 Index = 0; Index < InventoryItems.Num(); ++Index)
-	{
-		if (IsValid(InventoryItems[Index]))
-		{
-			USlot* NewSlot = CreateWidget<USlot>(GetWorld(), SlotClass);
-			if (NewSlot)
-			{
-				NewSlot->SlotIndex = Index;
-				NewSlot->SetOwningActor(OwningActor);
-				NewSlot->SetType(InventorySlotType);
-				NewSlot->Init();
-
-				// 위치 설정
-				int32 Row = Index / 5;
-				int32 Col = Index % 5;
-				SlotContainer->AddChildToUniformGrid(NewSlot, Row, Col);
-			}
-		}
+		return EItemType::IT_Potion;
+	default:
+		return EItemType::IT_Weapon;
 	}
 }
 
 
-
-void UInventoryWidget::SetEquipmentType()
-{
-	SetType(ESlotType::ST_InventoryEquipment);
-}
-
-void UInventoryWidget::SetConsumableType()
-{
-	SetType(ESlotType::ST_InventoryConsumable);
-}
-
-void UInventoryWidget::SetOtherType()
-{
-	SetType(ESlotType::ST_InventoryOther);
-}
-
-void UInventoryWidget::SortItem()
-{
-	// 인벤토리 컴포넌트 내부 아이템 정렬 함수를 호출합니다.
-	IInventoryInterface* InvPlayer = Cast<IInventoryInterface>(OwningActor);
-	if (InvPlayer)
-	{
-		InvPlayer->GetInventoryComponent()->SortItem(InventorySlotType);
-	}
-}
-
-void UInventoryWidget::SetType(ESlotType Type)
-{
-	// 현재 인벤토리의 타입을 변경합니다.
-	InventorySlotType = Type;
-	// 타입이 변경되었으므로 슬롯을 다시 업데이트 해줍니다.
-	UpdateInventorySlot();
-}

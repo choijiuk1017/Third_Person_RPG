@@ -9,120 +9,72 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 
-void USlot::NativeConstruct()
-{
-
-}
-
-void USlot::Init()
-{
-	// 개별 함수를 연동해 맵에 저장해주도록 합니다.
-	SlotUpdateActions.Add(ESlotType::ST_InventoryEquipment, FUpdateSlotDelegateWrapper(FOnUpdateSlotDelegate::CreateUObject(this, &USlot::UpdateEquipmentSlot)));
-	SlotUpdateActions.Add(ESlotType::ST_InventoryConsumable, FUpdateSlotDelegateWrapper(FOnUpdateSlotDelegate::CreateUObject(this, &USlot::UpdateConsumableSlot)));
-	SlotUpdateActions.Add(ESlotType::ST_InventoryOther, FUpdateSlotDelegateWrapper(FOnUpdateSlotDelegate::CreateUObject(this, &USlot::UpdateOtherSlot)));
-
-	// 초기화 시 업데이트를 진행합니다.
-	UpdateSlot();
-}
-
 void USlot::SetType(ESlotType InType)
 {
-	SlotType = InType;
-
-	// 타입 설정 후 자동 업데이트 하고 싶다면 이 줄도 추가
-	UpdateSlot();
+    SlotType = InType;
+    UpdateSlot(); // 타입에 따라 상태 업데이트
 }
 
 void USlot::UpdateSlot()
 {
-	SlotUpdateActions[SlotType].SlotDelegate.ExecuteIfBound();
+    // 예시: 초기 상태에서는 비어 있음
+    if (IMG_Item && DefaultTexture)
+    {
+        IMG_Item->SetBrushFromTexture(DefaultTexture);
+    }
+
+    if (TXT_Quantity)
+    {
+        TXT_Quantity->SetText(FText::FromString(TEXT("")));
+    }
 }
 
-
-void USlot::UpdateEquipmentSlot()
+void USlot::SetItem(UInventoryItem* NewItem)
 {
-	IInventoryInterface* InvPlayer = Cast<IInventoryInterface>(OwningActor);
+    if (!NewItem || !IMG_Item)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SetItem 실패: NewItem 또는 IMG_Item이 nullptr"));
+        return;
+    }
 
-	if (InvPlayer)
-	{
-		// 인벤토리(Equipment)를 가져옵니다.
-		TArray<UInventoryItem*> InventoryItems = InvPlayer->GetInventoryComponent()->GetEquipmentItems();
+    if (!NewItem->ItemData)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SetItem 실패: ItemData가 nullptr"));
+        return;
+    }
 
-		// 현재 Slot의 인덱스가 유효한지 체크합니다.
-		if (InventoryItems.IsValidIndex(SlotIndex))
-		{
-			// 해당 슬롯에 아이템이 존재하는지 확인합니다.
-			if (IsValid(InventoryItems[SlotIndex]))
-			{
-				// 존재하는 경우 아이템의 텍스쳐와 수량을 반영해주도록 합니다. (장비는 수량 표시 X)
-				IMG_Item->SetBrushFromTexture(InventoryItems[SlotIndex]->ItemData->ItemTexture);
-				TXT_Quantity->SetText(FText::FromString(TEXT("")));
-			}
-			else
-			{
-				// 존재하지 않는 경우 빈 칸으로 표시합니다.
-				IMG_Item->SetBrushFromTexture(DefaultTexture);
-				TXT_Quantity->SetText(FText::FromString(TEXT("")));
-			}
-		}
-	}
+    UTexture2D* ItemTexture = NewItem->GetItemTexture();
+
+    if (ItemTexture)
+    {
+        IMG_Item->SetBrushFromTexture(ItemTexture);
+        IMG_Item->SetVisibility(ESlateVisibility::Visible);
+        TXT_Quantity->SetText(FText::AsNumber(NewItem->Quantity));
+
+        UE_LOG(LogTemp, Warning, TEXT("SetItem 성공: 아이템 [%s], 수량 [%d], 텍스처 [%s]"),
+            *NewItem->ItemData->ItemName, NewItem->Quantity, *ItemTexture->GetName());
+    }
+    else
+    {
+        IMG_Item->SetBrushFromTexture(DefaultTexture);
+        IMG_Item->SetVisibility(ESlateVisibility::Hidden);
+        TXT_Quantity->SetText(FText::FromString(TEXT("")));
+
+        UE_LOG(LogTemp, Warning, TEXT("SetItem 실패: [%s] 텍스처 없음 -> 기본 텍스처 처리"), *NewItem->ItemData->ItemName);
+    }
 }
-void USlot::UpdateConsumableSlot()
+
+void USlot::ClearItem()
 {
-	IInventoryInterface* InvPlayer = Cast<IInventoryInterface>(OwningActor);
+    if (IMG_Item && DefaultTexture)
+    {
+        IMG_Item->SetBrushFromTexture(DefaultTexture);
+        IMG_Item->SetVisibility(ESlateVisibility::Visible);
+    }
 
-	if (InvPlayer)
-	{
-		// 인벤토리(Consumable)를 가져옵니다.
-		TArray<UInventoryItem*> InventoryItems = InvPlayer->GetInventoryComponent()->GetConsumableItems();
-
-		// 현재 Slot의 인덱스가 유효한지 체크합니다.
-		if (InventoryItems.IsValidIndex(SlotIndex))
-		{
-			// 해당 슬롯에 아이템이 존재하는지 확인합니다.
-			if (IsValid(InventoryItems[SlotIndex]))
-			{
-				// 존재하는 경우 아이템의 텍스쳐와 수량을 반영해주도록 합니다. (소비는 수량 표시 O)
-				IMG_Item->SetBrushFromTexture(InventoryItems[SlotIndex]->ItemData->ItemTexture);
-				TXT_Quantity->SetText(FText::FromString(FString::Printf(TEXT("%d"), InventoryItems[SlotIndex]->ItemQuantity)));
-			}
-			else
-			{
-				// 존재하지 않는 경우 빈 칸으로 표시합니다.
-				IMG_Item->SetBrushFromTexture(DefaultTexture);
-				TXT_Quantity->SetText(FText::FromString(TEXT("")));
-			}
-		}
-	}
+    if (TXT_Quantity)
+    {
+        TXT_Quantity->SetText(FText::FromString(TEXT("")));
+    }
 }
-
-void USlot::UpdateOtherSlot()
-{
-	IInventoryInterface* InvPlayer = Cast<IInventoryInterface>(OwningActor);
-
-	if (InvPlayer)
-	{
-		// 인벤토리(Consumable)를 가져옵니다.
-		TArray<UInventoryItem*> InventoryItems = InvPlayer->GetInventoryComponent()->GetOtherItems();
-
-		// 현재 Slot의 인덱스가 유효한지 체크합니다.
-		if (InventoryItems.IsValidIndex(SlotIndex))
-		{
-			// 해당 슬롯에 아이템이 존재하는지 확인합니다.
-			if (IsValid(InventoryItems[SlotIndex]))
-			{
-				// 존재하는 경우 아이템의 텍스쳐와 수량을 반영해주도록 합니다. (기타는 수량 표시 O)
-				IMG_Item->SetBrushFromTexture(InventoryItems[SlotIndex]->ItemData->ItemTexture);
-				TXT_Quantity->SetText(FText::FromString(FString::Printf(TEXT("%d"), InventoryItems[SlotIndex]->ItemQuantity)));
-			}
-			else
-			{
-				// 존재하지 않는 경우 빈 칸으로 표시합니다.
-				IMG_Item->SetBrushFromTexture(DefaultTexture);
-				TXT_Quantity->SetText(FText::FromString(TEXT("")));
-			}
-		}
-	}
-}
-
 

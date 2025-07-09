@@ -130,7 +130,7 @@ APlayerCharacter::APlayerCharacter()
 
 	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
 
-
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
 	
 }
@@ -681,16 +681,32 @@ void APlayerCharacter::Interact()
 
 void APlayerCharacter::OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (!OverlappingItem) return;
+	UE_LOG(LogTemp, Warning, TEXT("장비 획득"));
+
+	if (!OverlappingItem)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OverlappingItem이 nullptr입니다."));
+		return;
+	}
+
+	if (!OverlappingItem->ItemData)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OverlappingItem->ItemData가 nullptr입니다."));
+		return;
+	}
+
+
 
 	UWorld* World = GetWorld();
 	if (!World) return;
 
 	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
+
 	if (Inventory && OverlappingItem->ItemData)
 	{
-		int32 OutQuantity = 0;
-		Inventory->AddItem(OverlappingItem->ItemData->GetFName(), 1, OutQuantity);
+		UE_LOG(LogTemp, Warning, TEXT("인벤토리에 아이템 추가 시도"));
+		int32 OutQuantity = 1;
+		Inventory->AddItemByData(OverlappingItem->ItemData, OutQuantity);
 	}
 
 	if (CanSetWeapon() && OverlappingItem->WeaponClass)
@@ -788,18 +804,14 @@ void APlayerCharacter::ToggleInventory()
 }
 void APlayerCharacter::PopUpInventory()
 {
-	if (InventoryWidgetClass)
+	if (!InventoryWidgetInstance && InventoryWidgetClass)
 	{
 		InventoryWidgetInstance = CreateWidget<UInventoryWidget>(GetWorld(), InventoryWidgetClass);
-		bIsPopupInventory = true;
-
-		if (InventoryWidgetInstance)
-		{
-			InventoryWidgetInstance->AddToViewport();
-			InventoryWidgetInstance->SetOwningActor(this); // 인터페이스 연동 시 필수
-			InventoryWidgetInstance->Init();
-		}
+		InventoryWidgetInstance->OwningActor = this;
+		InventoryWidgetInstance->AddToViewport();
 	}
+
+	bIsPopupInventory = true;
 }
 
 void APlayerCharacter::CloseInventory()
@@ -810,4 +822,9 @@ void APlayerCharacter::CloseInventory()
 		InventoryWidgetInstance = nullptr;
 		bIsPopupInventory = false;
 	}
+}
+
+UInventoryComponent* APlayerCharacter::GetInventoryComponent()
+{
+	return InventoryComponent;
 }

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Third_Person_RPG/Interface/AnimationAttackInterface.h"
+#include "Third_Person_RPG/Interface/InventoryInterface.h"
 #include "Third_Person_RPG/Item/Item.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"
 
@@ -13,7 +14,7 @@
 
 
 UCLASS()
-class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimationAttackInterface
+class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimationAttackInterface, public IInventoryInterface
 {
 	GENERATED_BODY()
 
@@ -26,6 +27,8 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual UInventoryComponent* GetInventoryComponent() override;
 
 
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
@@ -116,6 +119,9 @@ protected:
 	TSubclassOf<class UInventoryWidget> InventoryWidgetClass;
 	
 	UInventoryWidget* InventoryWidgetInstance;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<class UInventoryComponent> InventoryComponent;
 
 	//Function Section
 	//기본 이동 함수

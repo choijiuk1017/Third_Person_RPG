@@ -17,8 +17,10 @@ class THIRD_PERSON_RPG_API UCustomWidget : public UUserWidget
 public:
 	FORCEINLINE void SetOwningActor(AActor* NewOwner) { OwningActor = NewOwner; }
 
-protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor")
 	TObjectPtr<AActor> OwningActor;
+
+protected:
+	
 	
 };

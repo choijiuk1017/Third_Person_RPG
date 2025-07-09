@@ -4,71 +4,42 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Third_Person_RPG/Data/ItemData/TPRItemData.h"
+#include "Third_Person_RPG/Inventory/InventoryItem.h"
 #include "InventoryComponent.generated.h"
 
-DECLARE_MULTICAST_DELEGATE(FOnChangedInventoryDelegate);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryChanged);
 
-UENUM(BlueprintType)
-enum class ESlotType : uint8
-{
-	ST_InventoryEquipment,
-	ST_InventoryConsumable,
-	ST_InventoryOther,
-};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class THIRD_PERSON_RPG_API UInventoryComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
-	FOnChangedInventoryDelegate OnChangeInven;
-
-	// Sets default values for this component's properties
+public:
 	UInventoryComponent();
 
-	virtual void InitializeComponent() override;
+	bool AddItemByData(UTPRItemData* ItemData, int32 Quantity);
+
+	// 인벤토리 조회
+	const TArray<UInventoryItem*>& GetItemsByType(EItemType Type) const;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnInventoryChanged OnInventoryChanged;
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	UPROPERTY()
+	TArray<UInventoryItem*> EquipmentItems;
 
+	UPROPERTY()
+	TArray<UInventoryItem*> ConsumableItems;
 
-	UPROPERTY(VisibleAnywhere, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	TArray<TObjectPtr<class UInventoryItem>> EquipmentItems;
+	UPROPERTY()
+	TArray<UInventoryItem*> OtherItems;
 
-	UPROPERTY(VisibleAnywhere, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	TArray<TObjectPtr<class UInventoryItem>> ConsumableItems;
-
-	UPROPERTY(VisibleAnywhere, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	TArray<TObjectPtr<class UInventoryItem>> OtherItems;
-
-	UPROPERTY(VisibleAnywhere, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	int32 MaxInventoryNum;
-
-
-	UPROPERTY(VisibleAnywhere, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	int32 MaxItemNum;
-
-	FORCEINLINE TArray<TObjectPtr<class UInventoryItem>> GetEquipmentItems() { return EquipmentItems; }
-	FORCEINLINE TArray<TObjectPtr<class UInventoryItem>> GetConsumableItems() { return ConsumableItems; }
-	FORCEINLINE TArray<TObjectPtr<class UInventoryItem>> GetOtherItems() { return OtherItems; }
-
-	bool AddItem(FName InItemName, int32 InItemQuantity, int32& OutItemQuantity);
-
-	void UseItem(int32 InSlotIndex, ESlotType InventoryType);
-
-	void SwapItem(int32 InPrevIndex, int32 InCurrentIndex, ESlotType InPrevSlotType, ESlotType InCurrentSlotType);
-
-	void SortItem(ESlotType InSlotType);
-
-protected:
-	void InitInventory();
-
-	void RemoveItem(int32 InSlotIndex, ESlotType InventoryType);
+	UPROPERTY(EditDefaultsOnly)
+	int32 MaxSlotCount = 30;
 };
