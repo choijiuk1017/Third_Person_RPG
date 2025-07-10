@@ -5,6 +5,7 @@
 #include "Third_Person_RPG/UI/InventoryUI/CustomWidget.h"
 #include "Third_Person_RPG/Inventory/InventoryComponent.h"
 #include "Third_Person_RPG/UI/InventoryUI/Slot.h"
+#include "Components/Button.h" 
 #include "InventoryWidget.generated.h"
 
 /**
@@ -23,6 +24,8 @@ public:
 
     UFUNCTION()
     void UpdateInventorySlot();
+
+
 
 private:
     void CreateSlots(int32 NumSlots = 30);
@@ -43,4 +46,27 @@ private:
     ESlotType InventorySlotType = ESlotType::ST_InventoryEquipment;
 
     EItemType ConvertSlotTypeToItemType(ESlotType SlotType);
+
+    // 슬롯 타입 변경 함수
+    UFUNCTION()
+    void OnClickEquipment();
+
+    UFUNCTION()
+    void OnClickConsumable();
+
+    UFUNCTION()
+    void OnClickOther();
+
+
+    UPROPERTY(meta = (BindWidget))
+    class UButton* BTN_Equipment;
+
+    UPROPERTY(meta = (BindWidget))
+    class UButton* BTN_Consumable;
+
+    UPROPERTY(meta = (BindWidget))
+    class UButton* BTN_Other;
+
+    UPROPERTY(meta = (BindWidget))
+    USlot* EquippedWeaponSlot;
 };

@@ -17,6 +17,7 @@
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"	
 #include "Third_Person_RPG/UI/InventoryUI/InventoryWidget.h"
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
+#include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
 
@@ -654,28 +655,33 @@ void APlayerCharacter::SkillAttackCheck()
 
 void APlayerCharacter::Interact()
 {
-	if (bIsRoll || bIsSkillActing || bIsAttacking) return;
+	if (bIsRoll || bIsSkillActing || bIsAttacking || bIsInteracting) return;
 	UE_LOG(LogTemp, Warning, TEXT("상호작용 키 입력됨"));
 
 	bIsInteracting = true;
 
-
-	if (OverlappingItem && OverlappingItem->WeaponClass && CanSetWeapon())
+	if (OverlappingItem)
 	{
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-		// 애니메이션 재생
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-		if (AnimInstance && PickUpMontage)
+		//무기를 장착할 수 있을 경우에만 장착 애니메이션
+		if (OverlappingItem->WeaponClass && CanSetWeapon())
 		{
-			// 장착 애니메이션 재생
-			AnimInstance->Montage_Play(PickUpMontage, 1.7f);
+			GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
-			// 애니메이션 종료 델리게이트
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &APlayerCharacter::OnEquipAnimationEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, PickUpMontage);
+			if (AnimInstance && PickUpMontage)
+			{
+				AnimInstance->Montage_Play(PickUpMontage, 1.7f);
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &APlayerCharacter::OnEquipAnimationEnd);
+				AnimInstance->Montage_SetEndDelegate(EndDelegate, PickUpMontage);
+				return; // 애니메이션 후 처리 예정
+			}
 		}
+
+		// 장착할 수 없으면 그냥 파괴
+		OverlappingItem->Destroy();
+		OverlappingItem = nullptr;
+		bIsInteracting = false;
 	}
 }
 
@@ -683,51 +689,23 @@ void APlayerCharacter::OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrup
 {
 	UE_LOG(LogTemp, Warning, TEXT("장비 획득"));
 
-	if (!OverlappingItem)
+	if (!OverlappingItem || !OverlappingItem->ItemData)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OverlappingItem이 nullptr입니다."));
+		UE_LOG(LogTemp, Warning, TEXT("OverlappingItem이 nullptr 또는 ItemData 없음"));
 		return;
 	}
-
-	if (!OverlappingItem->ItemData)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("OverlappingItem->ItemData가 nullptr입니다."));
-		return;
-	}
-
-
 
 	UWorld* World = GetWorld();
 	if (!World) return;
 
 	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
 
-	if (Inventory && OverlappingItem->ItemData)
+	if (Inventory)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("인벤토리에 아이템 추가 시도"));
 		int32 OutQuantity = 1;
 		Inventory->AddItemByData(OverlappingItem->ItemData, OutQuantity);
 	}
 
-	if (CanSetWeapon() && OverlappingItem->WeaponClass)
-	{
-		FActorSpawnParameters Params;
-		Params.Owner = this;
-
-		ATPRWeapon* SpawnedWeapon = World->SpawnActor<ATPRWeapon>(
-			OverlappingItem->WeaponClass,
-			FVector::ZeroVector,
-			FRotator::ZeroRotator,
-			Params
-		);
-
-		if (SpawnedWeapon)
-		{
-			SetWeapon(SpawnedWeapon);
-		}
-	}
-
-	// 3. 아이템 제거 및 마무리
 	OverlappingItem->Destroy();
 	OverlappingItem = nullptr;
 
@@ -788,6 +766,8 @@ void APlayerCharacter::UnEquipWeapon()
 		SkillData = nullptr;
 		WeaponComboData = nullptr;
 
+		InventoryComponent->EquippedWeaponItem = nullptr;
+
 		UE_LOG(LogTemp, Warning, TEXT("무기 해제됨"));
 	}
 }
@@ -809,6 +789,24 @@ void APlayerCharacter::PopUpInventory()
 		InventoryWidgetInstance = CreateWidget<UInventoryWidget>(GetWorld(), InventoryWidgetClass);
 		InventoryWidgetInstance->OwningActor = this;
 		InventoryWidgetInstance->AddToViewport();
+
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		// 입력 모드를 UI + Game으로 설정 (I 키는 계속 인식하게)
+		FInputModeGameAndUI InputMode;
+		InputMode.SetWidgetToFocus(InventoryWidgetInstance->TakeWidget());
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		InputMode.SetHideCursorDuringCapture(false);
+
+		PC->SetInputMode(InputMode);
+		PC->bShowMouseCursor = true;
+
+		// 캐릭터 입력 차단
+		PC->SetIgnoreMoveInput(true);
+		PC->SetIgnoreLookInput(true);
 	}
 
 	bIsPopupInventory = true;
@@ -818,11 +816,59 @@ void APlayerCharacter::CloseInventory()
 {
 	if (InventoryWidgetInstance)
 	{
-		InventoryWidgetInstance->RemoveFromParent(); // 화면에서 제거
+		InventoryWidgetInstance->RemoveFromParent();
 		InventoryWidgetInstance = nullptr;
-		bIsPopupInventory = false;
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		// 게임 입력으로 복원
+		FInputModeGameOnly InputMode;
+		PC->SetInputMode(InputMode);
+		PC->bShowMouseCursor = false;
+
+		// 캐릭터 입력 다시 허용
+		PC->SetIgnoreMoveInput(false);
+		PC->SetIgnoreLookInput(false);
+	}
+
+	bIsPopupInventory = false;
+}
+
+void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
+{
+	if (!WeaponItem || !WeaponItem->ItemData) return;
+
+	const auto ItemData = Cast<UWeaponItemData>(WeaponItem->ItemData);
+	if (!ItemData || !ItemData->WeaponClass) return;
+
+	// 이전에 들고 있던 무기 제거
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->Destroy();
+		CurrentWeapon = nullptr;
+	}
+	// 새 무기 생성
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	ATPRWeapon* NewWeapon = GetWorld()->SpawnActor<ATPRWeapon>(
+		ItemData->WeaponClass,
+		FVector::ZeroVector,
+		FRotator::ZeroRotator
+	);
+
+	if (NewWeapon)
+	{
+		SetWeapon(NewWeapon);
+
+		InventoryComponent->EquippedWeaponItem = WeaponItem;
 	}
 }
+
+
 
 UInventoryComponent* APlayerCharacter::GetInventoryComponent()
 {

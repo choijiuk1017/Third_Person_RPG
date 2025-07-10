@@ -30,6 +30,7 @@ public:
 
 	virtual UInventoryComponent* GetInventoryComponent() override;
 
+	virtual void EquipWeapon_Implementation(UInventoryItem* WeaponItem) override;
 
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	class ATPRWeapon* CurrentWeapon;
@@ -40,6 +41,9 @@ public:
 	void UnEquipWeapon();
 
 	void SetOverlappingItem(AItem* Item);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<class UInventoryComponent> InventoryComponent;
 
 protected:
 	// Called when the game starts or when spawned
@@ -120,8 +124,6 @@ protected:
 	
 	UInventoryWidget* InventoryWidgetInstance;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<class UInventoryComponent> InventoryComponent;
 
 	//Function Section
 	//기본 이동 함수
@@ -146,6 +148,8 @@ protected:
 	void ComboCheck();
 	//콤보 체크 호출 시간 설정 함수
 	void SetComboTimer();
+
+	void EquipWeapon(ATPRWeapon* Weapon);
 
 	//스킬 함수
 	void SkillStart();

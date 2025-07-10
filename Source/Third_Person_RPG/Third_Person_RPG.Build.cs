@@ -8,7 +8,15 @@ public class Third_Person_RPG : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core",
+			"CoreUObject", 
+			"Engine", 
+			"InputCore", 
+			"EnhancedInput",
+            "UMG",
+			"Slate",        // UI 사용 시 필요
+			"SlateCore"     // FSlateBrush 등 사용 시 반드시 필요
+		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

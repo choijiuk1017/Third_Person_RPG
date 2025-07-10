@@ -24,4 +24,9 @@ class THIRD_PERSON_RPG_API IInventoryInterface
 public:
 
 	virtual class UInventoryComponent* GetInventoryComponent() = 0;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory")
+	void EquipWeapon(UInventoryItem* WeaponItem); // DroppedItem 그대로 받음
+
+
 };

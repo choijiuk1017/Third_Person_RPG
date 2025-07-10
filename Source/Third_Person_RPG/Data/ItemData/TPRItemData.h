@@ -11,6 +11,9 @@ enum class EItemType : uint8
 {
 	IT_Weapon,
 	IT_Potion,
+	IT_Consumable,
+	IT_Other,
+	IT_None
 
 };
 

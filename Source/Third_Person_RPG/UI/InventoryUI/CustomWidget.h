@@ -20,6 +20,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor")
 	TObjectPtr<AActor> OwningActor;
 
+
+
 protected:
 	
 	

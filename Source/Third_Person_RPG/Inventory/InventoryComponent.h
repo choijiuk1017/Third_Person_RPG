@@ -8,8 +8,8 @@
 #include "Third_Person_RPG/Inventory/InventoryItem.h"
 #include "InventoryComponent.generated.h"
 
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryChanged);
+
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -27,6 +27,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnInventoryChanged OnInventoryChanged;
+
+	UPROPERTY()
+	UInventoryItem* EquippedWeaponItem;
 
 protected:
 	virtual void BeginPlay() override;

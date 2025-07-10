@@ -12,12 +12,55 @@
 #include "Third_Person_RPG/Inventory/InventoryItem.h"
 #include "Third_Person_RPG/UI/InventoryUI/Slot.h"
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
+#include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "Third_Person_RPG/Inventory/InventoryComponent.h"
 
 void UInventoryWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    if (BTN_Equipment)
+        BTN_Equipment->OnClicked.AddDynamic(this, &UInventoryWidget::OnClickEquipment);
+
+    if (BTN_Consumable)
+        BTN_Consumable->OnClicked.AddDynamic(this, &UInventoryWidget::OnClickConsumable);
+
+    if (BTN_Other)
+        BTN_Other->OnClicked.AddDynamic(this, &UInventoryWidget::OnClickOther);
+
+    EquippedWeaponSlot->SetType(ESlotType::ST_EquipWeapon);
+    EquippedWeaponSlot->SetIndex(0);
+
+    EquippedWeaponSlot->OwningActor = GetOwningPlayerPawn();
+
+
     Init();
+
+    if (APlayerCharacter* PC = Cast<APlayerCharacter>(GetOwningPlayerPawn()))
+    {
+        if (PC->InventoryComponent && PC->InventoryComponent->EquippedWeaponItem)
+        {
+            EquippedWeaponSlot->SetItem(PC->InventoryComponent->EquippedWeaponItem);
+        }
+    }
+}
+
+void UInventoryWidget::OnClickEquipment()
+{
+    InventorySlotType = ESlotType::ST_InventoryEquipment;
+    UpdateInventorySlot();
+}
+
+void UInventoryWidget::OnClickConsumable()
+{
+    InventorySlotType = ESlotType::ST_InventoryConsumable;
+    UpdateInventorySlot();
+}
+
+void UInventoryWidget::OnClickOther()
+{
+    InventorySlotType = ESlotType::ST_InventoryOther;
+    UpdateInventorySlot();
 }
 
 void UInventoryWidget::Init()
@@ -93,15 +136,17 @@ void UInventoryWidget::UpdateInventorySlot()
 
 EItemType UInventoryWidget::ConvertSlotTypeToItemType(ESlotType SlotType)
 {
-	switch (SlotType)
-	{
-	case ESlotType::ST_InventoryEquipment:
-		return EItemType::IT_Weapon;
-	case ESlotType::ST_InventoryConsumable:
-		return EItemType::IT_Potion;
-	default:
-		return EItemType::IT_Weapon;
-	}
+    switch (SlotType)
+    {
+    case ESlotType::ST_InventoryEquipment:
+        return EItemType::IT_Weapon;
+    case ESlotType::ST_InventoryConsumable:
+        return EItemType::IT_Consumable;
+    case ESlotType::ST_InventoryOther:
+        return EItemType::IT_Other;
+    default:
+        return EItemType::IT_None;
+    }
 }
 
 
