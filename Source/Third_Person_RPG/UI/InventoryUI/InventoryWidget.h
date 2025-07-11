@@ -57,8 +57,8 @@ private:
     UFUNCTION()
     void OnClickOther();
 
-    UFUNCTION()
-    void OnClickSort();
+    /*UFUNCTION()
+    void OnClickSort();*/
 
     UPROPERTY(meta = (BindWidget))
     class UButton* BTN_Equipment;

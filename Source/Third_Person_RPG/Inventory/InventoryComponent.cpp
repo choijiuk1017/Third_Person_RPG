@@ -78,32 +78,6 @@ const TArray<UInventoryItem*>& UInventoryComponent::GetItemsByType(EItemType Typ
 	}
 }
 
-void UInventoryComponent::SortItemsByName(EItemType ItemType)
-{
-	auto SortLambda = [](const UInventoryItem& A, const UInventoryItem& B)
-		{
-			return A.ItemData->ItemName < B.ItemData->ItemName;
-		};
 
-	switch (ItemType)
-	{
-	case EItemType::IT_Weapon:
-		EquipmentItems.Sort([&](const UInventoryItem& A, const UInventoryItem& B) { return SortLambda(A, B); });
-		break;
-
-	case EItemType::IT_Consumable:
-		ConsumableItems.Sort([&](const UInventoryItem& A, const UInventoryItem& B) { return SortLambda(A, B); });
-		break;
-
-	case EItemType::IT_Other:
-		OtherItems.Sort([&](const UInventoryItem& A, const UInventoryItem& B) { return SortLambda(A, B); });
-		break;
-
-	default:
-		break;
-	}
-
-	OnInventoryChanged.Broadcast(); 
-}
 
 

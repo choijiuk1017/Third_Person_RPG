@@ -28,8 +28,8 @@ void UInventoryWidget::NativeConstruct()
     if (BTN_Other)
         BTN_Other->OnClicked.AddDynamic(this, &UInventoryWidget::OnClickOther);
 
-    if (BTN_Sort)
-        BTN_Sort->OnClicked.AddDynamic(this, &UInventoryWidget::OnClickSort);
+    //if (BTN_Sort)
+    //    BTN_Sort->OnClicked.AddDynamic(this, &UInventoryWidget::OnClickSort);
 
     EquippedWeaponSlot->SetType(ESlotType::ST_EquipWeapon);
     EquippedWeaponSlot->SetIndex(0);
@@ -152,16 +152,16 @@ EItemType UInventoryWidget::ConvertSlotTypeToItemType(ESlotType SlotType)
     }
 }
 
-void UInventoryWidget::OnClickSort()
-{
-    if (IInventoryInterface* Interface = Cast<IInventoryInterface>(OwningActor))
-    {
-        if (UInventoryComponent* Inventory = Interface->GetInventoryComponent())
-        {
-            Inventory->SortItemsByName(ConvertSlotTypeToItemType(InventorySlotType));
-        }
-    }
-}
+//void UInventoryWidget::OnClickSort()
+//{
+//    if (IInventoryInterface* Interface = Cast<IInventoryInterface>(OwningActor))
+//    {
+//        if (UInventoryComponent* Inventory = Interface->GetInventoryComponent())
+//        {
+//            Inventory->SortItemsByName(ConvertSlotTypeToItemType(InventorySlotType));
+//        }
+//    }
+//}
 
 
 
