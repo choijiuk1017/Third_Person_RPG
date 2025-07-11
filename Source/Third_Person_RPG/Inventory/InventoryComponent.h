@@ -31,6 +31,9 @@ public:
 	UPROPERTY()
 	UInventoryItem* EquippedWeaponItem;
 
+	UFUNCTION()
+	void SortItemsByName(EItemType ItemType);
+
 protected:
 	virtual void BeginPlay() override;
 

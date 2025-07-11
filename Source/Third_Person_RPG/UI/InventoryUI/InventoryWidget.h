@@ -57,6 +57,8 @@ private:
     UFUNCTION()
     void OnClickOther();
 
+    UFUNCTION()
+    void OnClickSort();
 
     UPROPERTY(meta = (BindWidget))
     class UButton* BTN_Equipment;
@@ -66,6 +68,9 @@ private:
 
     UPROPERTY(meta = (BindWidget))
     class UButton* BTN_Other;
+
+    UPROPERTY(meta = (BindWidget))
+    class UButton* BTN_Sort;
 
     UPROPERTY(meta = (BindWidget))
     USlot* EquippedWeaponSlot;
