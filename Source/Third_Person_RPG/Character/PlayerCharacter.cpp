@@ -175,9 +175,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(IA_Interaction, ETriggerEvent::Started, this, &APlayerCharacter::Interact);
 	EnhancedInputComponent->BindAction(IA_Inventory, ETriggerEvent::Started, this, &APlayerCharacter::ToggleInventory);
 
-	EnhancedInputComponent->BindAction(IA_UnEquipWeapon_Test, ETriggerEvent::Started, this, &APlayerCharacter::UnEquipWeapon);
-	
-
 }
 
 // Called every frame
@@ -659,6 +656,7 @@ void APlayerCharacter::Interact()
 	UE_LOG(LogTemp, Warning, TEXT("상호작용 키 입력됨"));
 
 	bIsInteracting = true;
+	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
 
 	if (OverlappingItem)
 	{
@@ -677,11 +675,18 @@ void APlayerCharacter::Interact()
 				return; // 애니메이션 후 처리 예정
 			}
 		}
+		else
+		{
+			if (Inventory)
+			{
+				int32 OutQuantity = 1;
+				Inventory->AddItemByData(OverlappingItem->ItemData, OutQuantity);
+			}
 
-		// 장착할 수 없으면 그냥 파괴
-		OverlappingItem->Destroy();
-		OverlappingItem = nullptr;
-		bIsInteracting = false;
+			OverlappingItem->Destroy();
+			OverlappingItem = nullptr;
+			bIsInteracting = false;
+		}
 	}
 }
 
@@ -751,8 +756,47 @@ void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
 	UE_LOG(LogTemp, Warning, TEXT("무기 장착"));
 }
 
-void APlayerCharacter::UnEquipWeapon()
+void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
 {
+	if (!WeaponItem || !WeaponItem->ItemData) return;
+
+	const auto ItemData = Cast<UWeaponItemData>(WeaponItem->ItemData);
+	if (!ItemData || !ItemData->WeaponClass) return;
+
+	// 이전에 들고 있던 무기 제거
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		CurrentWeapon->Destroy();
+		CurrentWeapon = nullptr;
+		SkillData = nullptr;
+		WeaponComboData = nullptr;
+
+		InventoryComponent->EquippedWeaponItem = nullptr;
+	}
+	// 새 무기 생성
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	ATPRWeapon* NewWeapon = GetWorld()->SpawnActor<ATPRWeapon>(
+		ItemData->WeaponClass,
+		FVector::ZeroVector,
+		FRotator::ZeroRotator
+	);
+
+	if (NewWeapon)
+	{
+		SetWeapon(NewWeapon);
+
+		InventoryComponent->EquippedWeaponItem = WeaponItem;
+	}
+}
+
+
+void APlayerCharacter::UnEquipWeapon_Implementation(UInventoryItem* WeaponItem)
+{
+
 	if (CurrentWeapon)
 	{
 		// 1. 먼저 무기를 소켓에서 분리
@@ -836,37 +880,6 @@ void APlayerCharacter::CloseInventory()
 	bIsPopupInventory = false;
 }
 
-void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
-{
-	if (!WeaponItem || !WeaponItem->ItemData) return;
-
-	const auto ItemData = Cast<UWeaponItemData>(WeaponItem->ItemData);
-	if (!ItemData || !ItemData->WeaponClass) return;
-
-	// 이전에 들고 있던 무기 제거
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->Destroy();
-		CurrentWeapon = nullptr;
-	}
-	// 새 무기 생성
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	ATPRWeapon* NewWeapon = GetWorld()->SpawnActor<ATPRWeapon>(
-		ItemData->WeaponClass,
-		FVector::ZeroVector,
-		FRotator::ZeroRotator
-	);
-
-	if (NewWeapon)
-	{
-		SetWeapon(NewWeapon);
-
-		InventoryComponent->EquippedWeaponItem = WeaponItem;
-	}
-}
 
 
 

@@ -74,6 +74,16 @@ FReply USlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointe
 {
     UE_LOG(LogTemp, Warning, TEXT("Mouse Button Down"));
 
+    if (InMouseEvent.IsMouseButtonDown(EKeys::RightMouseButton))
+    {
+        // 우클릭 시 무기 해제 시도
+        if (SlotType == ESlotType::ST_EquipWeapon && InventoryItem)
+        {
+            UnequipItem();
+            return FReply::Handled();
+        }
+    }
+
     if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
     {
         return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
@@ -123,4 +133,19 @@ bool USlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDr
     return false;
 }
 
+
+void USlot::UnequipItem()
+{
+
+    if (InventoryItem)
+    {
+        if (OwningActor && OwningActor->GetClass()->ImplementsInterface(UInventoryInterface::StaticClass()))
+        {
+            IInventoryInterface::Execute_UnEquipWeapon(OwningActor, InventoryItem);
+        }
+
+        InventoryItem = nullptr;
+        ClearItem();
+    }
+}
 

@@ -28,5 +28,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory")
 	void EquipWeapon(UInventoryItem* WeaponItem); // DroppedItem 그대로 받음
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory")
+	void UnEquipWeapon(UInventoryItem* WeaponItem);
+
 
 };

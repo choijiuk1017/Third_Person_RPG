@@ -54,6 +54,8 @@ public:
 
     virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
+    void UnequipItem();
+
 protected:
     UPROPERTY(VisibleAnywhere, Category = "Slot")
     ESlotType SlotType;

@@ -32,13 +32,15 @@ public:
 
 	virtual void EquipWeapon_Implementation(UInventoryItem* WeaponItem) override;
 
+	virtual void UnEquipWeapon_Implementation(UInventoryItem* WeaponItem) override;
+
+
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	class ATPRWeapon* CurrentWeapon;
 
 	bool CanSetWeapon();
 	void SetWeapon(class ATPRWeapon* NewWeapon);
 
-	void UnEquipWeapon();
 
 	void SetOverlappingItem(AItem* Item);
 
