@@ -7,6 +7,7 @@
 #include "Third_Person_RPG/Interface/AnimationAttackInterface.h"
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
 #include "Third_Person_RPG/Item/Item.h"
+#include "Third_Person_RPG/Actor/SavePoint.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"
 
 #include "PlayerCharacter.generated.h"
@@ -43,6 +44,8 @@ public:
 
 
 	void SetOverlappingItem(AItem* Item);
+
+	void SetOverlappingSavePoint(ASavePoint* SavePoint);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class UInventoryComponent> InventoryComponent;
@@ -98,6 +101,9 @@ protected:
 	class AItem* OverlappingItem;
 
 
+	UPROPERTY()
+	class ASavePoint* OverlappingSavePoint;
+
 	//Montage Section
 	//구르기 애니메이션 몽타주
 	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
@@ -150,8 +156,6 @@ protected:
 	void ComboCheck();
 	//콤보 체크 호출 시간 설정 함수
 	void SetComboTimer();
-
-	void EquipWeapon(ATPRWeapon* Weapon);
 
 	//스킬 함수
 	void SkillStart();

@@ -655,7 +655,6 @@ void APlayerCharacter::Interact()
 	if (bIsRoll || bIsSkillActing || bIsAttacking || bIsInteracting) return;
 	UE_LOG(LogTemp, Warning, TEXT("상호작용 키 입력됨"));
 
-	bIsInteracting = true;
 	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
 
 	if (OverlappingItem)
@@ -663,6 +662,8 @@ void APlayerCharacter::Interact()
 		//무기를 장착할 수 있을 경우에만 장착 애니메이션
 		if (OverlappingItem->WeaponClass && CanSetWeapon())
 		{
+			bIsInteracting = true;
+
 			GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
@@ -688,6 +689,11 @@ void APlayerCharacter::Interact()
 			bIsInteracting = false;
 		}
 	}
+
+	//if (OverlappingSavePoint)
+	//{
+
+	//}
 }
 
 void APlayerCharacter::OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted)
@@ -721,6 +727,11 @@ void APlayerCharacter::OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrup
 void APlayerCharacter::SetOverlappingItem(AItem* Item)
 {
 	OverlappingItem = Item;
+}
+
+void APlayerCharacter::SetOverlappingSavePoint(ASavePoint* SavePoint)
+{
+	OverlappingSavePoint = SavePoint;
 }
 
 bool APlayerCharacter::CanSetWeapon()

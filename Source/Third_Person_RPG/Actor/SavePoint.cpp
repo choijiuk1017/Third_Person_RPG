@@ -1,29 +1,29 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
+#include "Third_Person_RPG/Actor/SavePoint.h"
 
-
-#include "Third_Person_RPG/Item/Item.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "Third_Person_RPG/UI/InteractionWidget.h"
+#include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
+
 
 // Sets default values
-AItem::AItem()
+ASavePoint::ASavePoint()
 {
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-
 	Trigger = CreateDefaultSubobject<USphereComponent>(TEXT("Trigger"));
-	Trigger->InitSphereRadius(100.f);
 	RootComponent = Trigger;
+	Trigger->InitSphereRadius(200.f);
 	Trigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	Trigger->SetCollisionResponseToAllChannels(ECR_Ignore);
 	Trigger->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap);
 
-	BoxMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BoxMesh"));
-	BoxMesh->SetupAttachment(RootComponent);
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	Mesh->SetupAttachment(RootComponent);
 
-	Trigger->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnOverlapBegin);
-	Trigger->OnComponentEndOverlap.AddDynamic(this, &AItem::OnOverlapEnd);
-
+	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ASavePoint::OnOverlapBegin);
+	Trigger->OnComponentEndOverlap.AddDynamic(this, &ASavePoint::OnOverlapEnd);
 
 	static ConstructorHelpers::FClassFinder<UInteractionWidget> InteractionWidgetRef(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/BluePrint/WBP_Interaction.WBP_Interaction_C'"));
 	if (InteractionWidgetRef.Class)
@@ -31,11 +31,12 @@ AItem::AItem()
 		InteractionWidgetClass = InteractionWidgetRef.Class;
 	}
 
-	HelpText = TEXT("Press 'E' to pick up the item.");
+	HelpText = TEXT("Press 'E' to active save point.");
+
 }
 
 // Called when the game starts or when spawned
-void AItem::BeginPlay()
+void ASavePoint::BeginPlay()
 {
 	Super::BeginPlay();
 	
@@ -46,33 +47,34 @@ void AItem::BeginPlay()
 		InteractionWidget->AddToViewport();
 		InteractionWidget->SetVisibility(ESlateVisibility::Hidden);
 	}
-
 }
 
 // Called every frame
-void AItem::Tick(float DeltaTime)
+void ASavePoint::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-void AItem::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void ASavePoint::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor);
-
-	if (Player)
-	{
-		Player->SetOverlappingItem(this); // 새로 만든 함수
-	}
+	if (bIsActivated) return;
 
 	if (InteractionWidget)
 	{
 		InteractionWidget->SetVisibility(ESlateVisibility::Visible);
 	}
+
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
+	{
+		bIsActivated = true;
+
+		Player->SetOverlappingSavePoint(this);
+	}
 }
 
-void AItem::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void ASavePoint::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (InteractionWidget)
