@@ -35,6 +35,9 @@ public:
 
 	virtual void UnEquipWeapon_Implementation(UInventoryItem* WeaponItem) override;
 
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	bool bIsKneeling;
+
 
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	class ATPRWeapon* CurrentWeapon;
@@ -112,6 +115,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UAnimMontage> PickUpMontage;
 
+	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UAnimMontage> KneelingDownMontage;
+
+	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UAnimMontage> KneelingIdleMontage;
+
 
 	
 
@@ -177,12 +186,15 @@ protected:
 
 	void OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted);
 
+	void InteractingSavePoint(UAnimMontage* Montage, bool bInterrupted);
+
 	void ToggleInventory();
 
 	void PopUpInventory();
 
 	void CloseInventory();
 
+	
 	//Variable Section
 	//구르기 확인 변수
 	uint8 bIsRoll : 1;
@@ -200,10 +212,6 @@ protected:
 	uint8 bIsInteracting : 1;
 
 	uint8 bIsPopupInventory : 1;
-
-
-private:
-
 
 
 };

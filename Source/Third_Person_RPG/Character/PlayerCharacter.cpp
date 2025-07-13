@@ -255,7 +255,7 @@ void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
 
 void APlayerCharacter::BasicAttack()
 {
-	if (bIsInteracting || bIsRoll || bIsSkillActing) return;
+	if (bIsInteracting || bIsRoll || bIsSkillActing || bIsInteracting || bIsKneeling) return;
 
 	if (CurrentComboCount == 0)
 	{
@@ -657,6 +657,29 @@ void APlayerCharacter::Interact()
 
 	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
 
+	if (bIsKneeling && OverlappingSavePoint)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("세이브 포인트 상호작용 종료"));
+
+		bIsKneeling = false;
+		bIsInteracting = false;
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			AnimInstance->StopAllMontages(0.2f);
+		}
+
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->SetActorHiddenInGame(false);
+			CurrentWeapon->SetActorEnableCollision(true);
+		}
+
+		return;
+
+	}
+
 	if (OverlappingItem)
 	{
 		//무기를 장착할 수 있을 경우에만 장착 애니메이션
@@ -690,10 +713,44 @@ void APlayerCharacter::Interact()
 		}
 	}
 
-	//if (OverlappingSavePoint)
-	//{
+	if (OverlappingSavePoint)
+	{
+		bIsInteracting = true;
 
-	//}
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->SetActorHiddenInGame(true);
+			CurrentWeapon->SetActorEnableCollision(false);
+		}
+
+
+		bIsKneeling = true;
+
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+		if (AnimInstance && KneelingDownMontage)
+		{
+			AnimInstance->Montage_Play(KneelingDownMontage, 1.0f);
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &APlayerCharacter::InteractingSavePoint);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, KneelingDownMontage);
+			return;
+		}
+	}
+
+	
+}
+
+void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterrupted)
+{
+	UE_LOG(LogTemp, Warning, TEXT("세이브 포인트"));
+
+	if (!OverlappingSavePoint) return;
+	bIsInteracting = false;
+
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 }
 
 void APlayerCharacter::OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted)
