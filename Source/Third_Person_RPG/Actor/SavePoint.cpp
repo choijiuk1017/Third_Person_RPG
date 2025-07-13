@@ -59,24 +59,28 @@ void ASavePoint::Tick(float DeltaTime)
 void ASavePoint::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (bIsActivated) return;
-
 	if (InteractionWidget)
 	{
 		InteractionWidget->SetVisibility(ESlateVisibility::Visible);
 	}
 
-	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
-	{
-		bIsActivated = true;
+	APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor);
 
-		Player->SetOverlappingSavePoint(this);
+	if (Player)
+	{
+		Player->SetOverlappingSavePoint(this); // 새로 만든 함수
 	}
 }
 
 void ASavePoint::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor);
+
+	if (Player)
+	{
+		Player->ReSetOverlappingSavePoint(); // 새로 만든 함수
+	}
 	if (InteractionWidget)
 	{
 		InteractionWidget->SetVisibility(ESlateVisibility::Hidden);

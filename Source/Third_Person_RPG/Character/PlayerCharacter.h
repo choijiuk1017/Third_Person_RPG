@@ -48,7 +48,11 @@ public:
 
 	void SetOverlappingItem(AItem* Item);
 
+	void ReSetOverlappingItem();
+
 	void SetOverlappingSavePoint(ASavePoint* SavePoint);
+
+	void ReSetOverlappingSavePoint();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class UInventoryComponent> InventoryComponent;

@@ -723,8 +723,10 @@ void APlayerCharacter::Interact()
 			CurrentWeapon->SetActorEnableCollision(false);
 		}
 
-
-		bIsKneeling = true;
+		if (OverlappingSavePoint->InteractionWidget)
+		{
+			OverlappingSavePoint->InteractionWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
 
 		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
@@ -733,6 +735,7 @@ void APlayerCharacter::Interact()
 		if (AnimInstance && KneelingDownMontage)
 		{
 			AnimInstance->Montage_Play(KneelingDownMontage, 1.0f);
+			bIsKneeling = true;
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &APlayerCharacter::InteractingSavePoint);
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, KneelingDownMontage);
@@ -789,6 +792,16 @@ void APlayerCharacter::SetOverlappingItem(AItem* Item)
 void APlayerCharacter::SetOverlappingSavePoint(ASavePoint* SavePoint)
 {
 	OverlappingSavePoint = SavePoint;
+}
+
+void APlayerCharacter::ReSetOverlappingItem()
+{
+	OverlappingItem = nullptr;
+}
+
+void APlayerCharacter::ReSetOverlappingSavePoint()
+{
+	OverlappingSavePoint = nullptr;
 }
 
 bool APlayerCharacter::CanSetWeapon()

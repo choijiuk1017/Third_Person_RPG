@@ -77,6 +77,11 @@ void AItem::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor
 {
 	APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor);
 
+	if (Player)
+	{
+		Player->ReSetOverlappingItem(); // 새로 만든 함수
+	}
+
 	if (InteractionWidget)
 	{
 		InteractionWidget->SetVisibility(ESlateVisibility::Hidden);
