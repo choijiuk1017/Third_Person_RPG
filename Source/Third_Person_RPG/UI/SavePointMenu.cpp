@@ -4,7 +4,13 @@
 #include "Third_Person_RPG/UI/SavePointMenu.h"
 #include "Components/VerticalBox.h"
 #include "Third_Person_RPG/UI/SavePointMenuEntry.h"
+#include "Framework/Application/SlateApplication.h"
+#include "InputCoreTypes.h"
 
+USavePointMenu::USavePointMenu(const FObjectInitializer& ObjectInitializer): Super(ObjectInitializer)
+{
+	bIsFocusable = true;
+}
 void USavePointMenu::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -47,6 +53,41 @@ void USavePointMenu::NativeConstruct()
 	}
 
 	UpdateSelectionVisual(); 
+
+	this->SetKeyboardFocus();
+	FSlateApplication::Get().SetKeyboardFocus(this->TakeWidget(), EFocusCause::SetDirectly);
+}
+
+
+void USavePointMenu::NativeDestruct()
+{
+	Super::NativeDestruct();
+
+	// 입력 포커스 반환 시 처리 필요 시 여기에 추가
+}
+
+FReply USavePointMenu::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	const FKey PressedKey = InKeyEvent.GetKey();
+	UE_LOG(LogTemp, Warning, TEXT("Pressed Key: %s"), *PressedKey.ToString());
+
+	if (PressedKey == EKeys::W || PressedKey == EKeys::Up)
+	{
+		MoveSelectionUp();
+		return FReply::Handled();
+	}
+	else if (PressedKey == EKeys::S || PressedKey == EKeys::Down)
+	{
+		MoveSelectionDown();
+		return FReply::Handled();
+	}
+	else if (PressedKey == EKeys::Enter)
+	{
+		ConfirmSelection();
+		return FReply::Handled();
+	}
+
+	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 }
 
 void USavePointMenu::MoveSelectionUp()

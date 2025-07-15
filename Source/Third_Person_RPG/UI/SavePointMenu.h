@@ -20,7 +20,12 @@ class THIRD_PERSON_RPG_API USavePointMenu : public UUserWidget
 public:
 	APlayerCharacter* OwningActor;
 
+	USavePointMenu(const FObjectInitializer& ObjectInitializer);
+
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
 	// 입력 처리용 함수
 	void MoveSelectionUp();
