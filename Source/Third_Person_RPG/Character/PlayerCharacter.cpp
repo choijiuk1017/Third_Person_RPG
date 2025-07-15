@@ -18,6 +18,7 @@
 #include "Third_Person_RPG/UI/InventoryUI/InventoryWidget.h"
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
 #include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
+#include "Third_Person_RPG/UI/SavePointMenu.h"
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
 
@@ -754,6 +755,31 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 	bIsInteracting = false;
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+
+	if (!SavePointMenuInstance && SavePointMenuClass)
+	{
+		SavePointMenuInstance = CreateWidget<USavePointMenu>(GetWorld(), SavePointMenuClass);
+		if (SavePointMenuInstance)
+		{
+			SavePointMenuInstance->OwningActor = this;
+			SavePointMenuInstance->AddToViewport();
+
+			// UI용 입력 모드로 전환
+			APlayerController* PC = Cast<APlayerController>(GetController());
+			if (PC)
+			{
+				FInputModeUIOnly InputMode;
+				InputMode.SetWidgetToFocus(SavePointMenuInstance->TakeWidget());
+				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
+				PC->SetInputMode(InputMode);
+				PC->bShowMouseCursor = true;
+
+				PC->SetIgnoreMoveInput(true);
+				PC->SetIgnoreLookInput(true);
+			}
+		}
+	}
 }
 
 void APlayerCharacter::OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted)

@@ -145,6 +145,11 @@ protected:
 	
 	UInventoryWidget* InventoryWidgetInstance;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class USavePointMenu> SavePointMenuClass;
+
+	UPROPERTY()
+	USavePointMenu* SavePointMenuInstance;
 
 	//Function Section
 	//기본 이동 함수
