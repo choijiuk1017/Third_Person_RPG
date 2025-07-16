@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
-#include "TPRGameInstance.generated.h"
+#include "Third_Person_RPG/TPRSaveGame.h"
+#include "Third_Person_RPG/Actor/SavePoint.h"
 
+#include "TPRGameInstance.generated.h"
 /**
  * 
  */
@@ -15,16 +17,27 @@ class THIRD_PERSON_RPG_API UTPRGameInstance : public UGameInstance
 	GENERATED_BODY()
 
 public:
-	// 발견한 세이브포인트 등록
-	void RegisterSavePoint(const FString& Name, const FVector& Location);
+	virtual void Init() override;
 
-	// 세이브포인트 목록 가져오기
-	const TMap<FString, FVector>& GetSavePointMap() const;
-
-	// 모든 등록된 세이브포인트 삭제
+	void RegisterSavePoint(const FSavePointInfo& SavePointInfo);
+	const TMap<FString, FSavePointInfo>& GetSavePointMap() const;
 	void ClearSavePoints();
+
+	// 세이브 및 로드 기능 추가
+	void SaveGameData();
+	bool LoadGameData();
+
+	TArray<FString> GetActivatedSavePointNames() const;
 
 protected:
 	UPROPERTY()
-	TMap<FString, FVector> DiscoveredSavePoints;
+	TMap<FString, FSavePointInfo> DiscoveredSavePoints;
+
+	UPROPERTY()
+	FString LastActivatedSavePoint;
+
+private:
+	FString SaveSlotName = TEXT("PlayerSaveSlot");
+	uint32 UserIndex = 0;
+
 };

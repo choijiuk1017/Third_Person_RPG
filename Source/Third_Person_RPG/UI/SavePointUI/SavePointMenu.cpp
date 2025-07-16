@@ -20,7 +20,7 @@ void USavePointMenu::NativeConstruct()
 	Super::NativeConstruct();
 
 	//// 초기화
-	//EntryWidgets.Empty();
+	EntryWidgets.Empty();
 
 	if (!EntryClass || !VerticalBox_MenuList) return;
 
@@ -66,8 +66,6 @@ void USavePointMenu::NativeConstruct()
 void USavePointMenu::NativeDestruct()
 {
 	Super::NativeDestruct();
-
-	// 입력 포커스 반환 시 처리 필요 시 여기에 추가
 }
 
 FReply USavePointMenu::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)

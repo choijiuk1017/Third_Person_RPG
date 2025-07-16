@@ -7,7 +7,7 @@
 #include "SavePoint.generated.h"
 
 USTRUCT(BlueprintType)
-struct FSavePointData
+struct FSavePointInfo
 {
 	GENERATED_BODY()
 
@@ -72,7 +72,7 @@ public:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SavePoint")
-	FSavePointData SavePointInfo;
+	FSavePointInfo SavePointInfo;
 
 	FString HelpText;
 

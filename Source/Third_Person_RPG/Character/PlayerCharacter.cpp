@@ -19,6 +19,7 @@
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
 #include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
+#include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
 
@@ -734,6 +735,12 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 	bIsInteracting = false;
 
 	OverlappingSavePoint->SavePointInfo.bIsDiscovered = true;
+
+	UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (GI)
+	{
+		GI->RegisterSavePoint(OverlappingSavePoint->SavePointInfo);
+	}
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 

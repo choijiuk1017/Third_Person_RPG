@@ -3,10 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Delegates/Delegate.h"
 #include "Blueprint/UserWidget.h"
+#include "Third_Person_RPG/Actor/SavePoint.h"
+
 #include "WorldTravelMenuEntry.generated.h"
 
+DECLARE_DELEGATE_OneParam(FOnEntrySelected, const FString&);
+class UBorder;
 class UTextBlock;
+
+
 
 /**
  * 
@@ -16,17 +23,23 @@ class THIRD_PERSON_RPG_API UWorldTravelMenuEntry : public UUserWidget
 {
 	GENERATED_BODY()
 
-public:
-	void SetPointName(const FString& NewName);
-	const FString& GetPointName() const { return PointName; }
 
-	// 선택된 상태 시 시각적으로 표시 (ex. 색상 변경)
+public:
+	void SetSavePointInfo(const FSavePointInfo& Info);
+	FSavePointInfo GetSavePointInfo() const;
+
 	void SetSelected(bool bSelected);
+
+	FOnEntrySelected OnSelected;
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* Text_PointName;
+	TObjectPtr<UTextBlock> Text_PointName;
+
+	UPROPERTY(meta = (BindWidget))
+	class UBorder* Border_Highlight;
 
 private:
-	FString PointName;
+	FSavePointInfo SavePointInfo;
+
 };

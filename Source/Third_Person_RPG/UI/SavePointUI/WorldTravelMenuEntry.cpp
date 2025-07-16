@@ -3,22 +3,26 @@
 
 #include "Third_Person_RPG/UI/SavePointUI/WorldTravelMenuEntry.h"
 #include "Components/TextBlock.h"
+#include "Components/Border.h"
 
-void UWorldTravelMenuEntry::SetPointName(const FString& NewName)
+void UWorldTravelMenuEntry::SetSavePointInfo(const FSavePointInfo& Info)
 {
-	PointName = NewName;
-
+	SavePointInfo = Info;
 	if (Text_PointName)
 	{
-		Text_PointName->SetText(FText::FromString(PointName));
+		Text_PointName->SetText(Info.DisplayName);
 	}
+}
+
+FSavePointInfo UWorldTravelMenuEntry::GetSavePointInfo() const
+{
+	return SavePointInfo;
 }
 
 void UWorldTravelMenuEntry::SetSelected(bool bSelected)
 {
-	if (Text_PointName)
+	if (Border_Highlight)
 	{
-		FSlateColor Color = bSelected ? FSlateColor(FLinearColor::Yellow) : FSlateColor(FLinearColor::White);
-		Text_PointName->SetColorAndOpacity(Color);
+		Border_Highlight->SetVisibility(bSelected ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	}
 }
