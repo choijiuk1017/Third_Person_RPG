@@ -39,6 +39,8 @@ ASavePoint::ASavePoint()
 void ASavePoint::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SavePointInfo.Location = GetActorLocation();
 	
 	InteractionWidget = CreateWidget<UInteractionWidget>(GetWorld(), InteractionWidgetClass);
 	if (InteractionWidget)

@@ -18,7 +18,7 @@
 #include "Third_Person_RPG/UI/InventoryUI/InventoryWidget.h"
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
 #include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
-#include "Third_Person_RPG/UI/SavePointMenu.h"
+#include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
 
@@ -645,6 +645,7 @@ void APlayerCharacter::SkillAttackCheck()
 
 
 	bIsSkillActing = false;
+	bIsAttacking = false;
 
 	// 이동 다시 가능하게
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
@@ -658,28 +659,6 @@ void APlayerCharacter::Interact()
 
 	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
 
-	if (bIsKneeling && OverlappingSavePoint)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("세이브 포인트 상호작용 종료"));
-
-		bIsKneeling = false;
-		bIsInteracting = false;
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
-
-		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
-		{
-			AnimInstance->StopAllMontages(0.2f);
-		}
-
-		if (CurrentWeapon)
-		{
-			CurrentWeapon->SetActorHiddenInGame(false);
-			CurrentWeapon->SetActorEnableCollision(true);
-		}
-
-		return;
-
-	}
 
 	if (OverlappingItem)
 	{
@@ -754,6 +733,8 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 	if (!OverlappingSavePoint) return;
 	bIsInteracting = false;
 
+	OverlappingSavePoint->SavePointInfo.bIsDiscovered = true;
+
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
 	if (!SavePointMenuInstance && SavePointMenuClass)
@@ -779,6 +760,39 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 				PC->SetIgnoreLookInput(true);
 			}
 		}
+	}
+}
+
+void APlayerCharacter::EndInteractSavePoint()
+{
+	if (bIsKneeling && OverlappingSavePoint)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("세이브 포인트 상호작용 종료"));
+
+		bIsKneeling = false;
+		bIsInteracting = false;
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			AnimInstance->StopAllMontages(0.2f);
+		}
+
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->SetActorHiddenInGame(false);
+			CurrentWeapon->SetActorEnableCollision(true);
+		}
+
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (PC)
+		{
+			PC->SetIgnoreMoveInput(false);
+			PC->SetIgnoreLookInput(false);
+		}
+
+		return;
+
 	}
 }
 

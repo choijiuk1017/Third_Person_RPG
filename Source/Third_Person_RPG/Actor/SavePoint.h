@@ -6,6 +6,30 @@
 #include "GameFramework/Actor.h"
 #include "SavePoint.generated.h"
 
+USTRUCT(BlueprintType)
+struct FSavePointData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName SavePointID;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName MapName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector Location;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsDiscovered = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText DisplayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UTexture2D* PreviewImage;
+};
+
 UCLASS()
 class THIRD_PERSON_RPG_API ASavePoint : public AActor
 {
@@ -46,6 +70,9 @@ public:
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SavePoint")
+	FSavePointData SavePointInfo;
 
 	FString HelpText;
 

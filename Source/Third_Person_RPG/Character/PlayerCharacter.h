@@ -9,6 +9,7 @@
 #include "Third_Person_RPG/Item/Item.h"
 #include "Third_Person_RPG/Actor/SavePoint.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"
+#include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
 
 #include "PlayerCharacter.generated.h"
 
@@ -52,10 +53,15 @@ public:
 
 	void SetOverlappingSavePoint(ASavePoint* SavePoint);
 
+	void EndInteractSavePoint();
+
 	void ReSetOverlappingSavePoint();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class UInventoryComponent> InventoryComponent;
+
+	UPROPERTY()
+	USavePointMenu* SavePointMenuInstance;
 
 protected:
 	// Called when the game starts or when spawned
@@ -148,8 +154,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class USavePointMenu> SavePointMenuClass;
 
-	UPROPERTY()
-	USavePointMenu* SavePointMenuInstance;
 
 	//Function Section
 	//기본 이동 함수
