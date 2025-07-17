@@ -158,6 +158,31 @@ void APlayerCharacter::BeginPlay()
 		}
 
 	}
+
+	if (const UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		const FName TargetID = GI->GetPendingSavePoint();
+		if (TargetID != NAME_None)
+		{
+			const TMap<FName, FSavePointInfo>& SaveMap = GI->GetSavePointMap();
+			if (const FSavePointInfo* FoundInfo = SaveMap.Find(TargetID))
+			{
+				SetActorLocation(FoundInfo->Location + FVector(70.f, 0.f, 50.f));
+				UE_LOG(LogTemp, Warning, TEXT("로드 후 세이브포인트로 이동: %s"), *FoundInfo->Location.ToString());
+			}
+
+			// 클리어
+			const_cast<UTPRGameInstance*>(GI)->ClearPendingSavePoint();
+		}
+
+		if (InventoryComponent)
+		{
+			for (const FInventoryItemSaveData& SaveData : GI->GetCachedInventory())
+			{
+				InventoryComponent->AddItemByData(SaveData.ItemData, SaveData.Quantity);
+			}
+		}
+	}	
 }
 
 // Called to bind functionality to input

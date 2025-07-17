@@ -8,6 +8,7 @@
 #include "Third_Person_RPG/UI/SavePointUI/WorldTravelMenuEntry.h"
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "Third_Person_RPG/Inventory/InventoryComponent.h"
 
 UWorldTravelMenu::UWorldTravelMenu(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -36,7 +37,6 @@ void UWorldTravelMenu::NativeConstruct()
 FReply UWorldTravelMenu::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
 	const FKey PressedKey = InKeyEvent.GetKey();
-	UE_LOG(LogTemp, Warning, TEXT("Pressed Key: %s"), *PressedKey.ToString());
 
 	if (PressedKey == EKeys::W || PressedKey == EKeys::Up)
 	{
@@ -101,33 +101,30 @@ void UWorldTravelMenu::ConfirmSelection()
 	if (!EntryWidgets.IsValidIndex(SelectedIndex)) return;
 
 	const FSavePointInfo& Info = EntryWidgets[SelectedIndex]->GetSavePointInfo();
-	UE_LOG(LogTemp, Warning, TEXT("선택한 세이브포인트: %s"), *Info.SavePointID.ToString());
 
-	APlayerController* PC = GetOwningPlayer();
-	if (PC && PC->GetPawn())
+	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		FVector OffsetLocation = Info.Location + FVector(70.0f, 0.0f, 50.0f);
+		GI->SetPendingSavePoint(Info.SavePointID);
+	}
 
-		// 이동
-		PC->GetPawn()->SetActorLocation(OffsetLocation);
-		UE_LOG(LogTemp, Warning, TEXT("텔레포트 성공: %s"), *Info.Location.ToString());
+	RemoveFromParent();
 
-		APawn* Pawn = PC->GetPawn();
-		if (Pawn)
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		PC->SetInputMode(FInputModeGameOnly());
+		PC->bShowMouseCursor = false;
+	}
+	if (APlayerCharacter* PC = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
+	{
+		if (UInventoryComponent* Inventory = PC->FindComponentByClass<UInventoryComponent>())
 		{
-			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(Pawn);
-			if (PlayerCharacter)
+			if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 			{
-				RemoveFromParent();
-				PlayerCharacter->EndInteractSavePoint(); 
-
-				PlayerCharacter->SavePointMenuInstance = nullptr;
-
-				PC->SetInputMode(FInputModeGameOnly());
-				PC->bShowMouseCursor = false;
+				GI->CacheInventory(Inventory->GetAllItems()); // 함수 필요, 아래에 정의함
 			}
 		}
 	}
+	UGameplayStatics::OpenLevel(this, Info.MapName);
 }
 
 void UWorldTravelMenu::UpdateSelectionVisual()

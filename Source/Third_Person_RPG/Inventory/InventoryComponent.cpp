@@ -79,5 +79,15 @@ const TArray<UInventoryItem*>& UInventoryComponent::GetItemsByType(EItemType Typ
 }
 
 
+TArray<UInventoryItem*> UInventoryComponent::GetAllItems() const
+{
+	TArray<UInventoryItem*> AllItems;
+	AllItems.Append(EquipmentItems);
+	AllItems.Append(ConsumableItems);
+	AllItems.Append(OtherItems);
+	return AllItems;
+}
+
+
 
 

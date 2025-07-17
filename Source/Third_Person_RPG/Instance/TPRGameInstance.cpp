@@ -14,23 +14,27 @@ void UTPRGameInstance::Init()
 
 void UTPRGameInstance::RegisterSavePoint(const FSavePointInfo& SavePointInfo)
 {
-	if (!DiscoveredSavePoints.Contains(SavePointInfo.SavePointID.ToString()))
+	if (!DiscoveredSavePoints.Contains(SavePointInfo.SavePointID))
 	{
-		DiscoveredSavePoints.Add(SavePointInfo.SavePointID.ToString(), SavePointInfo);
+		DiscoveredSavePoints.Add(SavePointInfo.SavePointID, SavePointInfo);
 	}
 }
 
-const TMap<FString, FSavePointInfo>& UTPRGameInstance::GetSavePointMap() const
+const TMap<FName, FSavePointInfo>& UTPRGameInstance::GetSavePointMap() const
 {
 	return DiscoveredSavePoints;
 }
 
 TArray<FString> UTPRGameInstance::GetActivatedSavePointNames() const
 {
-	TArray<FString> Keys;
-	DiscoveredSavePoints.GetKeys(Keys);
-	return Keys;
+	TArray<FString> Names;
+	for (const auto& Pair : DiscoveredSavePoints)
+	{
+		Names.Add(Pair.Key.ToString());
+	}
+	return Names;
 }
+
 
 void UTPRGameInstance::ClearSavePoints()
 {
@@ -54,7 +58,7 @@ void UTPRGameInstance::SaveGameData()
 		for (const auto& Pair : DiscoveredSavePoints)
 		{
 			SaveGameInstance->AllDiscoveredSavePoints.Add(Pair.Value);
-			SaveGameInstance->ActivatedSavePointNames.Add(Pair.Key);
+			SaveGameInstance->ActivatedSavePointNames.Add(Pair.Key.ToString());
 		}
 
 		UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, UserIndex);
@@ -72,11 +76,31 @@ bool UTPRGameInstance::LoadGameData()
 
 			for (const FSavePointInfo& Info : LoadedGame->AllDiscoveredSavePoints)
 			{
-				DiscoveredSavePoints.Add(Info.SavePointID.ToString(), Info);
+				DiscoveredSavePoints.Add(Info.SavePointID, Info);
 			}
 
 			return true;
 		}
 	}
 	return false;
+}
+
+void UTPRGameInstance::CacheInventory(const TArray<UInventoryItem*>& Items)
+{
+	CachedInventoryItems.Empty();
+	for (UInventoryItem* Item : Items)
+	{
+		if (Item && Item->ItemData)
+		{
+			FInventoryItemSaveData SaveData;
+			SaveData.ItemData = Item->ItemData;
+			SaveData.Quantity = Item->Quantity;
+			CachedInventoryItems.Add(SaveData);
+		}
+	}
+}
+
+const TArray<FInventoryItemSaveData>& UTPRGameInstance::GetCachedInventory() const
+{
+	return CachedInventoryItems;
 }

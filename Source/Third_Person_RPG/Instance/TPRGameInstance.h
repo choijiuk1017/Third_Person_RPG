@@ -6,8 +6,22 @@
 #include "Engine/GameInstance.h"
 #include "Third_Person_RPG/TPRSaveGame.h"
 #include "Third_Person_RPG/Actor/SavePoint.h"
+#include "Third_Person_RPG/Inventory/InventoryItem.h"
 
 #include "TPRGameInstance.generated.h"
+
+USTRUCT(BlueprintType)
+struct FInventoryItemSaveData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	UTPRItemData* ItemData;
+
+	UPROPERTY()
+	int32 Quantity;
+};
+
 /**
  * 
  */
@@ -20,7 +34,7 @@ public:
 	virtual void Init() override;
 
 	void RegisterSavePoint(const FSavePointInfo& SavePointInfo);
-	const TMap<FString, FSavePointInfo>& GetSavePointMap() const;
+	const TMap<FName, FSavePointInfo>& GetSavePointMap() const;
 	void ClearSavePoints();
 
 	// 세이브 및 로드 기능 추가
@@ -29,9 +43,22 @@ public:
 
 	TArray<FString> GetActivatedSavePointNames() const;
 
+	void SetPendingSavePoint(FName InID) { PendingSavePointID = InID; }
+	FName GetPendingSavePoint() const { return PendingSavePointID; }
+	void ClearPendingSavePoint() { PendingSavePointID = NAME_None; }
+
+	UPROPERTY()
+	TArray<FInventoryItemSaveData> CachedInventoryItems;
+
+	void CacheInventory(const TArray<UInventoryItem*>& Items);
+	const TArray<FInventoryItemSaveData>& GetCachedInventory() const;
+
 protected:
 	UPROPERTY()
-	TMap<FString, FSavePointInfo> DiscoveredSavePoints;
+	TMap<FName, FSavePointInfo> DiscoveredSavePoints;
+
+	UPROPERTY()
+	FName PendingSavePointID;
 
 	UPROPERTY()
 	FString LastActivatedSavePoint;

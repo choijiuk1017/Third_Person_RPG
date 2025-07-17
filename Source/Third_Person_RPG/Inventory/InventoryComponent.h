@@ -31,6 +31,8 @@ public:
 	UPROPERTY()
 	UInventoryItem* EquippedWeaponItem;
 
+	UFUNCTION(BlueprintCallable)
+	TArray<UInventoryItem*> GetAllItems() const;
 
 protected:
 	virtual void BeginPlay() override;
