@@ -143,7 +143,7 @@ void USlot::UnequipItem()
         {
             IInventoryInterface::Execute_UnEquipWeapon(OwningActor, InventoryItem);
         }
-
+        InventoryItem->bEquipped = false;
         InventoryItem = nullptr;
         ClearItem();
     }

@@ -20,6 +20,9 @@ struct FInventoryItemSaveData
 
 	UPROPERTY()
 	int32 Quantity;
+
+	UPROPERTY()
+	bool bEquipped = false;
 };
 
 /**

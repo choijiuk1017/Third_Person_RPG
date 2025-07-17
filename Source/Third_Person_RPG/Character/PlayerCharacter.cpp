@@ -179,7 +179,9 @@ void APlayerCharacter::BeginPlay()
 		{
 			for (const FInventoryItemSaveData& SaveData : GI->GetCachedInventory())
 			{
-				InventoryComponent->AddItemByData(SaveData.ItemData, SaveData.Quantity);
+				bool bShouldEquip = SaveData.bEquipped;
+
+				UInventoryItem* AddedItem = InventoryComponent->AddItemByData(SaveData.ItemData, SaveData.Quantity, bShouldEquip);
 			}
 		}
 	}	
@@ -944,6 +946,8 @@ void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
 
 		InventoryComponent->EquippedWeaponItem = WeaponItem;
 	}
+
+	WeaponItem->bEquipped = true;
 }
 
 

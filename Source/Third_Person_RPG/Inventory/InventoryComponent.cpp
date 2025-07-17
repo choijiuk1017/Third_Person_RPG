@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings
 #include "Third_Person_RPG/Inventory/InventoryComponent.h"
+#include "Third_Person_RPG/Interface/InventoryInterface.h"
 #include "Engine/AssetManager.h"
 
 
@@ -21,17 +22,9 @@ void UInventoryComponent::BeginPlay()
 
 }
 
-bool UInventoryComponent::AddItemByData(UTPRItemData* Data, int32 Quantity)
+UInventoryItem* UInventoryComponent::AddItemByData(UTPRItemData* Data, int32 Quantity, bool bShouldEquip)
 {
-
-	if (!Data)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AddItemByData: Data가 nullptr입니다."));
-		return false;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("AddItemByData : name: %s, type: %d, count: %d"),
-		*Data->ItemName, static_cast<uint8>(Data->ItemType), Quantity);
+	if (!Data) return nullptr;
 
 	UInventoryItem* NewItem = NewObject<UInventoryItem>(this);
 	NewItem->ItemData = Data;
@@ -46,20 +39,24 @@ bool UInventoryComponent::AddItemByData(UTPRItemData* Data, int32 Quantity)
 	default:                       TargetArray = &OtherItems; break;
 	}
 
-
-
 	for (int32 i = 0; i < TargetArray->Num(); ++i)
 	{
 		if (!IsValid((*TargetArray)[i]))
 		{
 			(*TargetArray)[i] = NewItem;
 			OnInventoryChanged.Broadcast();
-			UE_LOG(LogTemp, Warning, TEXT("delegate"));
-			return true;
+
+			if (bShouldEquip && GetOwner()->GetClass()->ImplementsInterface(UInventoryInterface::StaticClass()))
+			{
+				IInventoryInterface::Execute_EquipWeapon(GetOwner(), NewItem);
+				NewItem->bEquipped = true;
+			}
+
+			return NewItem;
 		}
 	}
 
-	return false;
+	return nullptr;
 }
 
 const TArray<UInventoryItem*>& UInventoryComponent::GetItemsByType(EItemType Type) const

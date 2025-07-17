@@ -95,6 +95,8 @@ void UTPRGameInstance::CacheInventory(const TArray<UInventoryItem*>& Items)
 			FInventoryItemSaveData SaveData;
 			SaveData.ItemData = Item->ItemData;
 			SaveData.Quantity = Item->Quantity;
+			SaveData.bEquipped = Item->bEquipped;
+
 			CachedInventoryItems.Add(SaveData);
 		}
 	}

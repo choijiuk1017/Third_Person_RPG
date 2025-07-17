@@ -19,6 +19,9 @@ public:
 	UPROPERTY()
 	int32 Quantity;
 
+	UPROPERTY()
+	bool bEquipped = false;
+
 	UTexture2D* GetItemTexture() const
 	{
 		return ItemData ? ItemData->ItemTexture : nullptr;
