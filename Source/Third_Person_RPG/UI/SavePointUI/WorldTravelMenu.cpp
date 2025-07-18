@@ -124,7 +124,24 @@ void UWorldTravelMenu::ConfirmSelection()
 			}
 		}
 	}
-	UGameplayStatics::OpenLevel(this, Info.MapName);
+	if (LoadingScreen)
+	{
+		LoadingScreenWidget = CreateWidget<UUserWidget>(GetWorld(), LoadingScreen);
+		if (LoadingScreenWidget)
+		{
+			LoadingScreenWidget->AddToViewport(9999); // 가장 위에 표시
+		}
+	}
+
+
+	FTimerHandle TimerHandle;
+	FTimerDelegate TimerDelegate;
+	TimerDelegate.BindLambda([=, this]()  
+		{
+			UGameplayStatics::OpenLevel(this, Info.MapName);
+		});
+
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.1f, false);
 }
 
 void UWorldTravelMenu::UpdateSelectionVisual()

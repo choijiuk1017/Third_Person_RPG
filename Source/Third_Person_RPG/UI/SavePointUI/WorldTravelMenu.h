@@ -41,6 +41,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UWorldTravelMenuEntry> TravelEntryClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> LoadingScreen;
+
+	UUserWidget* LoadingScreenWidget;
+
 private:
 	TArray<UWorldTravelMenuEntry*> EntryWidgets;
 	int32 SelectedIndex = 0;

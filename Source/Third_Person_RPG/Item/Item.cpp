@@ -4,7 +4,9 @@
 #include "Third_Person_RPG/Item/Item.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Third_Person_RPG/UI/InteractionWidget.h"
+#include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AItem::AItem()
@@ -38,7 +40,21 @@ AItem::AItem()
 void AItem::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (ItemData)
+	{
+		FPrimaryAssetId AssetId = ItemData->GetPrimaryAssetId();
+
+		if (const UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+		{
+			if (GI->HasCollectedItemAsset(AssetId))
+			{
+				Destroy();
+				return;
+			}
+		}
+	}
+
 	InteractionWidget = CreateWidget<UInteractionWidget>(GetWorld(), InteractionWidgetClass);
 	if (InteractionWidget)
 	{

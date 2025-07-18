@@ -15,6 +15,9 @@ class THIRD_PERSON_RPG_API ATPRGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+
+	virtual void BeginPlay() override;
+
 	ATPRGameMode();
 	
 };

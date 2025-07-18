@@ -3,6 +3,15 @@
 
 #include "Third_Person_RPG/GameMode/TPRGameMode.h"
 
+#include "Third_Person_RPG/Instance/TPRGameInstance.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/HUD.h"
+
+
+
 ATPRGameMode::ATPRGameMode()
 {
 	//DefaultPawn 설정
@@ -20,5 +29,27 @@ ATPRGameMode::ATPRGameMode()
 	if (ControllerClassRef.Succeeded())
 	{
 		PlayerControllerClass = ControllerClassRef.Class;
+	}
+}
+
+void ATPRGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		// 뷰포트에 추가된 위젯을 추적하고 있다면 이걸 제거
+		if (PC->GetHUD())
+		{
+			// 방법 1: 로딩 위젯을 GameInstance 또는 PlayerController에서 직접 추적한 뒤 제거
+			if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+			{
+				if (GI->LoadingScreenWidget)
+				{
+					GI->LoadingScreenWidget->RemoveFromParent();
+					GI->LoadingScreenWidget = nullptr;
+				}
+			}
+		}
 	}
 }

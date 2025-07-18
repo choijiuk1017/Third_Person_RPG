@@ -184,6 +184,8 @@ void APlayerCharacter::BeginPlay()
 				UInventoryItem* AddedItem = InventoryComponent->AddItemByData(SaveData.ItemData, SaveData.Quantity, bShouldEquip);
 			}
 		}
+
+
 	}	
 }
 
@@ -688,8 +690,16 @@ void APlayerCharacter::Interact()
 	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
 
 
-	if (OverlappingItem)
+	if (OverlappingItem && OverlappingItem->ItemData)
 	{
+		FPrimaryAssetId AssetId = OverlappingItem->ItemData->GetPrimaryAssetId();
+
+		// 2. GameInstance에 등록
+		if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+		{
+			GI->RegisterCollectedItemAsset(AssetId);
+		}
+
 		//무기를 장착할 수 있을 경우에만 장착 애니메이션
 		if (OverlappingItem->WeaponClass && CanSetWeapon())
 		{

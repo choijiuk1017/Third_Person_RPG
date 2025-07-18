@@ -56,6 +56,28 @@ public:
 	void CacheInventory(const TArray<UInventoryItem*>& Items);
 	const TArray<FInventoryItemSaveData>& GetCachedInventory() const;
 
+	UPROPERTY()
+	UUserWidget* LoadingScreenWidget;
+
+
+	UPROPERTY()
+	TSet<FPrimaryAssetId> CollectedItemAssets;
+
+	// 아이템 등록
+	UFUNCTION()
+	void RegisterCollectedItemAsset(const FPrimaryAssetId& AssetId)
+	{
+		CollectedItemAssets.Add(AssetId);
+	}
+
+	// 아이템 이미 등록되었는지 확인
+	UFUNCTION()
+	bool HasCollectedItemAsset(const FPrimaryAssetId& AssetId) const
+	{
+		return CollectedItemAssets.Contains(AssetId);
+	}
+
+
 protected:
 	UPROPERTY()
 	TMap<FName, FSavePointInfo> DiscoveredSavePoints;
