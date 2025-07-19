@@ -15,7 +15,11 @@ public class Third_Person_RPG : ModuleRules
 			"EnhancedInput",
             "UMG",
 			"Slate",        // UI 사용 시 필요
-			"SlateCore"     // FSlateBrush 등 사용 시 반드시 필요
+			"SlateCore" ,   // FSlateBrush 등 사용 시 반드시 필요
+
+			"NavigationSystem",
+			"AIModule",
+			"GameplayTasks"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
