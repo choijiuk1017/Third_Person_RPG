@@ -6,6 +6,10 @@
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "AIController.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/Actor.h"
+
+const FName TargetKey = TEXT("Target");
+const FName DistanceKey = TEXT("Distance");
 
 UBTService_DetectPlayer::UBTService_DetectPlayer()
 {
@@ -15,20 +19,31 @@ UBTService_DetectPlayer::UBTService_DetectPlayer()
 
 void UBTService_DetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-    Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
+	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-    APawn* ControlledPawn = OwnerComp.GetAIOwner()->GetPawn();
-    if (!ControlledPawn) return;
+	AAIController* AIController = OwnerComp.GetAIOwner();
+	if (!AIController) return;
 
-    UWorld* World = ControlledPawn->GetWorld();
-    if (!World) return;
+	APawn* ControlledPawn = AIController->GetPawn();
+	if (!ControlledPawn) return;
 
-    APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(World, 0));
-    if (!Player) return;
+	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(ControlledPawn->GetWorld(), 0));
+	if (!Player) return;
 
-    float Distance = FVector::Dist(Player->GetActorLocation(), ControlledPawn->GetActorLocation());
+	// 거리 계산
+	const float Distance = FVector::Dist(Player->GetActorLocation(), ControlledPawn->GetActorLocation());
 
-    // Set Target and Distance in Blackboard
-    OwnerComp.GetBlackboardComponent()->SetValueAsObject("Target", Player);
-    OwnerComp.GetBlackboardComponent()->SetValueAsFloat("Distance", Distance);
+	// Blackboard 설정
+	UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
+	if (BlackboardComp)
+	{
+		BlackboardComp->SetValueAsObject(TargetKey, Player);
+		BlackboardComp->SetValueAsFloat(DistanceKey, Distance);
+
+	}
+
+	if (Distance <= 1000.0f)
+	{
+		AIController->SetFocus(Player);
+	}
 }
