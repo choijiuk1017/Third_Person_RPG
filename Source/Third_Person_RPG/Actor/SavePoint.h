@@ -64,7 +64,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Widget, Meta = (AllowPrivateAccess = true))
 	TSubclassOf<class UInteractionWidget> InteractionWidgetClass;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Widget, Meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget")
 	TObjectPtr<class UInteractionWidget> InteractionWidget;
 
 	UFUNCTION()
