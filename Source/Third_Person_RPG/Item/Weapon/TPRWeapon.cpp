@@ -127,11 +127,11 @@ void ATPRWeapon::OnHitBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 
 		if (OtherActor->GetClass()->ImplementsInterface(UAnimationAttackInterface::StaticClass()))
 		{
-			IAnimationAttackInterface* Interface = Cast<IAnimationAttackInterface>(OtherActor);
+			/*IAnimationAttackInterface* Interface = Cast<IAnimationAttackInterface>(OtherActor);
 			if (Interface)
 			{
 				Interface->BaseAttackCheck(); 
-			}
+			}*/
 		}
 	}
 }

@@ -13,6 +13,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Third_Person_RPG/Data/MMComboActionData.h"
+#include "Third_Person_RPG/Character/EnemyCharacter.h"
 #include "Third_Person_RPG/Data/SkillData.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"	
 #include "Third_Person_RPG/UI/InventoryUI/InventoryWidget.h"
@@ -546,8 +547,7 @@ void APlayerCharacter::SetComboTimer()
 
 void APlayerCharacter::BaseAttackCheck()
 {
-	UE_LOG(LogTemp, Warning, TEXT("피격"));
-	if (CurrentWeapon == NULL)
+	if (CurrentWeapon == nullptr)
 	{
 		//충돌 결과를 반환하기 위한 배열
 		TArray<FHitResult> OutHitResults;
@@ -573,7 +573,15 @@ void APlayerCharacter::BaseAttackCheck()
 		//공격 판정 시 데미지 처리 예정
 		if (bHasHit)
 		{
-
+			for (const FHitResult& Result : OutHitResults)
+			{
+				AActor* HitActor = Result.GetActor();
+				if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(HitActor))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Monster Damaged"));
+					Enemy->PlayHitReactMontage();
+				}
+			}
 		}
 
 		// Capsule 모양의 디버깅 체크
@@ -654,7 +662,7 @@ void APlayerCharacter::SkillAttackCheck()
 
 	if (bHasHit)
 	{
-		// 데미지 처리 예정
+		UE_LOG(LogTemp, Warning, TEXT("Monster Damaged By Skill"));
 	}
 
 	// Capsule 디버그 시각화
