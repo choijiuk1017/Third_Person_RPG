@@ -6,6 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/PoseableMeshComponent.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "Third_Person_RPG/Character/EnemyCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Engine/World.h"
 #include "Engine/EngineTypes.h"
@@ -110,6 +111,8 @@ void ATPRWeapon::Tick(float DeltaTime)
 
 void ATPRWeapon::EnableHitBox()
 {
+	DamagedActors.Empty();
+
 	HitBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
@@ -123,15 +126,23 @@ void ATPRWeapon::OnHitBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 {
 	if (OtherActor && OtherActor != GetOwner())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("HitBox overlapped with: %s"), *OtherActor->GetName());
+		// 이미 피격된 액터인지 확인
+		if (DamagedActors.Contains(OtherActor))
+		{
+			return; // 이미 처리한 대상이면 무시
+		}
 
 		if (OtherActor->GetClass()->ImplementsInterface(UAnimationAttackInterface::StaticClass()))
 		{
-			/*IAnimationAttackInterface* Interface = Cast<IAnimationAttackInterface>(OtherActor);
-			if (Interface)
+			if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor))
 			{
-				Interface->BaseAttackCheck(); 
-			}*/
+				UE_LOG(LogTemp, Warning, TEXT("Enemy Damaged via Weapon HitBox"));
+
+				Enemy->PlayHitReactMontage();
+
+				// 피격된 액터로 등록
+				DamagedActors.Add(OtherActor);
+			}
 		}
 	}
 }

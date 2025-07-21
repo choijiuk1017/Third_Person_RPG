@@ -57,6 +57,8 @@ public:
 
 	void ReSetOverlappingSavePoint();
 
+	void TakeDamage();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class UInventoryComponent> InventoryComponent;
 
@@ -131,7 +133,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UAnimMontage> KneelingIdleMontage;
 
-
+	UPROPERTY(EditDefaultsOnly, Category = Animation)
+	TObjectPtr<class UAnimMontage> HitReactMontage;
 	
 
 	//Data Section

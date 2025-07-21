@@ -4,6 +4,7 @@
 #include "PlayerCharacter.h"
 
 #include "Engine/EngineTypes.h"
+#include "Engine/OverlapResult.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -133,6 +134,9 @@ APlayerCharacter::APlayerCharacter()
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
 
 	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(CHANNEL_ACTION, ECR_Overlap);
+	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
@@ -549,49 +553,57 @@ void APlayerCharacter::BaseAttackCheck()
 {
 	if (CurrentWeapon == nullptr)
 	{
-		//충돌 결과를 반환하기 위한 배열
-		TArray<FHitResult> OutHitResults;
+		TArray<FOverlapResult> OverlapResults;
 
-		//충돌 탐지를 위한 시작 지점
+		// 충돌 탐지를 위한 시작 지점
 		FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
 
-		//충돌 탐지 끝 지점
+		// 충돌 탐지 끝 지점
 		FVector End = Start + (GetActorForwardVector() * BasicComboData->AttackRange);
 
-		FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
+		// 오버랩 파라미터 설정
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(AttackOverlap), false, this);
 
-		bool bHasHit = GetWorld()->SweepMultiByChannel(
-			OutHitResults,
-			Start,
-			End,
-			FQuat::Identity,
-			CHANNEL_ACTION,
-			FCollisionShape::MakeSphere(BasicComboData->AttackRadius),
+		// 충돌 셰이프 설정 (캡슐)
+		FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(BasicComboData->AttackRadius, BasicComboData->AttackRange * 0.5f);
+
+		// 캡슐 중심 위치 계산
+		FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
+		FQuat CapsuleRotation = FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat();
+
+		// 오버랩 수행
+		bool bHasHit = GetWorld()->OverlapMultiByChannel(
+			OverlapResults,
+			CapsuleOrigin,
+			CapsuleRotation,
+			CHANNEL_ACTION,  // ECollisionChannel::ECC_GameTraceChannel2
+			CollisionShape,
 			Params
 		);
 
-		//공격 판정 시 데미지 처리 예정
+		// 판정 결과 처리
 		if (bHasHit)
 		{
-			for (const FHitResult& Result : OutHitResults)
+			TSet<AEnemyCharacter*> HitEnemies;
+
+			for (const FOverlapResult& Result : OverlapResults)
 			{
-				AActor* HitActor = Result.GetActor();
-				if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(HitActor))
+				if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(Result.GetActor()))
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Monster Damaged"));
-					Enemy->PlayHitReactMontage();
+					if (!HitEnemies.Contains(Enemy))
+					{
+						HitEnemies.Add(Enemy);
+						UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
+						Enemy->PlayHitReactMontage();
+					}
 				}
 			}
 		}
 
-		// Capsule 모양의 디버깅 체크
-		FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
-		float CapsuleHalfHeight = BasicComboData->AttackRange * 0.5f;
+		// 디버그 캡슐 시각화
 		FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
-
-		DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, BasicComboData->AttackRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
+		DrawDebugCapsule(GetWorld(), CapsuleOrigin, BasicComboData->AttackRange * 0.5f, BasicComboData->AttackRadius, CapsuleRotation, DrawColor, false, 3.0f);
 	}
-	
 }
 
 void APlayerCharacter::EnableWeaponHitBox()
@@ -617,7 +629,7 @@ void APlayerCharacter::SkillAttackCheck()
 
 	SpawnSkillEffect();
 
-	TArray<FHitResult> OutHitResults;
+	TArray<FOverlapResult> OverlapResults;
 
 	// 기본 값
 	FVector Start = GetActorLocation();
@@ -650,10 +662,9 @@ void APlayerCharacter::SkillAttackCheck()
 
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
 
-	bool bHasHit = GetWorld()->SweepMultiByChannel(
-		OutHitResults,
+	bool bHasHit = GetWorld()->OverlapMultiByChannel(
+		OverlapResults,
 		Start,
-		End,
 		FQuat::Identity,
 		CHANNEL_ACTION,
 		FCollisionShape::MakeSphere(SkillData->SkillRadius),
@@ -662,7 +673,20 @@ void APlayerCharacter::SkillAttackCheck()
 
 	if (bHasHit)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Monster Damaged By Skill"));
+		TSet<AEnemyCharacter*> HitEnemies;
+
+		for (const FOverlapResult& Result : OverlapResults)
+		{
+			if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(Result.GetActor()))
+			{
+				if (!HitEnemies.Contains(Enemy))
+				{
+					HitEnemies.Add(Enemy);
+					UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
+					Enemy->PlayHitReactMontage();
+				}
+			}
+		}
 	}
 
 	// Capsule 디버그 시각화
@@ -1001,6 +1025,7 @@ void APlayerCharacter::ToggleInventory()
 		PopUpInventory();
 	}
 }
+
 void APlayerCharacter::PopUpInventory()
 {
 	if (!InventoryWidgetInstance && InventoryWidgetClass)
@@ -1055,10 +1080,22 @@ void APlayerCharacter::CloseInventory()
 	bIsPopupInventory = false;
 }
 
-
-
-
 UInventoryComponent* APlayerCharacter::GetInventoryComponent()
 {
 	return InventoryComponent;
+}
+
+void APlayerCharacter::TakeDamage()
+{
+	bIsRoll = false;
+	bIsSkillActing = false;
+	bIsAttacking = false;
+	bIsInteracting = false;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+	}
 }

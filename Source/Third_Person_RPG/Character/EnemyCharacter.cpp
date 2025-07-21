@@ -7,6 +7,7 @@
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/EngineTypes.h"
+#include "Engine/OverlapResult.h"
 
 
 #define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
@@ -19,6 +20,9 @@ AEnemyCharacter::AEnemyCharacter()
 
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AEnemyAIController::StaticClass();
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(CHANNEL_ACTION, ECR_Overlap);
+	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
 }
 
 // Called when the game starts or when spawned
@@ -45,39 +49,56 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AEnemyCharacter::BaseAttackCheck()
 {
-	//충돌 결과를 반환하기 위한 배열
-	TArray<FHitResult> OutHitResults;
+	TArray<FOverlapResult> OverlapResults;
 
-	//충돌 탐지를 위한 시작 지점
+	// 충돌 탐지를 위한 시작 지점
 	FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
 
-	//충돌 탐지 끝 지점
+	// 충돌 탐지 끝 지점
 	FVector End = Start + (GetActorForwardVector() * 70.0f);
 
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
+	// 오버랩 중심점 (Capsule처럼 보이게)
+	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
+	FQuat CapsuleRotation = FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat();
 
-	bool bHasHit = GetWorld()->SweepMultiByChannel(
-		OutHitResults,
-		Start,
-		End,
-		FQuat::Identity,
+	// 오버랩 영역 설정
+	FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(70.0f, 70.0f * 0.5f);  // Radius, HalfHeight
+
+	// 쿼리 파라미터
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(AttackOverlap), false, this);
+
+	// 오버랩 실행
+	bool bHasHit = GetWorld()->OverlapMultiByChannel(
+		OverlapResults,
+		CapsuleOrigin,
+		CapsuleRotation,
 		CHANNEL_ACTION,
-		FCollisionShape::MakeSphere(70.0f),
+		CollisionShape,
 		Params
 	);
 
-	//공격 판정 시 데미지 처리 예정
+	// 피격 판정 처리
 	if (bHasHit)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Monster Damaged"));
+		TSet<APlayerCharacter*> DamagedPlayers;
+
+		for (const FOverlapResult& Result : OverlapResults)
+		{
+			if (APlayerCharacter* Player = Cast<APlayerCharacter>(Result.GetActor()))
+			{
+				if (!DamagedPlayers.Contains(Player))
+				{
+					DamagedPlayers.Add(Player);
+					UE_LOG(LogTemp, Warning, TEXT("Player Damaged via Overlap"));
+					Player->TakeDamage();
+				}
+			}
+		}
 	}
 
-	// Capsule 모양의 디버깅 체크
-	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
-	float CapsuleHalfHeight = 70.0f * 0.5f;
+	// 디버그용 캡슐 시각화
 	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
-
-	DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, 70.0f, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 3.0f);
+	DrawDebugCapsule(GetWorld(), CapsuleOrigin, 70.0f * 0.5f, 70.0f, CapsuleRotation, DrawColor, false, 3.0f);
 }
 
 void AEnemyCharacter::PlayHitReactMontage()
