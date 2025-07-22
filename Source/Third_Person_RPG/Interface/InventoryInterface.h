@@ -31,5 +31,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory")
 	void UnEquipWeapon(UInventoryItem* WeaponItem);
 
-
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory")
+	void ShowWeaponInfo(class UWeaponItemData* WeaponData);
 };

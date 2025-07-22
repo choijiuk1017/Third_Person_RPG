@@ -8,6 +8,7 @@
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
 #include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
 #include "Third_Person_RPG/Data/ItemData/TPRItemData.h"
+#include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
@@ -86,6 +87,18 @@ FReply USlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointe
 
     if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
     {
+        // 슬롯에 아이템이 있고 무기 아이템일 경우
+        if (InventoryItem && InventoryItem->ItemData->ItemType == EItemType::IT_Weapon)
+        {
+            if (UWeaponItemData* WeaponData = Cast<UWeaponItemData>(InventoryItem->ItemData))
+            {
+                if (OwningActor && OwningActor->GetClass()->ImplementsInterface(UInventoryInterface::StaticClass()))
+                {
+                    IInventoryInterface::Execute_ShowWeaponInfo(OwningActor, WeaponData);
+                }
+            }
+        }
+
         return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
     }
 
@@ -117,22 +130,44 @@ bool USlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDr
     {
         if (DroppedItem->ItemData->ItemType == EItemType::IT_Weapon)
         {
-            SetItem(DroppedItem);  // 슬롯에 표시
-
-            if (OwningActor && OwningActor->GetClass()->ImplementsInterface(UInventoryInterface::StaticClass()))
+            // 무기 데이터 가져오기
+            if (UWeaponItemData* WeaponData = Cast<UWeaponItemData>(DroppedItem->ItemData))
             {
-                UE_LOG(LogTemp, Warning, TEXT("Weapon Equiped"))
-                IInventoryInterface::Execute_EquipWeapon(OwningActor, DroppedItem);
+                // 플레이어 캐릭터 캐스팅
+                APlayerCharacter* Player = Cast<APlayerCharacter>(OwningActor);
+                if (!Player) return false;
+
+                const FCharacterAttributes& Attributes = Player->CharacterAttributes;
+                const FWeaponStatData& ReqStats = WeaponData->WeaponStats;
+
+                // 능력치 조건 비교
+                if (Attributes.Strength < ReqStats.RequiredStrength ||
+                    Attributes.Dexterity < ReqStats.RequiredDexterity ||
+                    Attributes.Intelligence < ReqStats.RequiredIntelligence ||
+                    Attributes.Faith < ReqStats.RequiredFaith ||
+                    Attributes.Arcane < ReqStats.RequiredArcane)
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("장착 실패: 요구 능력치 부족"));
+                    // 추후: UI 메시지 출력 가능
+                    return false;
+                }
+
+                // 조건 통과: 무기 장착
+                SetItem(DroppedItem);  // 슬롯에 표시
+
+                if (OwningActor && OwningActor->GetClass()->ImplementsInterface(UInventoryInterface::StaticClass()))
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("Weapon Equipped"));
+                    IInventoryInterface::Execute_EquipWeapon(OwningActor, DroppedItem);
+                }
+
+                return true;
             }
-
-
-            return true;
         }
     }
 
     return false;
 }
-
 
 void USlot::UnequipItem()
 {

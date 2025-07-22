@@ -16,6 +16,7 @@
 #include "Third_Person_RPG/Data/MMComboActionData.h"
 #include "Third_Person_RPG/Character/EnemyCharacter.h"
 #include "Third_Person_RPG/Data/SkillData.h"
+#include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"	
 #include "Third_Person_RPG/UI/InventoryUI/InventoryWidget.h"
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
@@ -1102,6 +1103,15 @@ void APlayerCharacter::ShowInteractionUI(const FText& InText)
 	{
 		InteractionWidgetInstance->SetHelpText(InText.ToString());
 		InteractionWidgetInstance->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+
+void APlayerCharacter::ShowWeaponInfo_Implementation(UWeaponItemData* WeaponData)
+{
+	if (InventoryWidgetInstance && WeaponData)
+	{
+		InventoryWidgetInstance->UpdateWeaponInfo(WeaponData);
 	}
 }
 

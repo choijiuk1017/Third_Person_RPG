@@ -120,6 +120,8 @@ public:
 
 	virtual void UnEquipWeapon_Implementation(UInventoryItem* WeaponItem) override;
 
+	virtual void ShowWeaponInfo_Implementation(UWeaponItemData* WeaponData) override;
+
 	UPROPERTY(BlueprintReadOnly, Category = "State")
 	bool bIsKneeling;
 
@@ -145,6 +147,7 @@ public:
 
 	void ShowInteractionUI(const FText& InText);
 
+
 	void HideInteractionUI();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -152,6 +155,22 @@ public:
 
 	UPROPERTY()
 	USavePointMenu* SavePointMenuInstance;
+
+	// 캐릭터 기본 능력치
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Stats")
+	FCharacterAttributes CharacterAttributes;
+
+	// 파생 능력치 (최대 HP/FP 등)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Stats")
+	FDerivedStats DerivedStats;
+
+	// 전투 중 수치 (현재 HP/FP 등)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Stats")
+	FCombatStats CombatStats;
+
+	// 캐릭터 레벨 (별도로 관리)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Stats")
+	int32 Level = 1;
 
 protected:
 	// Called when the game starts or when spawned

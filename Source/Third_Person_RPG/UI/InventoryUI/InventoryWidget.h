@@ -5,7 +5,9 @@
 #include "Third_Person_RPG/UI/InventoryUI/CustomWidget.h"
 #include "Third_Person_RPG/Inventory/InventoryComponent.h"
 #include "Third_Person_RPG/UI/InventoryUI/Slot.h"
+#include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
 #include "Components/Button.h" 
+#include "Styling/SlateColor.h"
 #include "InventoryWidget.generated.h"
 
 /**
@@ -25,7 +27,9 @@ public:
     UFUNCTION()
     void UpdateInventorySlot();
 
+    void UpdateStatPanel();
 
+    void UpdateWeaponInfo(UWeaponItemData* WeaponData);
 
 private:
     void CreateSlots(int32 NumSlots = 30);
@@ -73,5 +77,46 @@ private:
     class UButton* BTN_Sort;
 
     UPROPERTY(meta = (BindWidget))
+    class UImage* Image_WeaponIcon;
+
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Level;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Vigor;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Mind;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Endurance;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Strength;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Dexterity;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Intelligence;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Faith;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Arcane;
+
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_HP;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_FP;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Stamina;
+
+    // 무기 기본 정보
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_WeaponName;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_WeaponType;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_WeaponWeight;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_WeaponFP;
+
+    // 요구 능력치
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Require_Strength;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Require_Dexterity;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Require_Intelligence;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Require_Faith;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Require_Arcane;
+
+    // 스탯 보정
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Scaling_Strength;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Scaling_Dexterity;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Scaling_Intelligence;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Scaling_Faith;
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Scaling_Arcane;
+
+    UPROPERTY(meta = (BindWidget))
     USlot* EquippedWeaponSlot;
+
+    FSlateColor RedColor = FSlateColor(FLinearColor::Red);
+    FSlateColor WhiteColor = FSlateColor(FLinearColor::White);
+
 };

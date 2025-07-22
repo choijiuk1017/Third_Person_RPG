@@ -14,6 +14,7 @@
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Third_Person_RPG/Inventory/InventoryComponent.h"
+#include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
 
 void UInventoryWidget::NativeConstruct()
 {
@@ -81,6 +82,7 @@ void UInventoryWidget::Init()
 
             // 초기화 시 슬롯도 한 번 그려줌
             UpdateInventorySlot();
+            UpdateStatPanel();
 
         }
     }
@@ -99,6 +101,8 @@ void UInventoryWidget::CreateSlots(int32 NumSlots)
         {
             NewSlot->SetType(InventorySlotType);
             NewSlot->SetIndex(i);
+
+            NewSlot->OwningActor = GetOwningPlayerPawn();
 
             SlotList.Add(NewSlot);
             SlotContainer->AddChildToUniformGrid(NewSlot, i / 5, i % 5);
@@ -135,6 +139,8 @@ void UInventoryWidget::UpdateInventorySlot()
             }
         }
     }
+
+
 }
 
 EItemType UInventoryWidget::ConvertSlotTypeToItemType(ESlotType SlotType)
@@ -150,6 +156,89 @@ EItemType UInventoryWidget::ConvertSlotTypeToItemType(ESlotType SlotType)
     default:
         return EItemType::IT_None;
     }
+}
+
+void UInventoryWidget::UpdateStatPanel()
+{
+    if (APlayerCharacter* PC = Cast<APlayerCharacter>(GetOwningPlayerPawn()))
+    {
+        const auto& Attr = PC->CharacterAttributes;
+        const auto& Derived = PC->DerivedStats;
+        const auto& Combat = PC->CombatStats;
+
+        if (Text_Level)       Text_Level->SetText(FText::AsNumber(PC->Level)); // 레벨은 따로 변수로 있는 경우
+        if (Text_Vigor)       Text_Vigor->SetText(FText::AsNumber(Attr.Vigor));
+        if (Text_Mind)        Text_Mind->SetText(FText::AsNumber(Attr.Mind));
+        if (Text_Endurance)   Text_Endurance->SetText(FText::AsNumber(Attr.Endurance));
+        if (Text_Strength)    Text_Strength->SetText(FText::AsNumber(Attr.Strength));
+        if (Text_Dexterity)   Text_Dexterity->SetText(FText::AsNumber(Attr.Dexterity));
+        if (Text_Intelligence)Text_Intelligence->SetText(FText::AsNumber(Attr.Intelligence));
+        if (Text_Faith)       Text_Faith->SetText(FText::AsNumber(Attr.Faith));
+        if (Text_Arcane)      Text_Arcane->SetText(FText::AsNumber(Attr.Arcane));
+
+        if (Text_HP) Text_HP->SetText(FText::Format(FText::FromString("{0} / {1}"),
+            FText::AsNumber(Combat.CurrentHP), FText::AsNumber(Derived.MaxHP)));
+
+        if (Text_FP) Text_FP->SetText(FText::Format(FText::FromString("{0} / {1}"),
+            FText::AsNumber(Combat.CurrentFP), FText::AsNumber(Derived.MaxFP)));
+
+        if (Text_Stamina) Text_Stamina->SetText(FText::Format(FText::FromString("{0} / {1}"),
+            FText::AsNumber(Combat.CurrentStamina), FText::AsNumber(Derived.MaxStamina)));
+    }
+}
+
+void UInventoryWidget::UpdateWeaponInfo(UWeaponItemData* WeaponData)
+{
+    if (!WeaponData) return;
+
+    const FWeaponStatData& Stats = WeaponData->WeaponStats;
+
+    if (Image_WeaponIcon)
+    {
+        if (WeaponData->ItemTexture)
+        {
+            Image_WeaponIcon->SetBrushFromTexture(WeaponData->ItemTexture);
+            Image_WeaponIcon->SetVisibility(ESlateVisibility::Visible);
+        }
+        else
+        {
+            Image_WeaponIcon->SetVisibility(ESlateVisibility::Collapsed);
+        }
+    }
+
+    // 무기 텍스트 기본 출력
+    Text_WeaponName->SetText(Stats.WeaponName);
+    Text_WeaponType->SetText(Stats.WeaponType);
+    Text_WeaponWeight->SetText(FText::AsNumber(Stats.Weight));
+    Text_WeaponFP->SetText(FText::AsNumber(Stats.FPCost));
+
+    // 현재 플레이어 능력치와 비교
+    APlayerCharacter* PC = Cast<APlayerCharacter>(GetOwningPlayerPawn());
+    if (!PC) return;
+
+    const auto& Attr = PC->CharacterAttributes;
+
+    auto SetStatText = [](UTextBlock* TextBlock, int32 Value, bool bExceeds)
+        {
+            if (!TextBlock) return;
+            TextBlock->SetText(FText::AsNumber(Value));
+            FSlateColor Color = bExceeds ? FSlateColor(FLinearColor::Red) : FSlateColor(FLinearColor::White);
+            TextBlock->SetColorAndOpacity(Color);
+        };
+
+    // 요구 능력치 비교 및 색상 적용
+    SetStatText(Text_Require_Strength, Stats.RequiredStrength, Attr.Strength < Stats.RequiredStrength);
+    SetStatText(Text_Require_Dexterity, Stats.RequiredDexterity, Attr.Dexterity < Stats.RequiredDexterity);
+    SetStatText(Text_Require_Intelligence, Stats.RequiredIntelligence, Attr.Intelligence < Stats.RequiredIntelligence);
+    SetStatText(Text_Require_Faith, Stats.RequiredFaith, Attr.Faith < Stats.RequiredFaith);
+    SetStatText(Text_Require_Arcane, Stats.RequiredArcane, Attr.Arcane < Stats.RequiredArcane);
+
+    // 보정은 기존대로 흰색 텍스트 (추후 등급별 색상도 원하시면 추가 가능)
+    if (Text_Scaling_Strength) Text_Scaling_Strength->SetText(FText::FromString(Stats.StrengthScaling));
+    if (Text_Scaling_Dexterity) Text_Scaling_Dexterity->SetText(FText::FromString(Stats.DexterityScaling));
+    if (Text_Scaling_Intelligence) Text_Scaling_Intelligence->SetText(FText::FromString(Stats.IntelligenceScaling));
+    if (Text_Scaling_Faith) Text_Scaling_Faith->SetText(FText::FromString(Stats.FaithScaling));
+    if (Text_Scaling_Arcane) Text_Scaling_Arcane->SetText(FText::FromString(Stats.ArcaneScaling));
 }
 
 //void UInventoryWidget::OnClickSort()
