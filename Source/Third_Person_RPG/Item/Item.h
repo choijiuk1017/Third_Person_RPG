@@ -49,11 +49,6 @@ protected:
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Widget, Meta = (AllowPrivateAccess = true))
-	TSubclassOf<class UInteractionWidget> InteractionWidgetClass;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget")
-	TObjectPtr<class UInteractionWidget> InteractionWidget;
 
 public:	
 	// Called every frame
@@ -62,6 +57,6 @@ public:
 
 private:
 
-	FString HelpText;
+	FText HelpText;
 
 };

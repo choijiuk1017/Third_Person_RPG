@@ -164,6 +164,20 @@ void APlayerCharacter::BeginPlay()
 
 	}
 
+	if (InteractionWidgetClass)
+	{
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (PC)
+		{
+			InteractionWidgetInstance = CreateWidget<UInteractionWidget>(PC, InteractionWidgetClass);
+			if (InteractionWidgetInstance)
+			{
+				InteractionWidgetInstance->AddToViewport();
+				InteractionWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+			}
+		}
+	}
+
 	if (const UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
 		const FName TargetID = GI->GetPendingSavePoint();
@@ -773,10 +787,7 @@ void APlayerCharacter::Interact()
 			CurrentWeapon->SetActorEnableCollision(false);
 		}
 
-		if (OverlappingSavePoint->InteractionWidget)
-		{
-			OverlappingSavePoint->InteractionWidget->SetVisibility(ESlateVisibility::Hidden);
-		}
+		InteractionWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
 
 		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
@@ -1083,6 +1094,23 @@ void APlayerCharacter::CloseInventory()
 UInventoryComponent* APlayerCharacter::GetInventoryComponent()
 {
 	return InventoryComponent;
+}
+
+void APlayerCharacter::ShowInteractionUI(const FText& InText)
+{
+	if (InteractionWidgetInstance)
+	{
+		InteractionWidgetInstance->SetHelpText(InText.ToString());
+		InteractionWidgetInstance->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void APlayerCharacter::HideInteractionUI()
+{
+	if (InteractionWidgetInstance)
+	{
+		InteractionWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 void APlayerCharacter::TakeDamage()

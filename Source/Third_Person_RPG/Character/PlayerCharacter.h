@@ -13,7 +13,91 @@
 
 #include "PlayerCharacter.generated.h"
 
+USTRUCT(BlueprintType)
+struct FCharacterAttributes
+{
+	GENERATED_BODY()
 
+	// 생명력
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 Vigor = 10;
+
+	// 정신력
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 Mind = 10;
+
+	// 지구력
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 Endurance = 10;
+
+	// 근력
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 Strength = 10;
+
+	// 기량
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 Dexterity = 10;
+
+	// 지력
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 Intelligence = 10;
+
+	// 신앙
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 Faith = 10;
+
+	// 신비
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 Arcane = 10;
+};
+
+USTRUCT(BlueprintType)
+struct FDerivedStats
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MaxHP = 1000;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MaxFP = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MaxStamina = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxEquipLoad = 50.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Poise = 30.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Discovery = 100.f; // 발견력
+};
+
+USTRUCT(BlueprintType)
+struct FCombatStats
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 CurrentHP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 CurrentFP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 CurrentStamina;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 AttackPower;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 Defense;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Poise;
+};
 
 UCLASS()
 class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimationAttackInterface, public IInventoryInterface
@@ -58,6 +142,10 @@ public:
 	void ReSetOverlappingSavePoint();
 
 	void TakeDamage();
+
+	void ShowInteractionUI(const FText& InText);
+
+	void HideInteractionUI();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class UInventoryComponent> InventoryComponent;
@@ -157,6 +245,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class USavePointMenu> SavePointMenuClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UInteractionWidget> InteractionWidgetClass;
+
+	UInteractionWidget* InteractionWidgetInstance;
 
 	//Function Section
 	//기본 이동 함수

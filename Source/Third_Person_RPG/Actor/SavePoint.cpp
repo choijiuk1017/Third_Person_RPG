@@ -26,13 +26,8 @@ ASavePoint::ASavePoint()
 	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ASavePoint::OnOverlapBegin);
 	Trigger->OnComponentEndOverlap.AddDynamic(this, &ASavePoint::OnOverlapEnd);
 
-	static ConstructorHelpers::FClassFinder<UInteractionWidget> InteractionWidgetRef(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/BluePrint/WBP_Interaction.WBP_Interaction_C'"));
-	if (InteractionWidgetRef.Class)
-	{
-		InteractionWidgetClass = InteractionWidgetRef.Class;
-	}
 
-	HelpText = TEXT("Press 'E' to active save point.");
+	HelpText = FText::FromString(TEXT("Press 'E' to active save point."));
 
 }
 
@@ -43,13 +38,6 @@ void ASavePoint::BeginPlay()
 
 	SavePointInfo.Location = GetActorLocation();
 	
-	InteractionWidget = CreateWidget<UInteractionWidget>(GetWorld(), InteractionWidgetClass);
-	if (InteractionWidget)
-	{
-		InteractionWidget->SetHelpText(HelpText);
-		InteractionWidget->AddToViewport();
-		InteractionWidget->SetVisibility(ESlateVisibility::Hidden);
-	}
 }
 
 // Called every frame
@@ -62,16 +50,14 @@ void ASavePoint::Tick(float DeltaTime)
 void ASavePoint::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (InteractionWidget)
-	{
-		InteractionWidget->SetVisibility(ESlateVisibility::Visible);
-	}
+
 
 	APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor);
 
 	if (Player)
 	{
-		Player->SetOverlappingSavePoint(this); // 새로 만든 함수
+		Player->SetOverlappingSavePoint(this);
+		Player->ShowInteractionUI(HelpText);
 	}
 }
 
@@ -82,11 +68,8 @@ void ASavePoint::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Other
 
 	if (Player)
 	{
-		Player->ReSetOverlappingSavePoint(); // 새로 만든 함수
-	}
-	if (InteractionWidget)
-	{
-		InteractionWidget->SetVisibility(ESlateVisibility::Hidden);
+		Player->ReSetOverlappingSavePoint(); 
+		Player->HideInteractionUI();
 	}
 }
 

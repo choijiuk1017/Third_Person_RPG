@@ -26,14 +26,7 @@ AItem::AItem()
 	Trigger->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnOverlapBegin);
 	Trigger->OnComponentEndOverlap.AddDynamic(this, &AItem::OnOverlapEnd);
 
-
-	static ConstructorHelpers::FClassFinder<UInteractionWidget> InteractionWidgetRef(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/BluePrint/WBP_Interaction.WBP_Interaction_C'"));
-	if (InteractionWidgetRef.Class)
-	{
-		InteractionWidgetClass = InteractionWidgetRef.Class;
-	}
-
-	HelpText = TEXT("Press 'E' to pick up the item.");
+	HelpText = FText::FromString(TEXT("Press 'E' to pick up the item."));
 }
 
 // Called when the game starts or when spawned
@@ -55,14 +48,6 @@ void AItem::BeginPlay()
 		}
 	}
 
-	InteractionWidget = CreateWidget<UInteractionWidget>(GetWorld(), InteractionWidgetClass);
-	if (InteractionWidget)
-	{
-		InteractionWidget->SetHelpText(HelpText);
-		InteractionWidget->AddToViewport();
-		InteractionWidget->SetVisibility(ESlateVisibility::Hidden);
-	}
-
 }
 
 // Called every frame
@@ -80,11 +65,7 @@ void AItem::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherAct
 	if (Player)
 	{
 		Player->SetOverlappingItem(this); // 새로 만든 함수
-	}
-
-	if (InteractionWidget)
-	{
-		InteractionWidget->SetVisibility(ESlateVisibility::Visible);
+		Player->ShowInteractionUI(HelpText);
 	}
 }
 
@@ -96,11 +77,7 @@ void AItem::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor
 	if (Player)
 	{
 		Player->ReSetOverlappingItem(); // 새로 만든 함수
-	}
-
-	if (InteractionWidget)
-	{
-		InteractionWidget->SetVisibility(ESlateVisibility::Hidden);
+		Player->HideInteractionUI();
 	}
 }
 

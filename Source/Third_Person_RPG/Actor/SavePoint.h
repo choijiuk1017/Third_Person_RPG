@@ -61,11 +61,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "SavePoint")
 	bool bIsActivated = false;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Widget, Meta = (AllowPrivateAccess = true))
-	TSubclassOf<class UInteractionWidget> InteractionWidgetClass;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget")
-	TObjectPtr<class UInteractionWidget> InteractionWidget;
 
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -74,6 +69,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SavePoint")
 	FSavePointInfo SavePointInfo;
 
-	FString HelpText;
+	FText HelpText;
 
 };
