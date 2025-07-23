@@ -149,6 +149,9 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	CalculateDerivedStats();
+	InitializeCombatStats();
+
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 
 	if (PlayerController && IMC_Basic)
@@ -233,6 +236,93 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void APlayerCharacter::CalculateDerivedStats()
+{
+	DerivedStats.MaxHP = 300 + (CharacterAttributes.Vigor * 50);
+	DerivedStats.MaxFP = 50 + (CharacterAttributes.Mind * 10);
+	DerivedStats.MaxStamina = 80 + (CharacterAttributes.Endurance * 10);
+	DerivedStats.MaxEquipLoad = 30.f + (CharacterAttributes.Endurance * 1.5f);
+	DerivedStats.Poise = CharacterAttributes.Endurance * 1.2f;
+	DerivedStats.Discovery = CharacterAttributes.Arcane * 1.0f;
+}
+
+void APlayerCharacter::InitializeCombatStats()
+{
+	CombatStats.CurrentHP = DerivedStats.MaxHP;
+	CombatStats.CurrentFP = DerivedStats.MaxFP;
+	CombatStats.CurrentStamina = DerivedStats.MaxStamina;
+
+	// 무기 장착 전 기본 공격력/방어력
+	CombatStats.AttackPower = 50 + (CharacterAttributes.Strength * 2);  // 베이스 값
+	CombatStats.Defense = 10 + FMath::RoundToInt(CharacterAttributes.Strength * 1.5f);
+	CombatStats.Poise = DerivedStats.Poise;
+}
+
+float APlayerCharacter::ConvertScalingToMultiplier(const FString& Scaling)
+{
+	if (Scaling == "S") return 1.0f;
+	if (Scaling == "A") return 0.8f;
+	if (Scaling == "B") return 0.6f;
+	if (Scaling == "C") return 0.4f;
+	if (Scaling == "D") return 0.2f;
+	if (Scaling == "E") return 0.1f;
+	return 0.0f; // 없음
+}
+
+void APlayerCharacter::ApplyWeaponStats(ATPRWeapon* Weapon)
+{
+	if (!Weapon || !Weapon->ItemData) return;
+
+	const UWeaponItemData* WeaponItemData = Cast<UWeaponItemData>(Weapon->ItemData);
+	if (!WeaponItemData) return;
+
+	const FWeaponStatData& Stat = WeaponItemData->WeaponStats;
+
+
+	ResetCombatStats(); // 무기 해제 시와 동일하게 초기화
+
+
+	// Physical = 근력 + 기량 보정
+	float PhysicalScaling =
+		ConvertScalingToMultiplier(Stat.StrengthScaling) * CharacterAttributes.Strength +
+		ConvertScalingToMultiplier(Stat.DexterityScaling) * CharacterAttributes.Dexterity;
+
+	// Magic = 지력 보정
+	float MagicScaling =
+		ConvertScalingToMultiplier(Stat.IntelligenceScaling) * CharacterAttributes.Intelligence;
+
+	// Fire = 신비 보정
+	float FireScaling =
+		ConvertScalingToMultiplier(Stat.ArcaneScaling) * CharacterAttributes.Arcane;
+
+	// Lightning / Holy = 신앙 보정
+	float LightningScaling =
+		ConvertScalingToMultiplier(Stat.FaithScaling) * CharacterAttributes.Faith;
+
+	float HolyScaling = LightningScaling; // 동일하게 신앙 보정 사용
+
+	int32 TotalPhysical = Stat.Physical + FMath::RoundToInt(PhysicalScaling);
+	int32 TotalMagic = Stat.Magic + FMath::RoundToInt(MagicScaling);
+	int32 TotalFire = Stat.Fire + FMath::RoundToInt(FireScaling);
+	int32 TotalLightning = Stat.Lightning + FMath::RoundToInt(LightningScaling);
+	int32 TotalHoly = Stat.Holy + FMath::RoundToInt(HolyScaling);
+
+	// 총합 공격력 = 속성 포함 전체
+	int32 TotalAttackPower = TotalPhysical + TotalMagic + TotalFire + TotalLightning + TotalHoly;
+
+	CombatStats.AttackPower = TotalAttackPower;
+
+
+	UE_LOG(LogTemp, Warning, TEXT("총 공격력: %d (물리 %d / 마법 %d / 화염 %d / 번개 %d / 신성 %d)"),
+		TotalAttackPower, TotalPhysical, TotalMagic, TotalFire, TotalLightning, TotalHoly);
+}
+
+void APlayerCharacter::ResetCombatStats()
+{
+	CombatStats.AttackPower = 50 + (CharacterAttributes.Strength * 2);  // 베이스 값
+	CombatStats.Defense = 10 + FMath::RoundToInt(CharacterAttributes.Strength * 1.5f);     // 기본값
 }
 
 void APlayerCharacter::BasicMove(const FInputActionValue& Value)
@@ -388,6 +478,7 @@ void APlayerCharacter::SpawnSkillEffect()
 		SpawnRotation
 	);
 }
+
 void APlayerCharacter::ComboStart()
 {
 	if (CurrentWeapon)
@@ -609,7 +700,7 @@ void APlayerCharacter::BaseAttackCheck()
 					{
 						HitEnemies.Add(Enemy);
 						UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
-						Enemy->PlayHitReactMontage();
+						Enemy->TakeDamage(CombatStats.AttackPower);
 					}
 				}
 			}
@@ -698,7 +789,7 @@ void APlayerCharacter::SkillAttackCheck()
 				{
 					HitEnemies.Add(Enemy);
 					UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
-					Enemy->PlayHitReactMontage();
+					Enemy->TakeDamage(CombatStats.AttackPower);
 				}
 			}
 		}
@@ -955,6 +1046,8 @@ void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
 		SkillData = NewWeapon->SkillData;
 
 		WeaponComboData = NewWeapon->ComboData;
+
+		ApplyWeaponStats(NewWeapon);
 	}
 
 	if (NewWeapon->HitBox)
@@ -1022,6 +1115,8 @@ void APlayerCharacter::UnEquipWeapon_Implementation(UInventoryItem* WeaponItem)
 		WeaponComboData = nullptr;
 
 		InventoryComponent->EquippedWeaponItem = nullptr;
+
+		ResetCombatStats();
 
 		UE_LOG(LogTemp, Warning, TEXT("무기 해제됨"));
 	}
@@ -1123,16 +1218,36 @@ void APlayerCharacter::HideInteractionUI()
 	}
 }
 
-void APlayerCharacter::TakeDamage()
+void APlayerCharacter::TakeDamage(int32 DamageAmount)
 {
+	if (CombatStats.CurrentHP <= 0)
+		return; // 이미 사망한 상태
+
+	int32 Defense = CombatStats.Defense;
+
+	float DamageMultiplier = 100.f / (100.f + static_cast<float>(Defense));
+	float FinalDamage = DamageAmount * DamageMultiplier;
+
+	CombatStats.CurrentHP -= FinalDamage;
+
+	if (CombatStats.CurrentHP <= 0)
+	{
+		// 사망 처리
+		CombatStats.CurrentHP = 0;
+		UE_LOG(LogTemp, Error, TEXT("플레이어 사망"));
+
+		DisableInput(Cast<APlayerController>(GetController()));
+		return;
+	}
+
+	// 경직 애니메이션
 	bIsRoll = false;
 	bIsSkillActing = false;
 	bIsAttacking = false;
 	bIsInteracting = false;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance)
+	if (AnimInstance && HitReactMontage)
 	{
 		AnimInstance->Montage_Play(HitReactMontage);
 	}

@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Third_Person_RPG/Data/SkillData.h"
 #include "TPRWeapon.generated.h"
+class UWeaponItemData;
 
 UENUM(BlueprintType)
 enum class WeaponType : uint8
@@ -53,11 +54,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill")
 	USkillData* SkillData;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UWeaponItemData* ItemData;
+
 	UPROPERTY(EditAnywhere, Category = ComboData, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UMMComboActionData> ComboData;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	class UBoxComponent* HitBox;
+
+
 
 	UFUNCTION(BlueprintCallable)
 	void EnableHitBox();

@@ -143,7 +143,7 @@ public:
 
 	void ReSetOverlappingSavePoint();
 
-	void TakeDamage();
+	void TakeDamage(int32 DamageAmount);
 
 	void ShowInteractionUI(const FText& InText);
 
@@ -321,6 +321,14 @@ protected:
 
 	void CloseInventory();
 
+	void CalculateDerivedStats();
+	void InitializeCombatStats();
+
+	float ConvertScalingToMultiplier(const FString& Scaling);
+
+	void ApplyWeaponStats(class ATPRWeapon* Weapon);
+
+	void ResetCombatStats();
 	
 	//Variable Section
 	//구르기 확인 변수

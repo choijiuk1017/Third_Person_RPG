@@ -7,6 +7,24 @@
 #include "Third_Person_RPG/Interface/AnimationAttackInterface.h"
 #include "EnemyCharacter.generated.h"
 
+USTRUCT(BlueprintType)
+struct FEnemyStats
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 MaxHP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 CurrentHP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 AttackPower;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 Defense;
+};
+
 UCLASS()
 class THIRD_PERSON_RPG_API AEnemyCharacter : public ACharacter, public IAnimationAttackInterface
 {
@@ -32,8 +50,16 @@ public:
 
 	void PlayHitReactMontage();
 
+	void TakeDamage(int32 DamageAmount);
+
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	TObjectPtr<class UAnimMontage> AttackMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Stats")
+	FEnemyStats EnemyStats;
+
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	bool bIsDead;
 
 protected:
 	// Called when the game starts or when spawned

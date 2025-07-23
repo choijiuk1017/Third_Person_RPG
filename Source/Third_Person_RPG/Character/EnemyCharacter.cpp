@@ -6,6 +6,7 @@
 #include "Third_Person_RPG/Character/EnemyAIController.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/OverlapResult.h"
 
@@ -90,7 +91,8 @@ void AEnemyCharacter::BaseAttackCheck()
 				{
 					DamagedPlayers.Add(Player);
 					UE_LOG(LogTemp, Warning, TEXT("Player Damaged via Overlap"));
-					Player->TakeDamage();
+
+					Player->TakeDamage(EnemyStats.AttackPower);
 				}
 			}
 		}
@@ -106,5 +108,49 @@ void AEnemyCharacter::PlayHitReactMontage()
 	if (HitReactMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(HitReactMontage);
+	}
+}
+
+void AEnemyCharacter::TakeDamage(int32 DamageAmount)
+{
+	if (EnemyStats.CurrentHP == 0)
+		return;
+
+	int32 Defense = EnemyStats.Defense;
+
+	float DamageMultiplier = 100.f / (100.f + static_cast<float>(Defense));
+	float FinalDamage = DamageAmount * DamageMultiplier;
+
+	EnemyStats.CurrentHP -= FinalDamage;
+
+	if (EnemyStats.CurrentHP <= 0)
+	{
+		// »ç¸Á Ã³¸®
+		EnemyStats.CurrentHP = 0;
+		bIsDead = true;
+
+		AAIController* AIController = Cast<AAIController>(GetController());
+		if (AIController)
+		{
+			AIController->StopMovement();
+			AIController->UnPossess();
+		}
+
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+
+		USkeletalMeshComponent* MeshComponent = GetMesh();
+		MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		MeshComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+
+		UE_LOG(LogTemp, Error, TEXT("¸ó½ºÅÍ »ç¸Á"));
+
+		return;
+	}
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
 	}
 }
