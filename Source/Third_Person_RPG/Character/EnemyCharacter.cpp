@@ -3,12 +3,15 @@
 
 #include "Third_Person_RPG/Character/EnemyCharacter.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Third_Person_RPG/Character/EnemyAIController.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/OverlapResult.h"
+#include "Components/ProgressBar.h"
+#include "Kismet/GameplayStatics.h"
 
 
 #define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
@@ -24,12 +27,26 @@ AEnemyCharacter::AEnemyCharacter()
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(CHANNEL_ACTION, ECR_Overlap);
 	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
+
 }
 
 // Called when the game starts or when spawned
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	{
+		if (HPBarWidgetClass)
+		{
+			HPBarWidget = CreateWidget<UHPBar>(PC, HPBarWidgetClass);
+			if (HPBarWidget)
+			{
+				HPBarWidget->AddToViewport();
+				HPBarWidget->SetVisibility(ESlateVisibility::Hidden); // 처음엔 안 보이게
+			}
+		}
+	}
 	
 }
 
@@ -38,6 +55,17 @@ void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (HPBarWidget && !bIsDead)
+	{
+		FVector WorldLocation = GetActorLocation() + FVector(0, 0, 120.f); // 머리 위 위치
+		FVector2D ScreenPosition;
+
+		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (PC && PC->ProjectWorldLocationToScreen(WorldLocation, ScreenPosition))
+		{
+			HPBarWidget->SetPositionInViewport(ScreenPosition);
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -113,9 +141,6 @@ void AEnemyCharacter::PlayHitReactMontage()
 
 void AEnemyCharacter::TakeDamage(int32 DamageAmount)
 {
-	if (EnemyStats.CurrentHP == 0)
-		return;
-
 	int32 Defense = EnemyStats.Defense;
 
 	float DamageMultiplier = 100.f / (100.f + static_cast<float>(Defense));
@@ -123,11 +148,19 @@ void AEnemyCharacter::TakeDamage(int32 DamageAmount)
 
 	EnemyStats.CurrentHP -= FinalDamage;
 
+
 	if (EnemyStats.CurrentHP <= 0)
 	{
 		// 사망 처리
 		EnemyStats.CurrentHP = 0;
 		bIsDead = true;
+
+		if (HPBarWidget)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(HideHPBarTimerHandle);
+			HPBarWidget->RemoveFromParent();
+			HPBarWidget = nullptr;
+		}
 
 		AAIController* AIController = Cast<AAIController>(GetController());
 		if (AIController)
@@ -143,14 +176,70 @@ void AEnemyCharacter::TakeDamage(int32 DamageAmount)
 		MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		MeshComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 
+		
+
 		UE_LOG(LogTemp, Error, TEXT("몬스터 사망"));
 
 		return;
 	}
 
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && HitReactMontage)
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
-		AnimInstance->Montage_Play(HitReactMontage);
+		if (HitReactMontage)
+		{
+			AnimInstance->Montage_Play(HitReactMontage);
+
+			if (AEnemyAIController* EnemyAI = Cast<AEnemyAIController>(GetController()))
+			{
+				EnemyAI->PauseAI();
+			}
+
+			GetCharacterMovement()->DisableMovement();
+
+			GetWorld()->GetTimerManager().SetTimer(
+				HitReactTimerHandle,
+				this,
+				&AEnemyCharacter::EndHitReact,
+				HitReactDuration,
+				false
+			);
+		}
+	}
+
+
+
+	if (HPBarWidget)
+	{
+		float Percent = static_cast<float>(EnemyStats.CurrentHP) / static_cast<float>(EnemyStats.MaxHP);
+		HPBarWidget->SetHPBarPercent(Percent);
+
+		HPBarWidget->SetVisibility(ESlateVisibility::Visible);
+
+		GetWorld()->GetTimerManager().ClearTimer(HideHPBarTimerHandle);
+		GetWorld()->GetTimerManager().SetTimer(
+			HideHPBarTimerHandle,
+			[this]()
+			{
+				if (HPBarWidget && !bIsDead)
+				{
+					HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
+				}
+			},
+			1.0f,
+			false
+		);
+	}
+}
+
+void AEnemyCharacter::EndHitReact()
+{
+	if (!bIsDead)
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+		if (AEnemyAIController* EnemyAI = Cast<AEnemyAIController>(GetController()))
+		{
+			EnemyAI->ResumeAI();
+		}
 	}
 }

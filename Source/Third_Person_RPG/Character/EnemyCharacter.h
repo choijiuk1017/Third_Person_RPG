@@ -4,8 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/WidgetComponent.h"
 #include "Third_Person_RPG/Interface/AnimationAttackInterface.h"
+#include "Third_Person_RPG/UI/HPBar.h"
 #include "EnemyCharacter.generated.h"
+
+
 
 USTRUCT(BlueprintType)
 struct FEnemyStats
@@ -61,6 +65,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "State")
 	bool bIsDead;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HitReact")
+	float HitReactDuration = 0.5f;
+
+	UPROPERTY()
+	UHPBar* HPBarWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UHPBar> HPBarWidgetClass;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -69,7 +82,13 @@ protected:
 	TObjectPtr<class UAnimMontage> HitReactMontage;
 
 
-public:	
+private:
+	FTimerHandle HitReactTimerHandle;
+
+	FTimerHandle HideHPBarTimerHandle;
+
+	UFUNCTION()
+	void EndHitReact();
 
 
 };

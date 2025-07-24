@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Third_Person_RPG/Interface/AnimationAttackInterface.h"
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
+#include "Third_Person_RPG/Inventory/InventoryComponent.h"
 #include "Third_Person_RPG/Item/Item.h"
 #include "Third_Person_RPG/Actor/SavePoint.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"

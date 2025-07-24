@@ -396,7 +396,7 @@ void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
 
 void APlayerCharacter::BasicAttack()
 {
-	if (bIsInteracting || bIsRoll || bIsSkillActing || bIsInteracting || bIsKneeling) return;
+	if (bIsInteracting || bIsRoll || bIsSkillActing || bIsInteracting || bIsKneeling || bIsPopupInventory) return;
 
 	if (CurrentComboCount == 0)
 	{
@@ -710,6 +710,7 @@ void APlayerCharacter::BaseAttackCheck()
 		FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
 		DrawDebugCapsule(GetWorld(), CapsuleOrigin, BasicComboData->AttackRange * 0.5f, BasicComboData->AttackRadius, CapsuleRotation, DrawColor, false, 3.0f);
 	}
+	
 }
 
 void APlayerCharacter::EnableWeaponHitBox()

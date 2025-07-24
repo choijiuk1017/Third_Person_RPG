@@ -124,7 +124,6 @@ void ATPRWeapon::DisableHitBox()
 void ATPRWeapon::OnHitBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	APlayerCharacter* PlayerOwner = Cast<APlayerCharacter>(GetOwner());
 
 	if (OtherActor && OtherActor != GetOwner())
 	{
@@ -139,6 +138,8 @@ void ATPRWeapon::OnHitBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 			if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Enemy Damaged via Weapon HitBox"));
+
+				APlayerCharacter* PlayerOwner = Cast<APlayerCharacter>(GetOwner());
 
 				Enemy->TakeDamage(PlayerOwner->CombatStats.AttackPower);
 
