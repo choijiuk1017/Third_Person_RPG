@@ -25,6 +25,7 @@
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
+#include "Third_Person_RPG/UI/PlayerStatusWidget.h" 
 
 #define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
 
@@ -209,7 +210,30 @@ void APlayerCharacter::BeginPlay()
 		}
 
 
+
 	}	
+
+	if (PlayerStatusWidgetClass)
+	{
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (PC)
+		{
+			PlayerStatusWidgetInstance = CreateWidget<UPlayerStatusWidget>(PC, PlayerStatusWidgetClass);
+			if (PlayerStatusWidgetInstance)
+			{
+				PlayerStatusWidgetInstance->AddToViewport(/*ZOrder=*/10);
+				PlayerStatusWidgetInstance->InitWithPlayer(this);
+			}
+		}
+
+		PlayerStatusWidgetInstance->UpdateBarLengths(
+			DerivedStats.MaxHP,
+			DerivedStats.MaxFP,
+			DerivedStats.MaxStamina
+		);
+	}
+
+
 }
 
 // Called to bind functionality to input
@@ -1222,14 +1246,26 @@ void APlayerCharacter::HideInteractionUI()
 void APlayerCharacter::TakeDamage(int32 DamageAmount)
 {
 	if (CombatStats.CurrentHP <= 0)
-		return; // 이미 사망한 상태
+		return;
 
-	int32 Defense = CombatStats.Defense;
+	const int32 Defense = CombatStats.Defense;
+	const float DamageMultiplier = 100.f / (100.f + static_cast<float>(Defense));
+	const int32 FinalDamage = FMath::Max(1, FMath::RoundToInt(DamageAmount * DamageMultiplier));
 
-	float DamageMultiplier = 100.f / (100.f + static_cast<float>(Defense));
-	float FinalDamage = DamageAmount * DamageMultiplier;
+	CombatStats.CurrentHP = FMath::Clamp(CombatStats.CurrentHP - FinalDamage, 0, DerivedStats.MaxHP);
 
-	CombatStats.CurrentHP -= FinalDamage;
+	if (PlayerStatusWidgetInstance)
+	{
+		PlayerStatusWidgetInstance->UpdateHP(CombatStats.CurrentHP, DerivedStats.MaxHP);
+	}
+
+	if (CombatStats.CurrentHP <= 0)
+	{
+		CombatStats.CurrentHP = 0;
+		UE_LOG(LogTemp, Error, TEXT("플레이어 사망"));
+		DisableInput(Cast<APlayerController>(GetController()));
+		return;
+	}
 
 	if (CombatStats.CurrentHP <= 0)
 	{
@@ -1251,5 +1287,23 @@ void APlayerCharacter::TakeDamage(int32 DamageAmount)
 	if (AnimInstance && HitReactMontage)
 	{
 		AnimInstance->Montage_Play(HitReactMontage);
+	}
+}
+
+void APlayerCharacter::ConsumeStamina(int32 Amount)
+{
+	CombatStats.CurrentStamina = FMath::Clamp(CombatStats.CurrentStamina - Amount, 0, DerivedStats.MaxStamina);
+	if (PlayerStatusWidgetInstance)
+	{
+		PlayerStatusWidgetInstance->UpdateStamina(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
+	}
+}
+
+void APlayerCharacter::RestoreStaminaTick(int32 AmountPerTick)
+{
+	CombatStats.CurrentStamina = FMath::Clamp(CombatStats.CurrentStamina + AmountPerTick, 0, DerivedStats.MaxStamina);
+	if (PlayerStatusWidgetInstance)
+	{
+		PlayerStatusWidgetInstance->UpdateStamina(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
 	}
 }

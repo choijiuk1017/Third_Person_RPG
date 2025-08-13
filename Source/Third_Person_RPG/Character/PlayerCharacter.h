@@ -11,6 +11,8 @@
 #include "Third_Person_RPG/Actor/SavePoint.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
+#include "Blueprint/UserWidget.h"
+#include "Third_Person_RPG/UI/PlayerStatusWidget.h"
 
 #include "PlayerCharacter.generated.h"
 
@@ -270,6 +272,12 @@ protected:
 
 	UInteractionWidget* InteractionWidgetInstance;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UPlayerStatusWidget> PlayerStatusWidgetClass;
+
+	UPROPERTY()
+	UPlayerStatusWidget* PlayerStatusWidgetInstance;
+
 	//Function Section
 	//기본 이동 함수
 	void BasicMove(const FInputActionValue& Value);
@@ -330,6 +338,10 @@ protected:
 	void ApplyWeaponStats(class ATPRWeapon* Weapon);
 
 	void ResetCombatStats();
+
+	void ConsumeStamina(int32 Amount);
+
+	void RestoreStaminaTick(int32 AmountPerTick);
 	
 	//Variable Section
 	//구르기 확인 변수
