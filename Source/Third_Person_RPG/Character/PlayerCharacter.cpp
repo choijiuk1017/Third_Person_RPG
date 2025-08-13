@@ -223,16 +223,15 @@ void APlayerCharacter::BeginPlay()
 			{
 				PlayerStatusWidgetInstance->AddToViewport(/*ZOrder=*/10);
 				PlayerStatusWidgetInstance->InitWithPlayer(this);
+
+				PlayerStatusWidgetInstance->UpdateBarLengths(
+					DerivedStats.MaxHP,
+					DerivedStats.MaxFP,
+					DerivedStats.MaxStamina
+				);
 			}
 		}
-
-		PlayerStatusWidgetInstance->UpdateBarLengths(
-			DerivedStats.MaxHP,
-			DerivedStats.MaxFP,
-			DerivedStats.MaxStamina
-		);
 	}
-
 
 }
 
@@ -260,6 +259,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	StaminaRegenTick(DeltaTime);
 }
 
 void APlayerCharacter::CalculateDerivedStats()
@@ -393,6 +393,9 @@ void APlayerCharacter::RollStart()
 	// 구르기 중이면 리턴
 	if (bIsInteracting || bIsRoll || bIsSkillActing) return;
 
+	if (CombatStats.CurrentStamina < StaminaCost_Roll) return;
+	ConsumeStamina(StaminaCost_Roll);
+
 	// 애님 인스턴스 가져오기
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
@@ -442,6 +445,9 @@ void APlayerCharacter::BasicAttack()
 void APlayerCharacter::SkillStart()
 {
 	if (bIsInteracting || bIsRoll || !SkillData || !SkillData->SkillMontage || bIsSkillActing) return;
+
+	if (CombatStats.CurrentStamina < StaminaCost_Skill) return;
+	ConsumeStamina(StaminaCost_Skill);
 
 	// 공격 시 플레이어 이동 불가
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
@@ -505,6 +511,8 @@ void APlayerCharacter::SpawnSkillEffect()
 
 void APlayerCharacter::ComboStart()
 {
+	if (!TryConsumeStamina(StaminaCost_Attack)) return;
+
 	if (CurrentWeapon)
 	{
 		CurrentComboCount = 1;
@@ -577,10 +585,35 @@ void APlayerCharacter::ComboEnd(UAnimMontage* Montage, bool IsEnded)
 void APlayerCharacter::ComboCheck()
 {
 	ComboTimerHandle.Invalidate();
+
+	auto ConsumePerHitOrStop = [this]() -> bool
+		{
+			if (!bRequireStaminaForComboContinue)
+			{
+				if (HasStamina(StaminaCost_AttackPerHit))
+				{
+					ConsumeStamina(StaminaCost_AttackPerHit);
+				}
+				return true;
+			}
+
+			if (!TryConsumeStamina(StaminaCost_AttackPerHit))
+			{
+				bHasComboInput = false;
+				bIsAttacking = false;
+				GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+
+				return false;
+			}
+			return true;
+		};
+
 	if (CurrentWeapon)
 	{
 		if (bHasComboInput)
 		{
+			if (!ConsumePerHitOrStop()) return;
+
 			//콤보 수 증가
 			CurrentComboCount = FMath::Clamp(CurrentComboCount + 1, 1, WeaponComboData->MaxComboCount);
 
@@ -605,6 +638,8 @@ void APlayerCharacter::ComboCheck()
 	{
 		if (bHasComboInput)
 		{
+			if (!ConsumePerHitOrStop()) return;
+
 			//콤보 수 증가
 			CurrentComboCount = FMath::Clamp(CurrentComboCount + 1, 1, BasicComboData->MaxComboCount);
 
@@ -1261,14 +1296,6 @@ void APlayerCharacter::TakeDamage(int32 DamageAmount)
 
 	if (CombatStats.CurrentHP <= 0)
 	{
-		CombatStats.CurrentHP = 0;
-		UE_LOG(LogTemp, Error, TEXT("플레이어 사망"));
-		DisableInput(Cast<APlayerController>(GetController()));
-		return;
-	}
-
-	if (CombatStats.CurrentHP <= 0)
-	{
 		// 사망 처리
 		CombatStats.CurrentHP = 0;
 		UE_LOG(LogTemp, Error, TEXT("플레이어 사망"));
@@ -1306,4 +1333,70 @@ void APlayerCharacter::RestoreStaminaTick(int32 AmountPerTick)
 	{
 		PlayerStatusWidgetInstance->UpdateStamina(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
 	}
+}
+
+int32 APlayerCharacter::GetStaminaRegenPerSecond() const
+{
+	const float Half = DerivedStats.MaxEquipLoad * 0.5f;
+	const float W = GetCurrentWeaponWeight();
+
+	if (W <= Half - 5.f)
+	{
+		return StaminaRegen_Light;
+	}
+	if (W > Half - 5.f && W < Half + 5.f)
+	{
+		return StaminaRegen_Medium;
+	}
+	return StaminaRegen_Heavy;
+}
+
+float APlayerCharacter::GetCurrentWeaponWeight() const
+{
+	if (CurrentWeapon && CurrentWeapon->ItemData)
+	{
+		if (const UWeaponItemData* WData = Cast<UWeaponItemData>(CurrentWeapon->ItemData))
+		{
+			return WData->WeaponStats.Weight;
+		}
+	}
+	return 0.f;
+}
+
+void APlayerCharacter::StaminaRegenTick(float DeltaSeconds)
+{
+	// 비활성화면 종료
+	if (!bEnableFrameStaminaRegen) return;
+
+	// 이미 최대면 종료
+	if (CombatStats.CurrentStamina >= DerivedStats.MaxStamina) return;
+
+	// 초당 회복량(정수)을 프레임 환산
+	const int32 RegenPerSec = GetStaminaRegenPerSecond(); // (무게 조건에 따라 70/50/30 반환)
+	if (RegenPerSec <= 0) return;
+
+	// 누적: 초당 * Delta + 잔여분
+	StaminaRegenAccum += static_cast<float>(RegenPerSec) * DeltaSeconds;
+
+	// 정수 부분만 반영, 소수는 다음 프레임으로 이월
+	const int32 RegenWhole = FMath::FloorToInt(StaminaRegenAccum);
+	if (RegenWhole > 0)
+	{
+		StaminaRegenAccum -= static_cast<float>(RegenWhole);
+
+		// 실제 정수만큼 회복 (UI 갱신 포함)
+		RestoreStaminaTick(RegenWhole);
+	}
+}
+
+bool APlayerCharacter::HasStamina(int32 Amount) const
+{
+	return CombatStats.CurrentStamina >= Amount;
+}
+
+bool APlayerCharacter::TryConsumeStamina(int32 Amount)
+{
+	if (!HasStamina(Amount)) return false;
+	ConsumeStamina(Amount); 
+	return true;
 }

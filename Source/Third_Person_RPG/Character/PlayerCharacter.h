@@ -342,6 +342,12 @@ protected:
 	void ConsumeStamina(int32 Amount);
 
 	void RestoreStaminaTick(int32 AmountPerTick);
+
+	void StaminaRegenTick(float DeltaSeconds);
+
+	float GetCurrentWeaponWeight() const;
+
+	int32 GetStaminaRegenPerSecond() const;
 	
 	//Variable Section
 	//구르기 확인 변수
@@ -361,5 +367,42 @@ protected:
 
 	uint8 bIsPopupInventory : 1;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
+	int32 StaminaCost_Roll = 50;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
+	int32 StaminaCost_Attack = 50;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
+	int32 StaminaCost_AttackPerHit = 50;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
+	int32 StaminaCost_Skill = 100;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
+	int32 StaminaRegen_Light = 20;   // (무게 <= MaxEquipLoad*0.5 - 5)
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
+	int32 StaminaRegen_Medium = 15;  // (무게가 절반 ±5 이내)
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
+	int32 StaminaRegen_Heavy = 13;   // (무게 >= MaxEquipLoad*0.5 + 5)
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
+	bool bRequireStaminaForComboContinue = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
+	bool bEnableFrameStaminaRegen = true;
+
+	float StaminaRegenAccum = 0.f;
+
+
+	UFUNCTION(BlueprintCallable, Category = "Stamina")
+	bool HasStamina(int32 Amount) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Stamina")
+	bool TryConsumeStamina(int32 Amount);
+
+
+	
 };
