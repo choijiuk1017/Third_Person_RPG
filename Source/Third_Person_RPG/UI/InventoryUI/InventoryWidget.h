@@ -93,6 +93,9 @@ private:
     UPROPERTY(meta = (BindWidget)) UTextBlock* Text_FP;
     UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Stamina;
 
+    UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Weight;
+
+
     // 무기 기본 정보
     UPROPERTY(meta = (BindWidget)) UTextBlock* Text_WeaponName;
     UPROPERTY(meta = (BindWidget)) UTextBlock* Text_WeaponType;
@@ -118,5 +121,8 @@ private:
 
     FSlateColor RedColor = FSlateColor(FLinearColor::Red);
     FSlateColor WhiteColor = FSlateColor(FLinearColor::White);
+
+    float GetCurrentEquipWeight() const;               
+    FString GetWeightStateString(float Current, float Max) const;
 
 };

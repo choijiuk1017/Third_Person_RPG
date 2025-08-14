@@ -166,6 +166,7 @@ void UInventoryWidget::UpdateStatPanel()
         const auto& Derived = PC->DerivedStats;
         const auto& Combat = PC->CombatStats;
 
+
         if (Text_Level)       Text_Level->SetText(FText::AsNumber(PC->Level)); // 레벨은 따로 변수로 있는 경우
         if (Text_Vigor)       Text_Vigor->SetText(FText::AsNumber(Attr.Vigor));
         if (Text_Mind)        Text_Mind->SetText(FText::AsNumber(Attr.Mind));
@@ -184,6 +185,35 @@ void UInventoryWidget::UpdateStatPanel()
 
         if (Text_Stamina) Text_Stamina->SetText(FText::Format(FText::FromString("{0} / {1}"),
             FText::AsNumber(Combat.CurrentStamina), FText::AsNumber(Derived.MaxStamina)));
+
+        if (Text_Weight)
+        {
+            const float CurrentW = GetCurrentEquipWeight();   // 헬퍼 사용 중이면 그대로
+            const float MaxW = Derived.MaxEquipLoad;
+
+            // 상태 문자열
+            const FString StateStr = GetWeightStateString(CurrentW, MaxW);
+
+            // 보기 좋은 한 자리 소수 표시 (Printf 이용)
+            const FString WeightStr = FString::Printf(TEXT("%.1f / %.1f (%s)"),
+                CurrentW, MaxW, *StateStr);
+
+            Text_Weight->SetText(FText::FromString(WeightStr));
+
+            // (선택) 상태에 따라 색상 변화
+            if (StateStr == TEXT("Heavy"))
+            {
+                Text_Weight->SetColorAndOpacity(FSlateColor(FLinearColor::Red));
+            }
+            else if (StateStr == TEXT("Light"))
+            {
+                Text_Weight->SetColorAndOpacity(FSlateColor(FLinearColor(0.6f, 0.9f, 0.6f)));
+            }
+            else // 보통
+            {
+                Text_Weight->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+            }
+        }
     }
 }
 
@@ -233,12 +263,38 @@ void UInventoryWidget::UpdateWeaponInfo(UWeaponItemData* WeaponData)
     SetStatText(Text_Require_Faith, Stats.RequiredFaith, Attr.Faith < Stats.RequiredFaith);
     SetStatText(Text_Require_Arcane, Stats.RequiredArcane, Attr.Arcane < Stats.RequiredArcane);
 
-    // 보정은 기존대로 흰색 텍스트 (추후 등급별 색상도 원하시면 추가 가능)
     if (Text_Scaling_Strength) Text_Scaling_Strength->SetText(FText::FromString(Stats.StrengthScaling));
     if (Text_Scaling_Dexterity) Text_Scaling_Dexterity->SetText(FText::FromString(Stats.DexterityScaling));
     if (Text_Scaling_Intelligence) Text_Scaling_Intelligence->SetText(FText::FromString(Stats.IntelligenceScaling));
     if (Text_Scaling_Faith) Text_Scaling_Faith->SetText(FText::FromString(Stats.FaithScaling));
     if (Text_Scaling_Arcane) Text_Scaling_Arcane->SetText(FText::FromString(Stats.ArcaneScaling));
+}
+
+float UInventoryWidget::GetCurrentEquipWeight() const
+{
+    if (const APlayerCharacter* PC = Cast<APlayerCharacter>(GetOwningPlayerPawn()))
+    {
+        if (const UInventoryComponent* Inv = PC->InventoryComponent)
+        {
+            if (const UInventoryItem* Equipped = Inv->EquippedWeaponItem)
+            {
+                if (const UWeaponItemData* WData = Cast<UWeaponItemData>(Equipped->ItemData))
+                {
+                    return WData->WeaponStats.Weight;
+                }
+            }
+        }
+    }
+    return 0.f;
+}
+
+FString UInventoryWidget::GetWeightStateString(float Current, float Max) const
+{
+    const float Half = Max * 0.5f;
+
+    if (Current <= Half - 5.f)   return TEXT("Light");
+    if (Current < Half + 5.f)   return TEXT("Normal");
+    return TEXT("Heavy");
 }
 
 //void UInventoryWidget::OnClickSort()

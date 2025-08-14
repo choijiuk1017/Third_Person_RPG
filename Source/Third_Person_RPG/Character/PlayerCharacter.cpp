@@ -208,9 +208,6 @@ void APlayerCharacter::BeginPlay()
 				UInventoryItem* AddedItem = InventoryComponent->AddItemByData(SaveData.ItemData, SaveData.Quantity, bShouldEquip);
 			}
 		}
-
-
-
 	}	
 
 	if (PlayerStatusWidgetClass)
@@ -223,6 +220,8 @@ void APlayerCharacter::BeginPlay()
 			{
 				PlayerStatusWidgetInstance->AddToViewport(/*ZOrder=*/10);
 				PlayerStatusWidgetInstance->InitWithPlayer(this);
+
+				StatusHUDSavedVisibility = PlayerStatusWidgetInstance->GetVisibility();
 
 				PlayerStatusWidgetInstance->UpdateBarLengths(
 					DerivedStats.MaxHP,
@@ -943,6 +942,8 @@ void APlayerCharacter::Interact()
 
 		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
+		SetStatusHUDVisible(false);
+
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
 		if (AnimInstance && KneelingDownMontage)
@@ -955,8 +956,6 @@ void APlayerCharacter::Interact()
 			return;
 		}
 	}
-
-	
 }
 
 void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterrupted)
@@ -1029,6 +1028,8 @@ void APlayerCharacter::EndInteractSavePoint()
 			PC->SetIgnoreMoveInput(false);
 			PC->SetIgnoreLookInput(false);
 		}
+		SetStatusHUDVisible(true);
+
 
 		return;
 
@@ -1220,6 +1221,8 @@ void APlayerCharacter::PopUpInventory()
 		PC->SetIgnoreLookInput(true);
 	}
 
+	SetStatusHUDVisible(false);
+
 	bIsPopupInventory = true;
 }
 
@@ -1243,6 +1246,7 @@ void APlayerCharacter::CloseInventory()
 		PC->SetIgnoreMoveInput(false);
 		PC->SetIgnoreLookInput(false);
 	}
+	SetStatusHUDVisible(true);
 
 	bIsPopupInventory = false;
 }
@@ -1399,4 +1403,18 @@ bool APlayerCharacter::TryConsumeStamina(int32 Amount)
 	if (!HasStamina(Amount)) return false;
 	ConsumeStamina(Amount); 
 	return true;
+}
+
+void APlayerCharacter::SetStatusHUDVisible(bool bVisible)
+{
+	if (!PlayerStatusWidgetInstance) return;
+
+	if (bVisible)
+	{
+		PlayerStatusWidgetInstance->SetVisibility(StatusHUDSavedVisibility);
+	}
+	else
+	{
+		PlayerStatusWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }

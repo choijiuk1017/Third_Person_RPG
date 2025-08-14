@@ -150,8 +150,11 @@ public:
 
 	void ShowInteractionUI(const FText& InText);
 
-
 	void HideInteractionUI();
+
+	void SetStatusHUDVisible(bool bVisible);
+
+	float GetCurrentWeaponWeight() const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class UInventoryComponent> InventoryComponent;
@@ -345,8 +348,6 @@ protected:
 
 	void StaminaRegenTick(float DeltaSeconds);
 
-	float GetCurrentWeaponWeight() const;
-
 	int32 GetStaminaRegenPerSecond() const;
 	
 	//Variable Section
@@ -403,6 +404,6 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Stamina")
 	bool TryConsumeStamina(int32 Amount);
 
-
-	
+	UPROPERTY()
+	ESlateVisibility StatusHUDSavedVisibility = ESlateVisibility::SelfHitTestInvisible;
 };
