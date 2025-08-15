@@ -395,6 +395,10 @@ void APlayerCharacter::RollStart()
 	if (CombatStats.CurrentStamina < StaminaCost_Roll) return;
 	ConsumeStamina(StaminaCost_Roll);
 
+
+	const float Half = DerivedStats.MaxEquipLoad * 0.5f;
+	const float W = GetCurrentWeaponWeight();
+
 	// 애님 인스턴스 가져오기
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
@@ -402,15 +406,30 @@ void APlayerCharacter::RollStart()
 		// Roll Check (구르기 활성화)
 		bIsRoll = true;
 
-		// 몽타주 재생
-		AnimInstance->Montage_Play(RollMontage, 1.7f);
-
+		if (W <= Half - 5.f)
+		{
+			// 몽타주 재생
+			AnimInstance->Montage_Play(RollMontage, 2.0f);
+		}
+		else if (W > Half - 5.f && W < Half + 5.f)
+		{
+			// 몽타주 재생
+			AnimInstance->Montage_Play(RollMontage, 1.5f);
+		}
+		else
+		{
+			// 몽타주 재생
+			AnimInstance->Montage_Play(RollMontage, 1.0f);
+		}
+	
 		// 몽타주 재생 종료 바인딩
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindUObject(this, &APlayerCharacter::RollEnd);
 
 		// RollMontage 종료 시 EndDelegate에 연동된 함수 호출
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, RollMontage);
+
+		
 	}
 }
 

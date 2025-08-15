@@ -381,13 +381,13 @@ protected:
 	int32 StaminaCost_Skill = 100;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
-	int32 StaminaRegen_Light = 20;   // (무게 <= MaxEquipLoad*0.5 - 5)
+	int32 StaminaRegen_Light = 30;   // (무게 <= MaxEquipLoad*0.5 - 5)
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
-	int32 StaminaRegen_Medium = 15;  // (무게가 절반 ±5 이내)
+	int32 StaminaRegen_Medium = 20;  // (무게가 절반 ±5 이내)
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
-	int32 StaminaRegen_Heavy = 13;   // (무게 >= MaxEquipLoad*0.5 + 5)
+	int32 StaminaRegen_Heavy = 15;   // (무게 >= MaxEquipLoad*0.5 + 5)
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
 	bool bRequireStaminaForComboContinue = true;
