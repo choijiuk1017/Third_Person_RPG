@@ -281,6 +281,10 @@ protected:
 	UPROPERTY()
 	UPlayerStatusWidget* PlayerStatusWidgetInstance;
 
+
+	UFUNCTION()
+	void SprintStaminaTick(float DeltaSeconds);
+
 	//Function Section
 	//기본 이동 함수
 	void BasicMove(const FInputActionValue& Value);
@@ -403,6 +407,21 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Stamina")
 	bool TryConsumeStamina(int32 Amount);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stamina")
+	int32 StaminaCost_SprintPerSecond = 15;   
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stamina")
+	int32 StaminaCost_SprintStart = 0;    
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stamina")
+	bool bBlockRegenWhileSprinting = true;      
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stamina")
+	bool bIsSprinting = false;
+
+	UPROPERTY(Transient)
+	float SprintDrainAccum = 0.f;
 
 	UPROPERTY()
 	ESlateVisibility StatusHUDSavedVisibility = ESlateVisibility::SelfHitTestInvisible;

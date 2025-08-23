@@ -258,6 +258,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	SprintStaminaTick(DeltaTime);
+
 	StaminaRegenTick(DeltaTime);
 }
 
@@ -379,11 +381,30 @@ void APlayerCharacter::BasicLook(const FInputActionValue& Value)
 
 void APlayerCharacter::BeginSprint()
 {
+	if (bIsSprinting) return;
+
+	// 시작 즉시 소모가 있다면 체크
+	if (StaminaCost_SprintStart > 0)
+	{
+		if (!TryConsumeStamina(StaminaCost_SprintStart))
+		{
+			return; // 시작 비용 못 내면 스프린트 불가
+		}
+	}
+	else
+	{
+		if (!HasStamina(1)) return; // 스태미너 0이면 스프린트 시작 불가
+	}
+
+	bIsSprinting = true;
+	SprintDrainAccum = 0.f;
+
 	GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
 }
 
 void APlayerCharacter::EndSprint()
 {
+	bIsSprinting = false;
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 }
 
@@ -1391,6 +1412,8 @@ void APlayerCharacter::StaminaRegenTick(float DeltaSeconds)
 	// 비활성화면 종료
 	if (!bEnableFrameStaminaRegen) return;
 
+	if (bBlockRegenWhileSprinting && bIsSprinting) return;
+
 	// 이미 최대면 종료
 	if (CombatStats.CurrentStamina >= DerivedStats.MaxStamina) return;
 
@@ -1435,5 +1458,36 @@ void APlayerCharacter::SetStatusHUDVisible(bool bVisible)
 	else
 	{
 		PlayerStatusWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void APlayerCharacter::SprintStaminaTick(float DeltaSeconds)
+{
+	if (!bIsSprinting) return;
+
+	// 스태미너가 바닥나면 자동으로 스프린트 종료
+	if (CombatStats.CurrentStamina <= 0)
+	{
+		EndSprint();
+		return;
+	}
+
+	// 초당 소모량을 프레임 단위로 누적
+	const int32 DrainPerSec = StaminaCost_SprintPerSecond;
+	if (DrainPerSec <= 0) return;
+
+	SprintDrainAccum += static_cast<float>(DrainPerSec) * DeltaSeconds;
+
+	// 정수 부분만 소모, 소수는 누적 유지
+	const int32 DrainWhole = FMath::FloorToInt(SprintDrainAccum);
+	if (DrainWhole > 0)
+	{
+		SprintDrainAccum -= static_cast<float>(DrainWhole);
+		ConsumeStamina(DrainWhole); // UI 자동 갱신됨
+
+		if (CombatStats.CurrentStamina <= 0)
+		{
+			EndSprint();
+		}
 	}
 }
