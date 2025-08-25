@@ -425,4 +425,19 @@ protected:
 
 	UPROPERTY()
 	ESlateVisibility StatusHUDSavedVisibility = ESlateVisibility::SelfHitTestInvisible;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill|Cost")
+	bool bSkillConsumesFP = true;
+
+	UFUNCTION(BlueprintCallable, Category = "Skill|Cost")
+	int32 GetCurrentSkillFPCost() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Status|FP")
+	bool HasFP(int32 Amount) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Status|FP")
+	bool TryConsumeFP(int32 Amount);
+
+	UFUNCTION(BlueprintCallable, Category = "Status|FP")
+	void ConsumeFP(int32 Amount);
 };

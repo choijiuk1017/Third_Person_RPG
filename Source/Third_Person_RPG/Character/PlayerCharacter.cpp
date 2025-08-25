@@ -485,6 +485,18 @@ void APlayerCharacter::SkillStart()
 {
 	if (bIsInteracting || bIsRoll || !SkillData || !SkillData->SkillMontage || bIsSkillActing) return;
 
+	if (bSkillConsumesFP)
+	{
+		const int32 FPCost = GetCurrentSkillFPCost();
+		if (FPCost > 0)
+		{
+			if (!TryConsumeFP(FPCost))
+			{
+				return;
+			}
+		}
+	}
+
 	if (CombatStats.CurrentStamina < StaminaCost_Skill) return;
 	ConsumeStamina(StaminaCost_Skill);
 
@@ -1490,4 +1502,42 @@ void APlayerCharacter::SprintStaminaTick(float DeltaSeconds)
 			EndSprint();
 		}
 	}
+}
+
+bool APlayerCharacter::HasFP(int32 Amount) const
+{
+	return CombatStats.CurrentFP >= Amount;
+}
+
+bool APlayerCharacter::TryConsumeFP(int32 Amount)
+{
+	if (!HasFP(Amount)) return false;
+	ConsumeFP(Amount);
+	return true;
+}
+
+void APlayerCharacter::ConsumeFP(int32 Amount)
+{
+	CombatStats.CurrentFP = FMath::Clamp(CombatStats.CurrentFP - Amount, 0, DerivedStats.MaxFP);
+
+	if (PlayerStatusWidgetInstance)
+	{
+		// 위젯에 FP 반영 (위젯에 UpdateFP가 있다고 가정 — 기존에 MaxFP, Init 및 Stamina/HP 업데이트 패턴과 일치)
+		PlayerStatusWidgetInstance->UpdateFP(CombatStats.CurrentFP, DerivedStats.MaxFP);
+	}
+
+	UE_LOG(LogTemp, Verbose, TEXT("FP consumed: -%d (Now %d/%d)"),
+		Amount, CombatStats.CurrentFP, DerivedStats.MaxFP);
+}
+
+int32 APlayerCharacter::GetCurrentSkillFPCost() const
+{
+	if (CurrentWeapon && CurrentWeapon->ItemData)
+	{
+		if (const UWeaponItemData* WData = Cast<UWeaponItemData>(CurrentWeapon->ItemData))
+		{
+			return FMath::Max(0, WData->WeaponStats.FPCost);
+		}
+	}
+	return 0;
 }
