@@ -7,6 +7,7 @@
 #include "Components/WidgetComponent.h"
 #include "Third_Person_RPG/Interface/AnimationAttackInterface.h"
 #include "Third_Person_RPG/UI/HPBar.h"
+#include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "EnemyCharacter.generated.h"
 
 
@@ -74,6 +75,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UHPBar> HPBarWidgetClass;
 
+	UFUNCTION(BlueprintCallable, Category = "Reward")
+	void RegisterAttacker(AActor* Attacker);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -90,5 +94,16 @@ private:
 	UFUNCTION()
 	void EndHitReact();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reward", meta = (AllowPrivateAccess = "true"))
+	int32 CurrencyReward = 50;
 
+	// 마지막으로 이 적에게 피해를 준 플레이어
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Reward", meta = (AllowPrivateAccess = "true"))
+	TWeakObjectPtr<APlayerCharacter> LastAttacker;
+
+	// 보상 중복 지급 방지
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Reward", meta = (AllowPrivateAccess = "true"))
+	bool bRewardGranted = false;
+
+	void GrantCurrencyToKiller();
 };

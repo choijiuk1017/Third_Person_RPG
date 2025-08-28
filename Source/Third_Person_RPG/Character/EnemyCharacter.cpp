@@ -139,6 +139,27 @@ void AEnemyCharacter::PlayHitReactMontage()
 	}
 }
 
+void AEnemyCharacter::RegisterAttacker(AActor* Attacker)
+{
+	if (!Attacker) return;
+	if (bIsDead) return;
+
+	if (APlayerCharacter* PC = Cast<APlayerCharacter>(Attacker))
+	{
+		LastAttacker = PC;
+	}
+}
+
+void AEnemyCharacter::GrantCurrencyToKiller()
+{
+	if (bRewardGranted) return;
+	if (!LastAttacker.IsValid()) return;
+
+	LastAttacker->AddCurrency(CurrencyReward);
+	bRewardGranted = true;
+}
+
+
 void AEnemyCharacter::TakeDamage(int32 DamageAmount)
 {
 	int32 Defense = EnemyStats.Defense;
@@ -154,6 +175,8 @@ void AEnemyCharacter::TakeDamage(int32 DamageAmount)
 		// »ç¸Á Ã³¸®
 		EnemyStats.CurrentHP = 0;
 		bIsDead = true;
+
+		GrantCurrencyToKiller();
 
 		if (HPBarWidget)
 		{

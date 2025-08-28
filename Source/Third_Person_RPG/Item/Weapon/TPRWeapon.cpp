@@ -139,6 +139,8 @@ void ATPRWeapon::OnHitBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Enemy Damaged via Weapon HitBox"));
 
+				Enemy->RegisterAttacker(GetOwner());
+
 				APlayerCharacter* PlayerOwner = Cast<APlayerCharacter>(GetOwner());
 
 				Enemy->TakeDamage(PlayerOwner->CombatStats.AttackPower);

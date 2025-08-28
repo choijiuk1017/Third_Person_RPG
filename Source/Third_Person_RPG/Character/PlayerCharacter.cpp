@@ -25,6 +25,7 @@
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
+#include "Engine/Engine.h"  
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h" 
 
 #define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
@@ -1540,4 +1541,35 @@ int32 APlayerCharacter::GetCurrentSkillFPCost() const
 		}
 	}
 	return 0;
+}
+void APlayerCharacter::AddCurrency(int32 Amount)
+{
+	if (Amount <= 0) return;
+
+	// 오버플로우 방지
+	const int64 NewVal64 = static_cast<int64>(Currency) + static_cast<int64>(Amount);
+	Currency = static_cast<int32>(FMath::Clamp<int64>(NewVal64, 0, INT32_MAX));
+
+	NotifyCurrencyChanged();
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Yellow,
+			FString::Printf(TEXT("+%d Gold (총액: %d)"), Amount, Currency));
+	}
+}
+
+bool APlayerCharacter::SpendCurrency(int32 Amount)
+{
+	if (Amount <= 0) return true;
+	if (Currency < Amount) return false;
+
+	Currency -= Amount;
+	NotifyCurrencyChanged();
+	return true;
+}
+
+void APlayerCharacter::NotifyCurrencyChanged()
+{
+
 }

@@ -14,6 +14,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h"
 
+
 #include "PlayerCharacter.generated.h"
 
 USTRUCT(BlueprintType)
@@ -178,10 +179,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Stats")
 	int32 Level = 1;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Currency")
+	int32 Currency = 0;
+
+	UFUNCTION(BlueprintCallable, Category = "Currency")
+	void AddCurrency(int32 Amount);
+
+	UFUNCTION(BlueprintCallable, Category = "Currency")
+	bool SpendCurrency(int32 Amount);
+
+	UFUNCTION(BlueprintPure, Category = "Currency")
+	int32 GetCurrency() const { return Currency; }
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	void NotifyCurrencyChanged();
 	//Component Section
 	//스프링 암 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
