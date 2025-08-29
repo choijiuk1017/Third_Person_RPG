@@ -13,6 +13,7 @@
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
 #include "Blueprint/UserWidget.h"
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h"
+#include "Third_Person_RPG/UI/CurrencyWidget.h"
 
 
 #include "PlayerCharacter.generated.h"
@@ -442,6 +443,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill|Cost")
 	bool bSkillConsumesFP = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UCurrencyWidget> CurrencyWidgetClass;
+
+	UPROPERTY()
+	UCurrencyWidget* CurrencyWidgetInstance = nullptr;
 
 	UFUNCTION(BlueprintCallable, Category = "Skill|Cost")
 	int32 GetCurrentSkillFPCost() const;

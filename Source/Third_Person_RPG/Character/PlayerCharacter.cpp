@@ -27,6 +27,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"  
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h" 
+#include "Third_Person_RPG/UI/CurrencyWidget.h" 
 
 #define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
 
@@ -230,6 +231,16 @@ void APlayerCharacter::BeginPlay()
 					DerivedStats.MaxStamina
 				);
 			}
+		}
+	}
+
+	if (CurrencyWidgetClass)
+	{
+		CurrencyWidgetInstance = CreateWidget<UCurrencyWidget>(GetWorld(), CurrencyWidgetClass);
+		if (CurrencyWidgetInstance)
+		{
+			CurrencyWidgetInstance->AddToViewport(/*ZOrder=*/10); 
+			CurrencyWidgetInstance->SetCurrency(Currency);         
 		}
 	}
 
@@ -1571,5 +1582,8 @@ bool APlayerCharacter::SpendCurrency(int32 Amount)
 
 void APlayerCharacter::NotifyCurrencyChanged()
 {
-
+	if (CurrencyWidgetInstance)
+	{
+		CurrencyWidgetInstance->SetCurrency(Currency);
+	}
 }
