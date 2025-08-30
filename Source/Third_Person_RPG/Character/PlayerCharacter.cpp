@@ -820,10 +820,11 @@ void APlayerCharacter::BaseAttackCheck()
 				{
 					if (!HitEnemies.Contains(Enemy))
 					{
-						Enemy->RegisterAttacker(GetOwner());
+						
 
 						HitEnemies.Add(Enemy);
 						UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
+						Enemy->RegisterAttacker(this);
 						Enemy->TakeDamage(CombatStats.AttackPower);
 					}
 				}
@@ -912,10 +913,9 @@ void APlayerCharacter::SkillAttackCheck()
 			{
 				if (!HitEnemies.Contains(Enemy))
 				{
-					Enemy->RegisterAttacker(GetOwner());
-
 					HitEnemies.Add(Enemy);
 					UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
+					Enemy->RegisterAttacker(this);
 					Enemy->TakeDamage(CombatStats.AttackPower);
 				}
 			}

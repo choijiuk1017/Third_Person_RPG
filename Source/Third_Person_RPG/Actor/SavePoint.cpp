@@ -27,7 +27,7 @@ ASavePoint::ASavePoint()
 	Trigger->OnComponentEndOverlap.AddDynamic(this, &ASavePoint::OnOverlapEnd);
 
 
-	HelpText = FText::FromString(TEXT("Press 'E' to active save point."));
+	HelpText = FText::FromString(TEXT("Press 'F' to active save point."));
 
 }
 

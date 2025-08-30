@@ -154,7 +154,7 @@ void AEnemyCharacter::GrantCurrencyToKiller()
 {
 	if (bRewardGranted) return;
 	if (!LastAttacker.IsValid()) return;
-
+	UE_LOG(LogTemp, Warning, TEXT("LastAttacker Reward"));
 	LastAttacker->AddCurrency(CurrencyReward);
 	bRewardGranted = true;
 }
@@ -201,7 +201,7 @@ void AEnemyCharacter::TakeDamage(int32 DamageAmount)
 
 		
 
-		UE_LOG(LogTemp, Error, TEXT("∏ÛΩ∫≈Õ ªÁ∏¡"));
+		UE_LOG(LogTemp, Error, TEXT("Monster Dead"));
 
 		return;
 	}

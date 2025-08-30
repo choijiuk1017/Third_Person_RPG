@@ -26,7 +26,7 @@ AItem::AItem()
 	Trigger->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnOverlapBegin);
 	Trigger->OnComponentEndOverlap.AddDynamic(this, &AItem::OnOverlapEnd);
 
-	HelpText = FText::FromString(TEXT("Press 'E' to pick up the item."));
+	HelpText = FText::FromString(TEXT("Press 'F' to pick up the item."));
 }
 
 // Called when the game starts or when spawned
