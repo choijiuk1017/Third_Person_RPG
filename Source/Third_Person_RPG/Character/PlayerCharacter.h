@@ -14,6 +14,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h"
 #include "Third_Person_RPG/UI/CurrencyWidget.h"
+#include "Third_Person_RPG/UI/CurrentEquipedWidget.h"
 
 
 #include "PlayerCharacter.generated.h"
@@ -192,6 +193,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Currency")
 	int32 GetCurrency() const { return Currency; }
 
+	UFUNCTION(BlueprintCallable, Category = "UI|CurrentEquipped")
+	void RefreshCurrentEquipped_Weapon(UTexture2D* WeaponIconTexture);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|CurrentEquipped")
+	void RefreshCurrentEquipped_Potion(UTexture2D* PotionIconTexture, int32 NewCount);
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -295,6 +303,28 @@ protected:
 
 	UPROPERTY()
 	UPlayerStatusWidget* PlayerStatusWidgetInstance;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|CurrentEquipped")
+	TSubclassOf<UCurrentEquipedWidget> CurrentEquipedWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UCurrentEquipedWidget> CurrentEquipedWidgetInstance;
+
+	/** 현재 상태를 기억(선택) */
+	UPROPERTY(VisibleAnywhere, Category = "Consumable")
+	int32 CurrentPotionCount = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Consumable")
+	TObjectPtr<UTexture2D> DefaultPotionIcon; // 에스트병 아이콘 등
+
+	// (선택) 현재 장착 무기 아이콘 캐시
+	UPROPERTY(VisibleAnywhere, Category = "Equipment")
+	TObjectPtr<UTexture2D> CurrentWeaponIcon = nullptr;
+
+
+
+	UPROPERTY(VisibleAnywhere, Category = "UI")
+	bool bPausedBySavePoint = false;
 
 
 	UFUNCTION()

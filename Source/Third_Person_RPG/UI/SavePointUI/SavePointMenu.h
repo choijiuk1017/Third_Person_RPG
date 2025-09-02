@@ -7,8 +7,11 @@
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenuEntry.h"
 
 #include "SavePointMenu.generated.h"
+
 class APlayerCharacter;
 class UVerticalBox;
+
+
 /**
  * 
  */
@@ -31,6 +34,7 @@ public:
 	void MoveSelectionDown();
 	void ConfirmSelection();
 
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	UVerticalBox* VerticalBox_MenuList;
@@ -43,6 +47,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UWorldTravelMenu> WorldTravelMenuClass;
+
 private:
 	TArray<USavePointMenuEntry*> EntryWidgets;
 

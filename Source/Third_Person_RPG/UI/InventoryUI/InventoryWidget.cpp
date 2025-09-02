@@ -297,16 +297,6 @@ FString UInventoryWidget::GetWeightStateString(float Current, float Max) const
     return TEXT("Heavy");
 }
 
-//void UInventoryWidget::OnClickSort()
-//{
-//    if (IInventoryInterface* Interface = Cast<IInventoryInterface>(OwningActor))
-//    {
-//        if (UInventoryComponent* Inventory = Interface->GetInventoryComponent())
-//        {
-//            Inventory->SortItemsByName(ConvertSlotTypeToItemType(InventorySlotType));
-//        }
-//    }
-//}
 
 
 

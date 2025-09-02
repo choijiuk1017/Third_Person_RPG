@@ -24,5 +24,5 @@ protected:
 	UTextBlock* CurrencyText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Currency")
-	FText Prefix = FText::FromString(TEXT("G "));
+	FText Prefix = FText::FromString(TEXT(""));
 };

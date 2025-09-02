@@ -244,6 +244,16 @@ void APlayerCharacter::BeginPlay()
 		}
 	}
 
+	if (CurrentEquipedWidgetClass)
+	{
+		CurrentEquipedWidgetInstance = CreateWidget<UCurrentEquipedWidget>(GetWorld(), CurrentEquipedWidgetClass);
+		if (CurrentEquipedWidgetInstance)
+		{
+			CurrentEquipedWidgetInstance->AddToViewport(/*ZOrder=*/10);
+			CurrentEquipedWidgetInstance->UpdateWeaponIcon(CurrentWeaponIcon);
+			CurrentEquipedWidgetInstance->UpdatePotion(DefaultPotionIcon, CurrentPotionCount);
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -1065,9 +1075,16 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 				PC->SetIgnoreMoveInput(true);
 				PC->SetIgnoreLookInput(true);
 			}
+
+			if (!UGameplayStatics::IsGamePaused(GetWorld()))
+			{
+				UGameplayStatics::SetGamePaused(GetWorld(), true);
+				bPausedBySavePoint = true;
+			}
 		}
 	}
 }
+
 
 void APlayerCharacter::EndInteractSavePoint()
 {
@@ -1077,6 +1094,22 @@ void APlayerCharacter::EndInteractSavePoint()
 
 		bIsKneeling = false;
 		bIsInteracting = false;
+
+		if (SavePointMenuInstance)
+		{
+			if (SavePointMenuInstance->IsInViewport())
+			{
+				SavePointMenuInstance->RemoveFromParent();
+			}
+			SavePointMenuInstance = nullptr;
+		}
+
+		if (bPausedBySavePoint && UGameplayStatics::IsGamePaused(GetWorld()))
+		{
+			UGameplayStatics::SetGamePaused(GetWorld(), false);
+			bPausedBySavePoint = false;
+		}
+
 		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 
 		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
@@ -1194,6 +1227,10 @@ void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
 	const auto ItemData = Cast<UWeaponItemData>(WeaponItem->ItemData);
 	if (!ItemData || !ItemData->WeaponClass) return;
 
+	UTexture2D* WeaponIcon = nullptr;
+	
+	WeaponIcon = WeaponItem->GetItemTexture();
+
 	// 이전에 들고 있던 무기 제거
 	if (CurrentWeapon)
 	{
@@ -1224,11 +1261,15 @@ void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
 	}
 
 	WeaponItem->bEquipped = true;
+
+	RefreshCurrentEquipped_Weapon(WeaponIcon);
 }
 
 
 void APlayerCharacter::UnEquipWeapon_Implementation(UInventoryItem* WeaponItem)
 {
+	UTexture2D* WeaponIcon = nullptr;
+
 
 	if (CurrentWeapon)
 	{
@@ -1249,6 +1290,9 @@ void APlayerCharacter::UnEquipWeapon_Implementation(UInventoryItem* WeaponItem)
 
 		UE_LOG(LogTemp, Warning, TEXT("무기 해제됨"));
 	}
+
+	RefreshCurrentEquipped_Weapon(WeaponIcon);
+
 }
 void APlayerCharacter::ToggleInventory()
 {
@@ -1314,6 +1358,7 @@ void APlayerCharacter::CloseInventory()
 		PC->SetIgnoreMoveInput(false);
 		PC->SetIgnoreLookInput(false);
 	}
+
 	SetStatusHUDVisible(true);
 
 	bIsPopupInventory = false;
@@ -1479,15 +1524,20 @@ void APlayerCharacter::SetStatusHUDVisible(bool bVisible)
 {
 	if (!PlayerStatusWidgetInstance) return;
 
+	if (!CurrentEquipedWidgetInstance) return;
+
 	if (bVisible)
 	{
 		PlayerStatusWidgetInstance->SetVisibility(StatusHUDSavedVisibility);
+		CurrentEquipedWidgetInstance->SetVisibility(StatusHUDSavedVisibility);
 	}
 	else
 	{
 		PlayerStatusWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
+		CurrentEquipedWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
+
 
 void APlayerCharacter::SprintStaminaTick(float DeltaSeconds)
 {
@@ -1566,12 +1616,6 @@ void APlayerCharacter::AddCurrency(int32 Amount)
 	Currency = static_cast<int32>(FMath::Clamp<int64>(NewVal64, 0, INT32_MAX));
 
 	NotifyCurrencyChanged();
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Yellow,
-			FString::Printf(TEXT("+%d Gold (총액: %d)"), Amount, Currency));
-	}
 }
 
 bool APlayerCharacter::SpendCurrency(int32 Amount)
@@ -1589,5 +1633,24 @@ void APlayerCharacter::NotifyCurrencyChanged()
 	if (CurrencyWidgetInstance)
 	{
 		CurrencyWidgetInstance->SetCurrency(Currency);
+	}
+}
+
+void APlayerCharacter::RefreshCurrentEquipped_Weapon(UTexture2D* WeaponIconTexture)
+{
+	CurrentWeaponIcon = WeaponIconTexture;
+	if (CurrentEquipedWidgetInstance)
+	{
+		CurrentEquipedWidgetInstance->UpdateWeaponIcon(WeaponIconTexture);
+	}
+}
+
+void APlayerCharacter::RefreshCurrentEquipped_Potion(UTexture2D* PotionIconTexture, int32 NewCount)
+{
+	CurrentPotionCount = NewCount;
+	if (CurrentEquipedWidgetInstance)
+	{
+		UTexture2D* IconToUse = PotionIconTexture ? PotionIconTexture : DefaultPotionIcon.Get(); 
+		CurrentEquipedWidgetInstance->UpdatePotion(IconToUse, NewCount);
 	}
 }

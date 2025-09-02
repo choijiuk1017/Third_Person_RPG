@@ -100,6 +100,8 @@ void UWorldTravelMenu::ConfirmSelection()
 {
 	if (!EntryWidgets.IsValidIndex(SelectedIndex)) return;
 
+	UGameplayStatics::SetGamePaused(GetWorld(), false);
+
 	const FSavePointInfo& Info = EntryWidgets[SelectedIndex]->GetSavePointInfo();
 
 	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))

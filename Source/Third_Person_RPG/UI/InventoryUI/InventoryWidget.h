@@ -74,9 +74,6 @@ private:
     class UButton* BTN_Other;
 
     UPROPERTY(meta = (BindWidget))
-    class UButton* BTN_Sort;
-
-    UPROPERTY(meta = (BindWidget))
     class UImage* Image_WeaponIcon;
 
     UPROPERTY(meta = (BindWidget)) UTextBlock* Text_Level;
