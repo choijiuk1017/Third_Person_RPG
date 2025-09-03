@@ -97,6 +97,12 @@ APlayerCharacter::APlayerCharacter()
 		IA_Inventory = IA_InventoryRef.Object;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_DrinkPotionRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_DrinkPotion.IA_DrinkPotion'"));
+	if (IA_DrinkPotionRef.Object)
+	{
+		IA_DrinkPotion = IA_DrinkPotionRef.Object;
+	}
+
 #pragma endregion
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -269,6 +275,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(IA_Sprint, ETriggerEvent::Completed, this, &APlayerCharacter::EndSprint);
 	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
 	EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &APlayerCharacter::RollStart);
+	EnhancedInputComponent->BindAction(IA_DrinkPotion, ETriggerEvent::Triggered, this, &APlayerCharacter::DrinkPotion);
 	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Started, this, &APlayerCharacter::SkillStart);
 	EnhancedInputComponent->BindAction(IA_Interaction, ETriggerEvent::Started, this, &APlayerCharacter::Interact);
 	EnhancedInputComponent->BindAction(IA_Inventory, ETriggerEvent::Started, this, &APlayerCharacter::ToggleInventory);
@@ -1653,4 +1660,22 @@ void APlayerCharacter::RefreshCurrentEquipped_Potion(UTexture2D* PotionIconTextu
 		UTexture2D* IconToUse = PotionIconTexture ? PotionIconTexture : DefaultPotionIcon.Get(); 
 		CurrentEquipedWidgetInstance->UpdatePotion(IconToUse, NewCount);
 	}
+}
+
+void APlayerCharacter::DrinkPotion()
+{
+
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && DrinkPotionMontage)
+	{
+		AnimInstance->Montage_Play(DrinkPotionMontage);
+
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+
+		return; 
+	}
+
+	
 }

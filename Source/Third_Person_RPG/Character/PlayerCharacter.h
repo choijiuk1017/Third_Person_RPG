@@ -247,6 +247,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> IA_Inventory;
 
+	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> IA_DrinkPotion;
+
 
 	UPROPERTY()
 	class AItem* OverlappingItem;
@@ -271,6 +274,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = Animation)
 	TObjectPtr<class UAnimMontage> HitReactMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = Animation)
+	TObjectPtr<class UAnimMontage> DrinkPotionMontage;
 	
 
 	//Data Section
@@ -358,6 +364,8 @@ protected:
 	void SkillStart();
 	//스킬 이펙트 소환 함수
 	void SpawnSkillEffect();
+
+	void DrinkPotion();
 
 	//공격 체크 함수, 인터페이스에서 상속 받음
 	virtual void BaseAttackCheck() override;
