@@ -199,6 +199,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|CurrentEquipped")
 	void RefreshCurrentEquipped_Potion(UTexture2D* PotionIconTexture, int32 NewCount);
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
+	int32 MaxPotionCount = 7;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
+	int32 HPPotionCount = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
+	int32 FPPotionCount = 2;
 
 protected:
 	// Called when the game starts or when spawned
@@ -249,6 +257,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> IA_DrinkPotion;
+
+	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> IA_ChangePotion;
 
 
 	UPROPERTY()
@@ -316,9 +327,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UCurrentEquipedWidget> CurrentEquipedWidgetInstance;
 
-	/** 현재 상태를 기억(선택) */
-	UPROPERTY(VisibleAnywhere, Category = "Consumable")
-	int32 CurrentPotionCount = 0;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Consumable")
 	TObjectPtr<UTexture2D> DefaultPotionIcon; // 에스트병 아이콘 등
@@ -367,6 +375,9 @@ protected:
 
 	void DrinkPotion();
 
+	void ChangePotion();
+
+
 	//공격 체크 함수, 인터페이스에서 상속 받음
 	virtual void BaseAttackCheck() override;
 
@@ -405,6 +416,7 @@ protected:
 
 	void StaminaRegenTick(float DeltaSeconds);
 
+
 	int32 GetStaminaRegenPerSecond() const;
 	
 	//Variable Section
@@ -424,6 +436,8 @@ protected:
 	uint8 bIsInteracting : 1;
 
 	uint8 bIsPopupInventory : 1;
+
+	uint8 bIsHPPotion : 1;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
 	int32 StaminaCost_Roll = 50;
@@ -499,4 +513,8 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Status|FP")
 	void ConsumeFP(int32 Amount);
+
+	UFUNCTION(BlueprintCallable, Category = "Potion")
+
+	void UsePotion(UAnimMontage* Montage, bool bInterrupted);
 };

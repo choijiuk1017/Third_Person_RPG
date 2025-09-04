@@ -10,8 +10,11 @@ void UCurrentEquipedWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	// ÃÊ±â°ª: ºóÄ­À¸·Î
+
+	bIsHPPotion = true;
+
 	UpdateWeaponIcon(nullptr);
-	UpdatePotion(nullptr, 0);
+	UpdatePotion( 0);
 }
 
 void UCurrentEquipedWidget::SetImageFromTexture(UImage* Target, UTexture2D* Texture)
@@ -21,17 +24,31 @@ void UCurrentEquipedWidget::SetImageFromTexture(UImage* Target, UTexture2D* Text
 	if (Texture)
 	{
 		Target->SetVisibility(ESlateVisibility::Visible);
-		Target->SetBrushFromTexture(Texture, /*bMatchSize=*/true);
-	}
-	else if (EmptySlotTexture)
-	{
-		Target->SetVisibility(ESlateVisibility::Visible);
-		Target->SetBrushFromTexture(EmptySlotTexture, true);
+		Target->SetBrushFromTexture(Texture, true);
 	}
 	else
 	{
-		// ºó ÅØ½ºÃ³µµ ¾øÀ¸¸é ±×³É ¼û±è
 		Target->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void UCurrentEquipedWidget::SetPotionImageFromTexture(UImage* Target)
+{
+	if (!Target) return;
+
+	if (bIsHPPotion)
+	{
+		Target->SetVisibility(ESlateVisibility::Visible);
+		Target->SetBrushFromTexture(HPPotionTexture, true);
+
+		SubPotionIcon->SetBrushFromTexture(FPPotionTexture, true);
+	}
+	else
+	{
+		Target->SetVisibility(ESlateVisibility::Visible);
+		Target->SetBrushFromTexture(FPPotionTexture, true);
+
+		SubPotionIcon->SetBrushFromTexture(HPPotionTexture, true);
 	}
 }
 
@@ -44,11 +61,6 @@ void UCurrentEquipedWidget::SetCountText(int32 Count)
 		PotionCountText->SetVisibility(ESlateVisibility::HitTestInvisible);
 		PotionCountText->SetText(FText::AsNumber(Count));
 	}
-	else
-	{
-		PotionCountText->SetVisibility(ESlateVisibility::Hidden);
-		PotionCountText->SetText(FText::GetEmpty());
-	}
 }
 
 void UCurrentEquipedWidget::UpdateWeaponIcon(UTexture2D* InIcon)
@@ -56,10 +68,17 @@ void UCurrentEquipedWidget::UpdateWeaponIcon(UTexture2D* InIcon)
 	SetImageFromTexture(WeaponIcon, InIcon);
 }
 
-void UCurrentEquipedWidget::UpdatePotion(UTexture2D* InIcon, int32 InCount)
+void UCurrentEquipedWidget::UpdatePotion(int32 InCount)
 {
-	SetImageFromTexture(PotionIcon, InIcon);
+	SetPotionImageFromTexture(PotionIcon);
 	SetCountText(InCount);
+}
+
+void UCurrentEquipedWidget::ChangePotion(uint8 bIsHPPoiton, int32 Count)
+{
+	bIsHPPotion = bIsHPPoiton;
+
+	UpdatePotion(Count);
 }
 
 void UCurrentEquipedWidget::ClearWeapon()
@@ -69,5 +88,5 @@ void UCurrentEquipedWidget::ClearWeapon()
 
 void UCurrentEquipedWidget::ClearPotion()
 {
-	UpdatePotion(nullptr, 0);
+	UpdatePotion(0);
 }

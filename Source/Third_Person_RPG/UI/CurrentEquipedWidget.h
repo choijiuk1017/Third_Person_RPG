@@ -24,7 +24,7 @@ public:
 
 	/** 포션 아이콘/개수 갱신 (아이콘 없으면 nullptr 가능) */
 	UFUNCTION(BlueprintCallable, Category = "CurrentEquipped")
-	void UpdatePotion(UTexture2D* InIcon, int32 InCount);
+	void UpdatePotion(int32 InCount);
 
 	/** 무기 칸 비우기 */
 	UFUNCTION(BlueprintCallable, Category = "CurrentEquipped")
@@ -34,24 +34,37 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CurrentEquipped")
 	void ClearPotion();
 
+	void ChangePotion(uint8 bIsHPPotion, int32 Count);
+
 protected:
 	virtual void NativeConstruct() override;
 
-	/** UMG 바인딩 */
 	UPROPERTY(meta = (BindWidget))
 	UImage* WeaponIcon;
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* PotionIcon;
 
-	UPROPERTY(meta = (BindWidgetOptional))
+	UPROPERTY(meta = (BindWidget))
+	UImage* SubPotionIcon;
+
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* PotionCountText;
 
-	/** 빈칸 기본 텍스처(선택) */
-	UPROPERTY(EditAnywhere, Category = "Style")
-	TObjectPtr<UTexture2D> EmptySlotTexture = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Potion")
+	TObjectPtr<UTexture2D> EmptyPotionTexture = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Potion")
+	TObjectPtr<UTexture2D> HPPotionTexture = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Potion")
+	TObjectPtr<UTexture2D> FPPotionTexture = nullptr;
+
 
 private:
 	void SetImageFromTexture(UImage* Target, UTexture2D* Texture);
+	void SetPotionImageFromTexture(UImage* Target);
 	void SetCountText(int32 Count);
+
+	uint8 bIsHPPotion : 1;
 };

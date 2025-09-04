@@ -103,6 +103,12 @@ APlayerCharacter::APlayerCharacter()
 		IA_DrinkPotion = IA_DrinkPotionRef.Object;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_ChangePotionRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_ChangePotion.IA_ChangePotion'"));
+	if (IA_ChangePotionRef.Object)
+	{
+		IA_ChangePotion = IA_ChangePotionRef.Object;
+	}
+
 #pragma endregion
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -257,7 +263,7 @@ void APlayerCharacter::BeginPlay()
 		{
 			CurrentEquipedWidgetInstance->AddToViewport(/*ZOrder=*/10);
 			CurrentEquipedWidgetInstance->UpdateWeaponIcon(CurrentWeaponIcon);
-			CurrentEquipedWidgetInstance->UpdatePotion(DefaultPotionIcon, CurrentPotionCount);
+			CurrentEquipedWidgetInstance->UpdatePotion(HPPotionCount);
 		}
 	}
 }
@@ -275,7 +281,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(IA_Sprint, ETriggerEvent::Completed, this, &APlayerCharacter::EndSprint);
 	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
 	EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &APlayerCharacter::RollStart);
-	EnhancedInputComponent->BindAction(IA_DrinkPotion, ETriggerEvent::Triggered, this, &APlayerCharacter::DrinkPotion);
+	EnhancedInputComponent->BindAction(IA_DrinkPotion, ETriggerEvent::Started, this, &APlayerCharacter::DrinkPotion);
+	EnhancedInputComponent->BindAction(IA_ChangePotion, ETriggerEvent::Started, this, &APlayerCharacter::ChangePotion);
 	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Started, this, &APlayerCharacter::SkillStart);
 	EnhancedInputComponent->BindAction(IA_Interaction, ETriggerEvent::Started, this, &APlayerCharacter::Interact);
 	EnhancedInputComponent->BindAction(IA_Inventory, ETriggerEvent::Started, this, &APlayerCharacter::ToggleInventory);
@@ -514,6 +521,9 @@ void APlayerCharacter::SkillStart()
 {
 	if (bIsInteracting || bIsRoll || !SkillData || !SkillData->SkillMontage || bIsSkillActing) return;
 
+	if (CombatStats.CurrentStamina < StaminaCost_Skill) return;
+	ConsumeStamina(StaminaCost_Skill);
+
 	if (bSkillConsumesFP)
 	{
 		const int32 FPCost = GetCurrentSkillFPCost();
@@ -526,8 +536,6 @@ void APlayerCharacter::SkillStart()
 		}
 	}
 
-	if (CombatStats.CurrentStamina < StaminaCost_Skill) return;
-	ConsumeStamina(StaminaCost_Skill);
 
 	// 공격 시 플레이어 이동 불가
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
@@ -1654,28 +1662,73 @@ void APlayerCharacter::RefreshCurrentEquipped_Weapon(UTexture2D* WeaponIconTextu
 
 void APlayerCharacter::RefreshCurrentEquipped_Potion(UTexture2D* PotionIconTexture, int32 NewCount)
 {
-	CurrentPotionCount = NewCount;
+	HPPotionCount = NewCount;
 	if (CurrentEquipedWidgetInstance)
 	{
-		UTexture2D* IconToUse = PotionIconTexture ? PotionIconTexture : DefaultPotionIcon.Get(); 
-		CurrentEquipedWidgetInstance->UpdatePotion(IconToUse, NewCount);
+		CurrentEquipedWidgetInstance->UpdatePotion(NewCount);
 	}
 }
 
 void APlayerCharacter::DrinkPotion()
 {
-
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
 	if (AnimInstance && DrinkPotionMontage)
 	{
 		AnimInstance->Montage_Play(DrinkPotionMontage);
-
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+		
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &APlayerCharacter::UsePotion);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, DrinkPotionMontage);
 
 		return; 
 	}
+}
 
+void APlayerCharacter::ChangePotion()
+{
+	bIsHPPotion = bIsHPPotion ? 0 : 1;
+
+	if (bIsHPPotion)
+	{
+		CurrentEquipedWidgetInstance->ChangePotion(bIsHPPotion, HPPotionCount);
+	}
+	else
+	{
+		CurrentEquipedWidgetInstance->ChangePotion(bIsHPPotion, FPPotionCount);
+	}
 	
+}
+
+void APlayerCharacter::UsePotion(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage != DrinkPotionMontage)
+		return;
+
+	if (!bInterrupted)
+	{
+		if (bIsHPPotion)
+		{
+			if (HPPotionCount > 0)
+			{
+				HPPotionCount -= 1;
+				CurrentEquipedWidgetInstance->UpdatePotion(HPPotionCount);
+
+				CombatStats.CurrentHP += 500;
+			}
+		}
+		else
+		{
+			if (FPPotionCount > 0)
+			{
+				FPPotionCount -= 1;
+				CurrentEquipedWidgetInstance->UpdatePotion(FPPotionCount);
+
+				CombatStats.CurrentFP += 100;
+			}
+		}
+
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+	}
 }
