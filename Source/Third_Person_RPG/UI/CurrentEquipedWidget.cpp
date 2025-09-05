@@ -11,7 +11,9 @@ void UCurrentEquipedWidget::NativeConstruct()
 
 	// 초기값: 빈칸으로
 
-	bIsHPPotion = true;
+	bIsHPPotion = 1;
+	HPPotionCount = 0;
+	FPPotionCount = 0;
 
 	UpdateWeaponIcon(nullptr);
 	UpdatePotion( 0);
@@ -32,35 +34,33 @@ void UCurrentEquipedWidget::SetImageFromTexture(UImage* Target, UTexture2D* Text
 	}
 }
 
-void UCurrentEquipedWidget::SetPotionImageFromTexture(UImage* Target)
+void UCurrentEquipedWidget::ApplyPotionIcons()
 {
-	if (!Target) return;
+	if (!PotionIcon || !SubPotionIcon) return;
 
-	if (bIsHPPotion)
-	{
-		Target->SetVisibility(ESlateVisibility::Visible);
-		Target->SetBrushFromTexture(HPPotionTexture, true);
+	// 메인/서브 타입 및 개수 계산
+	const bool  bMainIsHP = (bIsHPPotion != 0);
+	const bool  bSubIsHP = !bMainIsHP;
 
-		SubPotionIcon->SetBrushFromTexture(FPPotionTexture, true);
-	}
-	else
-	{
-		Target->SetVisibility(ESlateVisibility::Visible);
-		Target->SetBrushFromTexture(FPPotionTexture, true);
+	const int32 MainCount = bMainIsHP ? HPPotionCount : FPPotionCount;
+	const int32 SubCount = bSubIsHP ? HPPotionCount : FPPotionCount;
 
-		SubPotionIcon->SetBrushFromTexture(HPPotionTexture, true);
-	}
+	UTexture2D* MainTypeTex = bMainIsHP ? HPPotionTexture.Get() : FPPotionTexture.Get();
+	UTexture2D* SubTypeTex = bSubIsHP ? HPPotionTexture.Get() : FPPotionTexture.Get();
+
+	UTexture2D* MainToUse = (MainCount > 0) ? MainTypeTex : EmptyPotionTexture.Get();
+	UTexture2D* SubToUse = (SubCount > 0) ? SubTypeTex : EmptyPotionTexture.Get();
+
+	SetImageFromTexture(PotionIcon, MainToUse);
+	SetImageFromTexture(SubPotionIcon, SubToUse);
 }
 
 void UCurrentEquipedWidget::SetCountText(int32 Count)
 {
 	if (!PotionCountText) return;
 
-	if (Count > 0)
-	{
-		PotionCountText->SetVisibility(ESlateVisibility::HitTestInvisible);
-		PotionCountText->SetText(FText::AsNumber(Count));
-	}
+	PotionCountText->SetText(FText::AsNumber(FMath::Max(0, Count)));
+	PotionCountText->SetVisibility(ESlateVisibility::HitTestInvisible);
 }
 
 void UCurrentEquipedWidget::UpdateWeaponIcon(UTexture2D* InIcon)
@@ -68,17 +68,53 @@ void UCurrentEquipedWidget::UpdateWeaponIcon(UTexture2D* InIcon)
 	SetImageFromTexture(WeaponIcon, InIcon);
 }
 
+
+void UCurrentEquipedWidget::RefreshPotionUI()
+{
+	ApplyPotionIcons();
+
+	// 현재 메인 타입의 개수 표기
+	const int32 MainCount = (bIsHPPotion != 0) ? HPPotionCount : FPPotionCount;
+	SetCountText(MainCount);
+}
+
 void UCurrentEquipedWidget::UpdatePotion(int32 InCount)
 {
-	SetPotionImageFromTexture(PotionIcon);
-	SetCountText(InCount);
+	if (bIsHPPotion)
+	{
+		HPPotionCount = FMath::Max(0, InCount);
+	}
+	else
+	{
+		FPPotionCount = FMath::Max(0, InCount);
+	}
+	RefreshPotionUI();
 }
+
+
+void UCurrentEquipedWidget::UpdatePotionCounts(int32 InHPCount, int32 InFPCount)
+{
+	HPPotionCount = FMath::Max(0, InHPCount);
+	FPPotionCount = FMath::Max(0, InFPCount);
+
+	RefreshPotionUI();
+}
+
 
 void UCurrentEquipedWidget::ChangePotion(uint8 bIsHPPoiton, int32 Count)
 {
 	bIsHPPotion = bIsHPPoiton;
 
-	UpdatePotion(Count);
+
+	if (bIsHPPotion)
+	{
+		HPPotionCount = FMath::Max(0, Count);
+	}
+	else
+	{
+		FPPotionCount = FMath::Max(0, Count);
+	}
+	RefreshPotionUI();
 }
 
 void UCurrentEquipedWidget::ClearWeapon()
@@ -88,5 +124,7 @@ void UCurrentEquipedWidget::ClearWeapon()
 
 void UCurrentEquipedWidget::ClearPotion()
 {
-	UpdatePotion(0);
+	HPPotionCount = 0;
+	FPPotionCount = 0;
+	RefreshPotionUI();
 }

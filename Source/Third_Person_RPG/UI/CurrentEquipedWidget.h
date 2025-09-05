@@ -18,13 +18,17 @@ class THIRD_PERSON_RPG_API UCurrentEquipedWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	/** 무기 아이콘 갱신 (아이콘 없으면 nullptr 전달) */
 	UFUNCTION(BlueprintCallable, Category = "CurrentEquipped")
 	void UpdateWeaponIcon(UTexture2D* InIcon);
 
-	/** 포션 아이콘/개수 갱신 (아이콘 없으면 nullptr 가능) */
 	UFUNCTION(BlueprintCallable, Category = "CurrentEquipped")
 	void UpdatePotion(int32 InCount);
+
+	UFUNCTION(BlueprintCallable)
+	void UpdatePotionCounts(int32 InHPCount, int32 InFPCount);
+
+	UFUNCTION(BlueprintCallable)
+	void ChangePotion(uint8 bIsHPPotion, int32 Count);
 
 	/** 무기 칸 비우기 */
 	UFUNCTION(BlueprintCallable, Category = "CurrentEquipped")
@@ -33,8 +37,7 @@ public:
 	/** 포션 칸 비우기(개수도 0으로) */
 	UFUNCTION(BlueprintCallable, Category = "CurrentEquipped")
 	void ClearPotion();
-
-	void ChangePotion(uint8 bIsHPPotion, int32 Count);
+	
 
 protected:
 	virtual void NativeConstruct() override;
@@ -67,4 +70,11 @@ private:
 	void SetCountText(int32 Count);
 
 	uint8 bIsHPPotion : 1;
+
+	int32 HPPotionCount = 0;
+	int32 FPPotionCount = 0;
+
+	void ApplyPotionIcons();          
+	void RefreshPotionUI();
+
 };

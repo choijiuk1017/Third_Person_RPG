@@ -437,7 +437,7 @@ protected:
 
 	uint8 bIsPopupInventory : 1;
 
-	uint8 bIsHPPotion : 1;
+	uint8 bIsHPPotion : 1 = 1;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
 	int32 StaminaCost_Roll = 50;

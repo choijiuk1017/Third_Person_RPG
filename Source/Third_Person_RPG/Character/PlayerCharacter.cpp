@@ -28,6 +28,8 @@
 #include "Engine/Engine.h"  
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h" 
 #include "Third_Person_RPG/UI/CurrencyWidget.h" 
+#include "Third_Person_RPG/UI/CurrentEquipedWidget.h" 
+
 
 #define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
 
@@ -263,7 +265,10 @@ void APlayerCharacter::BeginPlay()
 		{
 			CurrentEquipedWidgetInstance->AddToViewport(/*ZOrder=*/10);
 			CurrentEquipedWidgetInstance->UpdateWeaponIcon(CurrentWeaponIcon);
-			CurrentEquipedWidgetInstance->UpdatePotion(HPPotionCount);
+
+			CurrentEquipedWidgetInstance->UpdatePotionCounts(HPPotionCount, FPPotionCount);
+
+			CurrentEquipedWidgetInstance->ChangePotion(bIsHPPotion, bIsHPPotion ? HPPotionCount : FPPotionCount);
 		}
 	}
 }
@@ -1713,9 +1718,13 @@ void APlayerCharacter::UsePotion(UAnimMontage* Montage, bool bInterrupted)
 			if (HPPotionCount > 0)
 			{
 				HPPotionCount -= 1;
-				CurrentEquipedWidgetInstance->UpdatePotion(HPPotionCount);
 
-				CombatStats.CurrentHP += 500;
+				if (CurrentEquipedWidgetInstance)
+					CurrentEquipedWidgetInstance->UpdatePotionCounts(HPPotionCount, FPPotionCount);
+
+				CombatStats.CurrentHP = FMath::Min(CombatStats.CurrentHP + 500, DerivedStats.MaxHP);
+				if (PlayerStatusWidgetInstance)
+					PlayerStatusWidgetInstance->UpdateHP(CombatStats.CurrentHP, DerivedStats.MaxHP);
 			}
 		}
 		else
@@ -1723,9 +1732,12 @@ void APlayerCharacter::UsePotion(UAnimMontage* Montage, bool bInterrupted)
 			if (FPPotionCount > 0)
 			{
 				FPPotionCount -= 1;
-				CurrentEquipedWidgetInstance->UpdatePotion(FPPotionCount);
+				if (CurrentEquipedWidgetInstance)
+					CurrentEquipedWidgetInstance->UpdatePotionCounts(HPPotionCount, FPPotionCount);
 
-				CombatStats.CurrentFP += 100;
+				CombatStats.CurrentFP = FMath::Min(CombatStats.CurrentFP + 100, DerivedStats.MaxFP);
+				if (PlayerStatusWidgetInstance)
+					PlayerStatusWidgetInstance->UpdateFP(CombatStats.CurrentFP, DerivedStats.MaxFP);
 			}
 		}
 
