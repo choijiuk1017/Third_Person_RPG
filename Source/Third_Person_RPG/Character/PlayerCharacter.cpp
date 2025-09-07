@@ -268,7 +268,7 @@ void APlayerCharacter::BeginPlay()
 
 			CurrentEquipedWidgetInstance->UpdatePotionCounts(HPPotionCount, FPPotionCount);
 
-			CurrentEquipedWidgetInstance->ChangePotion(bIsHPPotion, bIsHPPotion ? HPPotionCount : FPPotionCount);
+			CurrentEquipedWidgetInstance->ChangePotion(bIsHPPotion, bIsHPPotion ? MaxHPPotionCount : MaxFPPotionCount);
 		}
 	}
 }
@@ -1073,6 +1073,9 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
+	HPPotionCount = MaxHPPotionCount;
+	FPPotionCount = MaxFPPotionCount;
+
 	if (!SavePointMenuInstance && SavePointMenuClass)
 	{
 		SavePointMenuInstance = CreateWidget<USavePointMenu>(GetWorld(), SavePointMenuClass);
@@ -1142,6 +1145,9 @@ void APlayerCharacter::EndInteractSavePoint()
 			CurrentWeapon->SetActorHiddenInGame(false);
 			CurrentWeapon->SetActorEnableCollision(true);
 		}
+
+		if (CurrentEquipedWidgetInstance)
+			CurrentEquipedWidgetInstance->UpdatePotionCounts(HPPotionCount, FPPotionCount);
 
 		APlayerController* PC = Cast<APlayerController>(GetController());
 		if (PC)
@@ -1328,6 +1334,8 @@ void APlayerCharacter::ToggleInventory()
 
 void APlayerCharacter::PopUpInventory()
 {
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+
 	if (!InventoryWidgetInstance && InventoryWidgetClass)
 	{
 		InventoryWidgetInstance = CreateWidget<UInventoryWidget>(GetWorld(), InventoryWidgetClass);
@@ -1360,6 +1368,8 @@ void APlayerCharacter::PopUpInventory()
 
 void APlayerCharacter::CloseInventory()
 {
+	UGameplayStatics::SetGamePaused(GetWorld(), false);
+
 	if (InventoryWidgetInstance)
 	{
 		InventoryWidgetInstance->RemoveFromParent();

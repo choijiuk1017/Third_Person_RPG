@@ -203,6 +203,12 @@ public:
 	int32 MaxPotionCount = 7;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
+	int32 MaxHPPotionCount = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
+	int32 MaxFPPotionCount = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
 	int32 HPPotionCount = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
@@ -515,6 +521,5 @@ protected:
 	void ConsumeFP(int32 Amount);
 
 	UFUNCTION(BlueprintCallable, Category = "Potion")
-
 	void UsePotion(UAnimMontage* Montage, bool bInterrupted);
 };
