@@ -5,6 +5,7 @@
 #include "Components/VerticalBox.h"
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenuEntry.h"
 #include "Third_Person_RPG/UI/SavePointUI/WorldTravelMenu.h"
+#include "Third_Person_RPG/UI/SavePointUI/LevelUpMenu.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "InputCoreTypes.h"
@@ -149,6 +150,27 @@ void USavePointMenu::ConfirmSelection()
 			}
 			
 		}
+	}
+	else if (SelectedText == TEXT("Level Up"))
+	{
+		if (LevelUpMenuClass)
+		{
+			ULevelUpMenu* LevelUpMenu = CreateWidget<ULevelUpMenu>(GetWorld(), LevelUpMenuClass);
+			if (LevelUpMenu)
+			{
+				LevelUpMenu->AddToViewport();
+
+				APlayerController* PC = GetOwningPlayer();
+				if (PC)
+				{
+					FInputModeUIOnly Mode;
+					Mode.SetWidgetToFocus(LevelUpMenu->TakeWidget());
+					PC->SetInputMode(Mode);
+					PC->bShowMouseCursor = true;
+				}
+			}
+		}
+		RemoveFromParent();
 	}
 	else if (SelectedText == TEXT("Travel"))
 	{

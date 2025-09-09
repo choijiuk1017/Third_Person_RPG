@@ -48,6 +48,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UWorldTravelMenu> WorldTravelMenuClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class ULevelUpMenu> LevelUpMenuClass;
+
 private:
 	TArray<USavePointMenuEntry*> EntryWidgets;
 
