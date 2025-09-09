@@ -1754,3 +1754,57 @@ void APlayerCharacter::UsePotion(UAnimMontage* Montage, bool bInterrupted)
 		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 	}
 }
+
+void APlayerCharacter::RecalculateStatsAfterLevelUp(bool bRefillHPFPStamina /*= false*/)
+{
+	// 기존 최대치 저장
+	const int32 OldMaxHP = DerivedStats.MaxHP;
+	const int32 OldMaxFP = DerivedStats.MaxFP;
+	const int32 OldMaxStamina = DerivedStats.MaxStamina;
+
+	// 파생치 재계산
+	CalculateDerivedStats();
+
+	// 현재 수치 동기화 (회복 or 비율 유지)
+	auto ScaleKeepRatio = [](int32 Curr, int32 OldMax, int32 NewMax)
+		{
+			if (OldMax <= 0) return FMath::Clamp(Curr, 0, NewMax);
+			const float Ratio = static_cast<float>(Curr) / static_cast<float>(OldMax);
+			return FMath::Clamp(FMath::RoundToInt(Ratio * static_cast<float>(NewMax)), 0, NewMax);
+		};
+
+	if (bRefillHPFPStamina)
+	{
+		CombatStats.CurrentHP = DerivedStats.MaxHP;
+		CombatStats.CurrentFP = DerivedStats.MaxFP;
+		CombatStats.CurrentStamina = DerivedStats.MaxStamina;
+	}
+	else
+	{
+		CombatStats.CurrentHP = ScaleKeepRatio(CombatStats.CurrentHP, OldMaxHP, DerivedStats.MaxHP);
+		CombatStats.CurrentFP = ScaleKeepRatio(CombatStats.CurrentFP, OldMaxFP, DerivedStats.MaxFP);
+		CombatStats.CurrentStamina = ScaleKeepRatio(CombatStats.CurrentStamina, OldMaxStamina, DerivedStats.MaxStamina);
+	}
+
+	if (CurrentWeapon)
+	{
+		ApplyWeaponStats(CurrentWeapon);
+	}
+	else
+	{
+		ResetCombatStats();
+	}
+	CombatStats.Poise = DerivedStats.Poise;
+
+	if (PlayerStatusWidgetInstance)
+	{
+		PlayerStatusWidgetInstance->UpdateBarLengths(
+			DerivedStats.MaxHP,
+			DerivedStats.MaxFP,
+			DerivedStats.MaxStamina
+		);
+		PlayerStatusWidgetInstance->UpdateHP(CombatStats.CurrentHP, DerivedStats.MaxHP);
+		PlayerStatusWidgetInstance->UpdateFP(CombatStats.CurrentFP, DerivedStats.MaxFP);
+		PlayerStatusWidgetInstance->UpdateStamina(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
+	}
+}

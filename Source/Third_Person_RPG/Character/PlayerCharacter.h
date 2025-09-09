@@ -199,6 +199,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|CurrentEquipped")
 	void RefreshCurrentEquipped_Potion(UTexture2D* PotionIconTexture, int32 NewCount);
 
+	UFUNCTION(BlueprintCallable)
+	void RecalculateStatsAfterLevelUp(bool bRefillHPFPStamina = false);
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
 	int32 MaxPotionCount = 7;
 

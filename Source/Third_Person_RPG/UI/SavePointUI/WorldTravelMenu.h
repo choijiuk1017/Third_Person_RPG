@@ -10,6 +10,7 @@
 class UVerticalBox;
 class UImage;
 class UWorldTravelMenuEntry;
+class UButton;
 
 UCLASS()
 class THIRD_PERSON_RPG_API UWorldTravelMenu : public UUserWidget
@@ -46,11 +47,16 @@ protected:
 
 	UUserWidget* LoadingScreenWidget;
 
+	UPROPERTY(meta = (BindWidget)) UButton* ExitButton;
+
 private:
 	TArray<UWorldTravelMenuEntry*> EntryWidgets;
 	int32 SelectedIndex = 0;
 
 	void UpdateSelectionVisual();
 	void UpdatePreviewImage(const FString& PointName);
+
+	UFUNCTION() void OnExitClicked();
+	void CloseMenuToGameOnly();
 
 };

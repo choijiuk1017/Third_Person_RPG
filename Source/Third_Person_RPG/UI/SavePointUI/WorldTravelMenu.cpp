@@ -9,6 +9,7 @@
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Third_Person_RPG/Inventory/InventoryComponent.h"
+#include "Components/Button.h"
 
 UWorldTravelMenu::UWorldTravelMenu(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -28,6 +29,11 @@ void UWorldTravelMenu::NativeConstruct()
 		TArray<FSavePointInfo> SavePoints;
 		GI->GetSavePointMap().GenerateValueArray(SavePoints);
 		SetTravelPoints(SavePoints);
+	}
+
+	if (ExitButton)
+	{
+		ExitButton->OnClicked.AddDynamic(this, &UWorldTravelMenu::OnExitClicked);
 	}
 
 	SelectedIndex = 0;
@@ -53,7 +59,11 @@ FReply UWorldTravelMenu::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
 		ConfirmSelection();
 		return FReply::Handled();
 	}
-	
+	if (PressedKey == EKeys::Escape)
+	{
+		OnExitClicked();
+		return FReply::Handled();
+	}
 
 	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 }
@@ -172,4 +182,37 @@ void UWorldTravelMenu::UpdatePreviewImage(const FString& PointName)
 	}
 
 	PreviewImage->SetBrushFromTexture(nullptr);
+}
+
+void UWorldTravelMenu::OnExitClicked()
+{
+	CloseMenuToGameOnly();
+}
+
+void UWorldTravelMenu::CloseMenuToGameOnly()
+{
+	UGameplayStatics::SetGamePaused(GetWorld(), false);
+
+	APlayerController* PC = GetOwningPlayer();
+	if (PC)
+	{
+		PC->SetInputMode(FInputModeGameOnly());
+		PC->bShowMouseCursor = false;
+
+		APawn* Pawn = PC->GetPawn();
+		if (Pawn)
+		{
+			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(Pawn);
+			if (PlayerCharacter)
+			{
+				PlayerCharacter->EndInteractSavePoint(); // 호출
+
+				PlayerCharacter->SavePointMenuInstance = nullptr;
+			}
+		}
+
+	}
+
+	// 위젯 제거
+	RemoveFromParent();
 }
