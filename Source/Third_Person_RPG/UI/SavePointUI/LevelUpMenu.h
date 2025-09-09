@@ -16,6 +16,14 @@ class THIRD_PERSON_RPG_API ULevelUpMenu : public UUserWidget
 {
 	GENERATED_BODY()
 
+public:
+	void Init();
+
+	void UpdateCurrentStats();
+
+protected:
+	virtual void NativeConstruct() override;
+
 private:
 	UPROPERTY(meta = (BindWidget)) UTextBlock* CurrentLevelText;
 	UPROPERTY(meta = (BindWidget)) UTextBlock* CurrentCurrencyText;
@@ -59,21 +67,21 @@ private:
 	class UButton* MindUpButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UImage* EnduranceUpButton;
+	class UButton* EnduranceUpButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UImage* StrengthUpButton;
+	class UButton* StrengthUpButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UImage* DexterityUpButton;
+	class UButton* DexterityUpButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UImage* IntelligenceUpButton;
+	class UButton* IntelligenceUpButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UImage* FaithUpButton;
+	class UButton* FaithUpButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UImage* ArcaneUpButton;
+	class UButton* ArcaneUpButton;
 
 };
