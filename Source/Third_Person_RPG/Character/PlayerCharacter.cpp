@@ -166,6 +166,11 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		GI->ApplyLoadedPlayerStatTo(this);
+	}
+
 	CalculateDerivedStats();
 	InitializeCombatStats();
 
@@ -1082,6 +1087,19 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 
 	HPPotionCount = MaxHPPotionCount;
 	FPPotionCount = MaxFPPotionCount;
+
+	CombatStats.CurrentHP = DerivedStats.MaxHP;
+	CombatStats.CurrentFP = DerivedStats.MaxFP;
+	CombatStats.CurrentStamina = DerivedStats.MaxStamina;
+
+
+	if (PlayerStatusWidgetInstance)
+	{
+		PlayerStatusWidgetInstance->UpdateHP(CombatStats.CurrentHP, DerivedStats.MaxHP);
+		PlayerStatusWidgetInstance->UpdateFP(CombatStats.CurrentFP, DerivedStats.MaxFP);
+		PlayerStatusWidgetInstance->UpdateStamina(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
+	}
+		
 
 	if (!SavePointMenuInstance && SavePointMenuClass)
 	{
