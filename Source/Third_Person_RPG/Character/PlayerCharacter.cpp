@@ -23,12 +23,12 @@
 #include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
-#include "Blueprint/UserWidget.h" 
-#include "Kismet/GameplayStatics.h"
-#include "Engine/Engine.h"  
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h" 
 #include "Third_Person_RPG/UI/CurrencyWidget.h" 
 #include "Third_Person_RPG/UI/CurrentEquipedWidget.h" 
+#include "Blueprint/UserWidget.h" 
+#include "Kismet/GameplayStatics.h"
+#include "Engine/Engine.h"  
 
 
 #define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
@@ -224,6 +224,8 @@ void APlayerCharacter::BeginPlay()
 				UInventoryItem* AddedItem = InventoryComponent->AddItemByData(SaveData.ItemData, SaveData.Quantity, bShouldEquip);
 			}
 		}
+
+	
 	}	
 
 	if (PlayerStatusWidgetClass)
@@ -271,6 +273,8 @@ void APlayerCharacter::BeginPlay()
 			CurrentEquipedWidgetInstance->ChangePotion(bIsHPPotion, bIsHPPotion ? MaxHPPotionCount : MaxFPPotionCount);
 		}
 	}
+
+	
 }
 
 // Called to bind functionality to input
@@ -1069,6 +1073,9 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 	if (GI)
 	{
 		GI->RegisterSavePoint(OverlappingSavePoint->SavePointInfo);
+
+		GI->RegisterPlayerStatFromPlayer(this); 
+		GI->SaveGameData();
 	}
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
@@ -1807,4 +1814,22 @@ void APlayerCharacter::RecalculateStatsAfterLevelUp(bool bRefillHPFPStamina /*= 
 		PlayerStatusWidgetInstance->UpdateFP(CombatStats.CurrentFP, DerivedStats.MaxFP);
 		PlayerStatusWidgetInstance->UpdateStamina(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
 	}
+}
+
+void APlayerCharacter::FillSaveData(FPlayerStatSaveData& OutSaveData) const
+{
+	OutSaveData.BaseAttributes = CharacterAttributes;
+	OutSaveData.DerivedStats = DerivedStats;
+	OutSaveData.CombatStats = CombatStats;
+	OutSaveData.Currency = Currency;
+}
+
+void APlayerCharacter::ApplySaveData(const FPlayerStatSaveData& InSaveData)
+{
+	CharacterAttributes = InSaveData.BaseAttributes;
+
+	DerivedStats = InSaveData.DerivedStats;
+	CombatStats = InSaveData.CombatStats;
+
+	Currency = InSaveData.Currency;
 }

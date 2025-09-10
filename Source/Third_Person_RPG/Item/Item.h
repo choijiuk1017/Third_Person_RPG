@@ -7,7 +7,6 @@
 #include "Components/SphereComponent.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"
 #include "Third_Person_RPG/Data/ItemData/TPRItemData.h"
-#include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Third_Person_RPG/UI/InteractionWidget.h"
 #include "Item.generated.h"
 

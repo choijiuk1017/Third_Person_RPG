@@ -5,9 +5,27 @@
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
 #include "Third_Person_RPG/Actor/SavePoint.h"
+#include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "TPRSaveGame.generated.h"
 
 
+USTRUCT(BlueprintType)
+struct FPlayerStatSaveData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	FCharacterAttributes BaseAttributes;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	FDerivedStats DerivedStats;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	FCombatStats CombatStats; // HP/FP/Stamina의 Current 값 포함된 걸로 가정
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Economy")
+	int32 Currency = 0;
+};
 /**
  * 
  */
@@ -25,4 +43,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<FSavePointInfo> AllDiscoveredSavePoints;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save")
+	FPlayerStatSaveData PlayerStat;
 };

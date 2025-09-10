@@ -10,6 +10,7 @@
 #include "Third_Person_RPG/Item/Item.h"
 #include "Third_Person_RPG/Actor/SavePoint.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"
+
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
 #include "Blueprint/UserWidget.h"
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h"
@@ -217,6 +218,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
 	int32 FPPotionCount = 2;
+
+	void FillSaveData(struct FPlayerStatSaveData& OutSaveData) const;
+
+	void ApplySaveData(const struct FPlayerStatSaveData& InSaveData);
 
 protected:
 	// Called when the game starts or when spawned

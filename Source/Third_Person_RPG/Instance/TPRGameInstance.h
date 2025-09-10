@@ -37,6 +37,7 @@ public:
 	virtual void Init() override;
 
 	void RegisterSavePoint(const FSavePointInfo& SavePointInfo);
+
 	const TMap<FName, FSavePointInfo>& GetSavePointMap() const;
 	void ClearSavePoints();
 
@@ -77,6 +78,8 @@ public:
 		return CollectedItemAssets.Contains(AssetId);
 	}
 
+	void RegisterPlayerStatFromPlayer(const APlayerCharacter* Player);
+	void ApplyLoadedPlayerStatTo(APlayerCharacter* Player);
 
 protected:
 	UPROPERTY()
@@ -91,5 +94,10 @@ protected:
 private:
 	FString SaveSlotName = TEXT("PlayerSaveSlot");
 	uint32 UserIndex = 0;
+
+	UPROPERTY()
+	FPlayerStatSaveData CachedPlayerStat;
+
+	bool bHasLoadedStat = false;
 
 };

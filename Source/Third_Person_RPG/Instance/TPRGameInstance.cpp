@@ -1,16 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Third_Person_RPG/TPRSaveGame.h"
+#include "Third_Person_RPG/Character/PlayerCharacter.h"
+
 
 void UTPRGameInstance::Init()
 {
 	Super::Init();
 	LoadGameData();
 }
-
 
 void UTPRGameInstance::RegisterSavePoint(const FSavePointInfo& SavePointInfo)
 {
@@ -61,28 +60,49 @@ void UTPRGameInstance::SaveGameData()
 			SaveGameInstance->ActivatedSavePointNames.Add(Pair.Key.ToString());
 		}
 
+		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+		{
+			if (APlayerCharacter* Player = Cast<APlayerCharacter>(PC->GetPawn()))
+			{
+				FPlayerStatSaveData Snapshot;
+				Player->FillSaveData(Snapshot);
+				SaveGameInstance->PlayerStat = Snapshot;
+
+				// 메모리 캐시도 최신으로 유지
+				CachedPlayerStat = Snapshot;
+				bHasLoadedStat = true;
+			}
+		}
+
 		UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, UserIndex);
 	}
 }
 
 bool UTPRGameInstance::LoadGameData()
 {
-	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+	if (!UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
 	{
-		UTPRSaveGame* LoadedGame = Cast<UTPRSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
-		if (LoadedGame)
-		{
-			DiscoveredSavePoints.Empty();
-
-			for (const FSavePointInfo& Info : LoadedGame->AllDiscoveredSavePoints)
-			{
-				DiscoveredSavePoints.Add(Info.SavePointID, Info);
-			}
-
-			return true;
-		}
+		bHasLoadedStat = false;
+		return false;
 	}
-	return false;
+
+	UTPRSaveGame* LoadedGame = Cast<UTPRSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+	if (!LoadedGame)
+	{
+		bHasLoadedStat = false;
+		return false;
+	}
+
+	DiscoveredSavePoints.Empty();
+	for (const FSavePointInfo& Info : LoadedGame->AllDiscoveredSavePoints)
+	{
+		DiscoveredSavePoints.Add(Info.SavePointID, Info);
+	}
+
+	CachedPlayerStat = LoadedGame->PlayerStat;
+	bHasLoadedStat = true;
+
+	return true;
 }
 
 void UTPRGameInstance::CacheInventory(const TArray<UInventoryItem*>& Items)
@@ -105,4 +125,21 @@ void UTPRGameInstance::CacheInventory(const TArray<UInventoryItem*>& Items)
 const TArray<FInventoryItemSaveData>& UTPRGameInstance::GetCachedInventory() const
 {
 	return CachedInventoryItems;
+}
+
+void UTPRGameInstance::RegisterPlayerStatFromPlayer(const APlayerCharacter* Player)
+{
+	if (!Player) return;
+
+	Player->FillSaveData(CachedPlayerStat);
+	bHasLoadedStat = true;
+}
+
+void UTPRGameInstance::ApplyLoadedPlayerStatTo(APlayerCharacter* Player)
+{
+	if (!Player) return;
+
+	if (!bHasLoadedStat) return;
+
+	Player->ApplySaveData(CachedPlayerStat);
 }
