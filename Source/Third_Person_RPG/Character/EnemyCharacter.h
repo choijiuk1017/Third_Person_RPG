@@ -58,7 +58,10 @@ public:
 	void TakeDamage(int32 DamageAmount);
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
-	TObjectPtr<class UAnimMontage> AttackMontage;
+	TArray<UAnimMontage *> AttackMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	TObjectPtr<class UAnimMontage> RetreatMontage 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Stats")
 	FEnemyStats EnemyStats;
@@ -77,6 +80,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Reward")
 	void RegisterAttacker(AActor* Attacker);
+
+
 
 protected:
 	// Called when the game starts or when spawned
