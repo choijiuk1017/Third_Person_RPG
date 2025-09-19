@@ -58,13 +58,29 @@ public:
 	void TakeDamage(int32 DamageAmount);
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
-	TArray<UAnimMontage *> AttackMontage;
+	TArray<UAnimMontage *> AttackMontages;
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
-	TObjectPtr<class UAnimMontage> RetreatMontage 
+	TObjectPtr<class UAnimMontage> RetreatMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Attack")
+	float RetreatChancePercent = 40.f;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Attack")
+	int32 CurrentAttackStep = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Attack")
+	bool bHasRetreatedThisCombo = false;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat|Attack")
+	void PlayAttackMontageByIndex(int32 Index);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat|Attack")
+	void PlayRetreatMontage();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Stats")
 	FEnemyStats EnemyStats;
+
 
 	UPROPERTY(BlueprintReadOnly, Category = "State")
 	bool bIsDead;
@@ -111,4 +127,10 @@ private:
 	bool bRewardGranted = false;
 
 	void GrantCurrencyToKiller();
+
+	UFUNCTION()
+	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnRetreatMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 };

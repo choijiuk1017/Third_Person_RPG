@@ -12,7 +12,7 @@
 #include "Engine/OverlapResult.h"
 #include "Components/ProgressBar.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "BehaviorTree/BlackboardComponent.h"
 
 #define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
 
@@ -129,6 +129,68 @@ void AEnemyCharacter::BaseAttackCheck()
 	// 디버그용 캡슐 시각화
 	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
 	DrawDebugCapsule(GetWorld(), CapsuleOrigin, 70.0f * 0.5f, 70.0f, CapsuleRotation, DrawColor, false, 3.0f);
+}
+
+void AEnemyCharacter::PlayAttackMontageByIndex(int32 Index)
+{
+	if (AttackMontages.IsValidIndex(Index) && GetMesh() && GetMesh()->GetAnimInstance())
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		AnimInstance->Montage_Play(AttackMontages[Index]);
+
+		// 종료 콜백
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &AEnemyCharacter::OnAttackMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontages[Index]);
+	}
+}
+
+void AEnemyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	CurrentAttackStep++;
+
+	if (CurrentAttackStep >= AttackMontages.Num())
+	{
+		CurrentAttackStep = 0;
+		bHasRetreatedThisCombo = false;
+		return;
+	}
+
+	// 아직 후퇴 안 했으면 확률 체크
+	if (!bHasRetreatedThisCombo && RetreatMontage)
+	{
+		float Rand = FMath::FRandRange(0.f, 100.f);
+		if (Rand <= RetreatChancePercent)
+		{
+			PlayRetreatMontage();
+			bHasRetreatedThisCombo = true;
+		}
+	}
+}
+
+void AEnemyCharacter::PlayRetreatMontage()
+{
+	if (RetreatMontage && GetMesh() && GetMesh()->GetAnimInstance())
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		AnimInstance->Montage_Play(RetreatMontage);
+
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &AEnemyCharacter::OnRetreatMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, RetreatMontage);
+	}
+}
+
+void AEnemyCharacter::OnRetreatMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		UBlackboardComponent* BB = AICon->GetBlackboardComponent();
+		if (BB)
+		{
+			BB->SetValueAsBool("ShouldChaseAfterRetreat", true);
+		}
+	}
 }
 
 void AEnemyCharacter::PlayHitReactMontage()

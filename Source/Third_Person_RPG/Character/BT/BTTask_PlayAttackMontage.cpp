@@ -9,6 +9,7 @@
 #include "Animation/AnimInstance.h"
 #include "Third_Person_RPG/Character/EnemyCharacter.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 UBTTask_PlayAttackMontage::UBTTask_PlayAttackMontage()
 {
@@ -23,6 +24,11 @@ EBTNodeResult::Type UBTTask_PlayAttackMontage::ExecuteTask(UBehaviorTreeComponen
     AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(AIController->GetPawn());
     if (!Enemy) return EBTNodeResult::Failed;
 
+	if (UBlackboardComponent* BB = AIController->GetBlackboardComponent())
+	{
+		BB->SetValueAsBool("ShouldChaseAfterRetreat", false);
+	}
+
 	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(Enemy->GetWorld(), 0));
 	if (Player)
 	{
@@ -33,12 +39,7 @@ EBTNodeResult::Type UBTTask_PlayAttackMontage::ExecuteTask(UBehaviorTreeComponen
 		Enemy->SetActorRotation(LookAtRotation);
 	}
 
-    UAnimInstance* AnimInstance = Enemy->GetMesh()->GetAnimInstance();
-    if (!AnimInstance || !Enemy->AttackMontage) return EBTNodeResult::Failed;
-
-    AnimInstance->Montage_Play(Enemy->AttackMontage);
-
-
+	Enemy->PlayAttackMontageByIndex(Enemy->CurrentAttackStep);
 
     return EBTNodeResult::Succeeded;
 }
