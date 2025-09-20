@@ -162,22 +162,45 @@ void AEnemyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrup
 		float Rand = FMath::FRandRange(0.f, 100.f);
 		if (Rand <= RetreatChancePercent)
 		{
-			PlayRetreatMontage();
+			StartRetreatMovement();
 			bHasRetreatedThisCombo = true;
 		}
 	}
 }
 
-void AEnemyCharacter::PlayRetreatMontage()
+void AEnemyCharacter::StartRetreatMovement()
 {
-	if (RetreatMontage && GetMesh() && GetMesh()->GetAnimInstance())
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		AnimInstance->Montage_Play(RetreatMontage);
+	const float RetreatDistance = 300.f; // 후퇴 거리
+	const float RetreatSpeed = 600.f;
 
-		FOnMontageEnded EndDelegate;
-		EndDelegate.BindUObject(this, &AEnemyCharacter::OnRetreatMontageEnded);
-		AnimInstance->Montage_SetEndDelegate(EndDelegate, RetreatMontage);
+	// 후퇴 방향 계산
+	FVector RetreatDirection = -GetActorForwardVector();
+	FVector RetreatTarget = GetActorLocation() + RetreatDirection * RetreatDistance;
+
+	// 이동 시작
+	LaunchCharacter(RetreatDirection * RetreatSpeed, true, false);
+
+	// 일정 시간 후 이동 종료 처리
+	const float EstimatedTime = RetreatDistance / RetreatSpeed;
+
+	GetWorld()->GetTimerManager().SetTimer(
+		HitReactTimerHandle, // 재사용
+		this,
+		&AEnemyCharacter::FinishRetreatMovement,
+		EstimatedTime,
+		false
+	);
+}
+
+void AEnemyCharacter::FinishRetreatMovement()
+{
+	// 후퇴 종료 → 추격 시작을 블랙보드에 알림
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool("ShouldChaseAfterRetreat", true);
+		}
 	}
 }
 

@@ -75,8 +75,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Attack")
 	void PlayAttackMontageByIndex(int32 Index);
 
-	UFUNCTION(BlueprintCallable, Category = "Combat|Attack")
-	void PlayRetreatMontage();
+	UFUNCTION(BlueprintCallable, Category = "Combat|Retreat")
+	void StartRetreatMovement();
+
+	UFUNCTION()
+	void FinishRetreatMovement();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Stats")
 	FEnemyStats EnemyStats;

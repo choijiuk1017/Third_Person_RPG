@@ -24,11 +24,6 @@ EBTNodeResult::Type UBTTask_PlayAttackMontage::ExecuteTask(UBehaviorTreeComponen
     AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(AIController->GetPawn());
     if (!Enemy) return EBTNodeResult::Failed;
 
-	if (UBlackboardComponent* BB = AIController->GetBlackboardComponent())
-	{
-		BB->SetValueAsBool("ShouldChaseAfterRetreat", false);
-	}
-
 	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(Enemy->GetWorld(), 0));
 	if (Player)
 	{
