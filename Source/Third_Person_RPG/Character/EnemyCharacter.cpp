@@ -157,7 +157,7 @@ void AEnemyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrup
 	}
 
 	// 아직 후퇴 안 했으면 확률 체크
-	if (!bHasRetreatedThisCombo && RetreatMontage)
+	if (!bHasRetreatedThisCombo)
 	{
 		float Rand = FMath::FRandRange(0.f, 100.f);
 		if (Rand <= RetreatChancePercent)
@@ -184,7 +184,7 @@ void AEnemyCharacter::StartRetreatMovement()
 	const float EstimatedTime = RetreatDistance / RetreatSpeed;
 
 	GetWorld()->GetTimerManager().SetTimer(
-		HitReactTimerHandle, // 재사용
+		HitReactTimerHandle, 
 		this,
 		&AEnemyCharacter::FinishRetreatMovement,
 		EstimatedTime,

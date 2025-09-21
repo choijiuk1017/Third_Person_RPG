@@ -60,9 +60,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	TArray<UAnimMontage *> AttackMontages;
 
-	UPROPERTY(EditAnywhere, Category = "Animation")
-	TObjectPtr<class UAnimMontage> RetreatMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Attack")
 	float RetreatChancePercent = 40.f;
 	
