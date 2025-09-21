@@ -8,6 +8,7 @@
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/BoxComponent.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/OverlapResult.h"
 #include "Components/ProgressBar.h"
@@ -84,14 +85,14 @@ void AEnemyCharacter::BaseAttackCheck()
 	FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
 
 	// 충돌 탐지 끝 지점
-	FVector End = Start + (GetActorForwardVector() * 70.0f);
+	FVector End = Start + (GetActorForwardVector() * AttackRange);
 
 	// 오버랩 중심점 (Capsule처럼 보이게)
 	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
 	FQuat CapsuleRotation = FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat();
 
 	// 오버랩 영역 설정
-	FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(70.0f, 70.0f * 0.5f);  // Radius, HalfHeight
+	FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(AttackRange, AttackRange * 0.5f);  // Radius, HalfHeight
 
 	// 쿼리 파라미터
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(AttackOverlap), false, this);
@@ -128,8 +129,9 @@ void AEnemyCharacter::BaseAttackCheck()
 
 	// 디버그용 캡슐 시각화
 	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
-	DrawDebugCapsule(GetWorld(), CapsuleOrigin, 70.0f * 0.5f, 70.0f, CapsuleRotation, DrawColor, false, 3.0f);
+	DrawDebugCapsule(GetWorld(), CapsuleOrigin, AttackRange * 0.5f, AttackRange, CapsuleRotation, DrawColor, false, 3.0f);
 }
+
 
 void AEnemyCharacter::PlayAttackMontageByIndex(int32 Index)
 {
@@ -147,6 +149,7 @@ void AEnemyCharacter::PlayAttackMontageByIndex(int32 Index)
 
 void AEnemyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+
 	CurrentAttackStep++;
 
 	if (CurrentAttackStep >= AttackMontages.Num())
@@ -156,65 +159,22 @@ void AEnemyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrup
 		return;
 	}
 
-	// 아직 후퇴 안 했으면 확률 체크
 	if (!bHasRetreatedThisCombo)
 	{
 		float Rand = FMath::FRandRange(0.f, 100.f);
 		if (Rand <= RetreatChancePercent)
 		{
-			StartRetreatMovement();
+
+			if (AEnemyAIController* AIController = Cast<AEnemyAIController>(GetController()))
+			{
+				AIController->GetBlackboardComponent()->SetValueAsBool("ShouldChaseAfterRetreat", true);
+			}
+
 			bHasRetreatedThisCombo = true;
 		}
 	}
 }
 
-void AEnemyCharacter::StartRetreatMovement()
-{
-	const float RetreatDistance = 300.f; // 후퇴 거리
-	const float RetreatSpeed = 600.f;
-
-	// 후퇴 방향 계산
-	FVector RetreatDirection = -GetActorForwardVector();
-	FVector RetreatTarget = GetActorLocation() + RetreatDirection * RetreatDistance;
-
-	// 이동 시작
-	LaunchCharacter(RetreatDirection * RetreatSpeed, true, false);
-
-	// 일정 시간 후 이동 종료 처리
-	const float EstimatedTime = RetreatDistance / RetreatSpeed;
-
-	GetWorld()->GetTimerManager().SetTimer(
-		HitReactTimerHandle, 
-		this,
-		&AEnemyCharacter::FinishRetreatMovement,
-		EstimatedTime,
-		false
-	);
-}
-
-void AEnemyCharacter::FinishRetreatMovement()
-{
-	// 후퇴 종료 → 추격 시작을 블랙보드에 알림
-	if (AAIController* AICon = Cast<AAIController>(GetController()))
-	{
-		if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
-		{
-			BB->SetValueAsBool("ShouldChaseAfterRetreat", true);
-		}
-	}
-}
-
-void AEnemyCharacter::OnRetreatMontageEnded(UAnimMontage* Montage, bool bInterrupted)
-{
-	if (AAIController* AICon = Cast<AAIController>(GetController()))
-	{
-		UBlackboardComponent* BB = AICon->GetBlackboardComponent();
-		if (BB)
-		{
-			BB->SetValueAsBool("ShouldChaseAfterRetreat", true);
-		}
-	}
-}
 
 void AEnemyCharacter::PlayHitReactMontage()
 {
@@ -257,6 +217,12 @@ void AEnemyCharacter::TakeDamage(int32 DamageAmount)
 
 	if (EnemyStats.CurrentHP <= 0)
 	{
+
+		if (AEnemyAIController* AIController = Cast<AEnemyAIController>(GetController()))
+		{
+			AIController->PauseAI();
+		}
+
 		// 사망 처리
 		EnemyStats.CurrentHP = 0;
 		bIsDead = true;

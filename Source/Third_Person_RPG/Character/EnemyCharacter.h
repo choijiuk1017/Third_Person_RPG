@@ -50,6 +50,7 @@ public:
 	virtual void EnableWeaponHitBox() override {};
 	virtual void DisableWeaponHitBox() override {};
 
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	class UBehaviorTree* BehaviorTreeAsset;
 
@@ -72,12 +73,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Attack")
 	void PlayAttackMontageByIndex(int32 Index);
 
-	UFUNCTION(BlueprintCallable, Category = "Combat|Retreat")
-	void StartRetreatMovement();
-
-	UFUNCTION()
-	void FinishRetreatMovement();
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Stats")
 	FEnemyStats EnemyStats;
 
@@ -98,13 +93,15 @@ public:
 	void RegisterAttacker(AActor* Attacker);
 
 
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = Animation)
 	TObjectPtr<class UAnimMontage> HitReactMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
+	float AttackRange;
 
 
 private:
@@ -131,6 +128,4 @@ private:
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
-	UFUNCTION()
-	void OnRetreatMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 };
