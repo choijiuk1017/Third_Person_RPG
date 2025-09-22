@@ -29,23 +29,21 @@ EBTNodeResult::Type UBTTask_Retreat::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 	APawn* Player = UGameplayStatics::GetPlayerPawn(Enemy->GetWorld(), 0);
 	if (!Player) return EBTNodeResult::Failed;
 
-	// 플레이어와 반대 방향으로 목표 위치 설정
+	// 목표 위치 계산
 	const float RetreatDistance = 300.f;
 	FVector BackwardDir = -(Player->GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
-	FVector RetreatLocation = Enemy->GetActorLocation() + BackwardDir * RetreatDistance;
+	RetreatLocation = Enemy->GetActorLocation() + BackwardDir * RetreatDistance; // 멤버 변수로 빼줌
 
-
-	// 이동 중에도 플레이어 쳐다보게 고정
+	// 플레이어 바라보기 고정
 	Enemy->bUseControllerRotationYaw = false;
 	Enemy->GetCharacterMovement()->bOrientRotationToMovement = false;
 
-	// 수동으로 회전 고정
 	FRotator LookAtRotation = (Player->GetActorLocation() - Enemy->GetActorLocation()).Rotation();
 	LookAtRotation.Pitch = 0.f;
 	LookAtRotation.Roll = 0.f;
 	Enemy->SetActorRotation(LookAtRotation);
 
-	// 목표 위치로 이동
+	// 이동 시작
 	FAIMoveRequest MoveReq;
 	MoveReq.SetGoalLocation(RetreatLocation);
 	MoveReq.SetAcceptanceRadius(5.f);
@@ -53,6 +51,7 @@ EBTNodeResult::Type UBTTask_Retreat::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 	FNavPathSharedPtr NavPath;
 	AICon->MoveTo(MoveReq, &NavPath);
 
-	return EBTNodeResult::Succeeded;
+	return EBTNodeResult::Succeeded; // 비동기 작업
 }
+
 
