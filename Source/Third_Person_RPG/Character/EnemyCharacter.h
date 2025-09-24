@@ -92,6 +92,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Reward")
 	void RegisterAttacker(AActor* Attacker);
 
+	UPROPERTY(EditAnywhere, Category = "MonsterSkill")
+	TObjectPtr<class UAnimMontage> SkillMontage;
+
+	UFUNCTION(BlueprintCallable)
+	void Heal(int32 Amount);
 
 protected:
 	// Called when the game starts or when spawned
@@ -127,5 +132,6 @@ private:
 
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
 
 };

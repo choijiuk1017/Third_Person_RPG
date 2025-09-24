@@ -51,7 +51,7 @@ EBTNodeResult::Type UBTTask_Retreat::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 	FNavPathSharedPtr NavPath;
 	AICon->MoveTo(MoveReq, &NavPath);
 
-	return EBTNodeResult::Succeeded; // 비동기 작업
+	return EBTNodeResult::Succeeded;
 }
 
 

@@ -147,6 +147,13 @@ void AEnemyCharacter::PlayAttackMontageByIndex(int32 Index)
 	}
 }
 
+void AEnemyCharacter::Heal(int32 Amount)
+{
+	if (Amount <= 0 || bIsDead) return;
+
+	EnemyStats.CurrentHP = FMath::Clamp(EnemyStats.CurrentHP + Amount, 0, EnemyStats.MaxHP);
+}
+
 void AEnemyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 
