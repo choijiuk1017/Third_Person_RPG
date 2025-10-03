@@ -36,6 +36,7 @@
 // Sets default values
 APlayerCharacter::APlayerCharacter()
 {
+	Tags.Add(FName("Player"));
 #pragma region Input
 
 	//Input

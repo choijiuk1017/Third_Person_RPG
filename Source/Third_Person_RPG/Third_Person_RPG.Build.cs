@@ -19,8 +19,11 @@ public class Third_Person_RPG : ModuleRules
 
 			"NavigationSystem",
 			"AIModule",
-			"GameplayTasks"
-		});
+			"GameplayTasks",
+            "LevelSequence",
+            "MovieScene",        
+			"MovieSceneTracks"
+        });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
