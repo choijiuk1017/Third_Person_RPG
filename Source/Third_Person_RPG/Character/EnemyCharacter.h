@@ -49,7 +49,7 @@ public:
 	virtual void SkillAttackCheck() override {};
 	virtual void EnableWeaponHitBox() override {};
 	virtual void DisableWeaponHitBox() override {};
-
+	virtual void SkillAttackCheckByIndex(int32 Index) override {};
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	class UBehaviorTree* BehaviorTreeAsset;

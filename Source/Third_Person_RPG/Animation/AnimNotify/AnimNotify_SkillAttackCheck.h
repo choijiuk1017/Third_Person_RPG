@@ -15,5 +15,8 @@ class THIRD_PERSON_RPG_API UAnimNotify_SkillAttackCheck : public UAnimNotify
 	GENERATED_BODY()
 
 protected:
+	UPROPERTY(EditAnywhere, Category = "Skill")
+	int32 PatternIndex = 0;
+
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference);
 };

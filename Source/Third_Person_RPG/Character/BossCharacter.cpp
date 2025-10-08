@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Third_Person_RPG/Character/EnemyAIController.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "Third_Person_RPG/Data/SkillData.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/BoxComponent.h"
@@ -114,6 +115,156 @@ void ABossCharacter::BaseAttackCheck()
 	// 디버그용 캡슐 시각화
 	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
 	DrawDebugCapsule(GetWorld(), CapsuleOrigin, AttackRange * 0.5f, AttackRange, CapsuleRotation, DrawColor, false, 3.0f);
+}
+
+void ABossCharacter::PlayPatternMontage(int32 Index)
+{
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	if (!PatternDatas.IsValidIndex(Index)) return;
+
+	CurrentPatternIndex = Index;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		AnimInstance->Montage_Play(PatternDatas[Index]->SkillMontage);
+
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &ABossCharacter::PatternEnd);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, PatternDatas[Index]->SkillMontage);
+	}
+}
+
+void ABossCharacter::PatternEnd(UAnimMontage* Montage, bool IsEnded)
+{
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+}
+
+
+void ABossCharacter::SkillAttackCheckByIndex(int32 Index)
+{
+	if (!PatternDatas.IsValidIndex(Index)) return;
+
+	const USkillData* SkillData = PatternDatas[Index];
+	if (!SkillData) return;
+
+	FVector SpawnLocation = GetActorLocation();
+
+	SpawnSkillEffectByData(SkillData);
+
+	TArray<FOverlapResult> OverlapResults;
+
+	// 기본 값
+	FVector Start = GetActorLocation();
+	FVector End = Start;
+
+	// 방향 계산
+	FVector Forward = GetActorForwardVector();
+
+	switch (SkillData->SpawnType)
+	{
+	case ESkillEffectSpawnType::Forward:
+		Start = GetActorLocation() + Forward * 200.0f;
+		End = Start + Forward * SkillData->SkillRange;
+		break;
+
+	case ESkillEffectSpawnType::Self:
+		Start = GetActorLocation();
+		End = Start + Forward * SkillData->SkillRange;
+		break;
+
+	case ESkillEffectSpawnType::Ground:
+		Start = GetActorLocation() - FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+		End = Start + Forward * SkillData->SkillRange;
+		break;
+
+	case ESkillEffectSpawnType::Custom:
+		// 필요시 커스텀 위치 로직 추가
+		break;
+	}
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
+
+	bool bHasHit = GetWorld()->OverlapMultiByChannel(
+		OverlapResults,
+		Start,
+		FQuat::Identity,
+		CHANNEL_ACTION,
+		FCollisionShape::MakeSphere(SkillData->SkillRadius),
+		Params
+	);
+
+	if (bHasHit)
+	{
+		TSet<APlayerCharacter*> DamagedPlayers;
+
+		for (const FOverlapResult& Result : OverlapResults)
+		{
+			if (APlayerCharacter* Player = Cast<APlayerCharacter>(Result.GetActor()))
+			{
+				if (!DamagedPlayers.Contains(Player))
+				{
+					DamagedPlayers.Add(Player);
+					UE_LOG(LogTemp, Warning, TEXT("Player Damaged via Overlap"));
+
+					Player->TakeDamage(BossStats.AttackPower);
+				}
+			}
+		}
+	}
+
+	// Capsule 디버그 시각화
+	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
+	float CapsuleHalfHeight = SkillData->SkillRange * 0.5f;
+	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
+
+	DrawDebugCapsule(
+		GetWorld(),
+		CapsuleOrigin,
+		CapsuleHalfHeight,
+		SkillData->SkillRadius,
+		FRotationMatrix::MakeFromZ(Forward).ToQuat(),
+		DrawColor,
+		false,
+		3.0f
+	);
+}
+
+
+void ABossCharacter::SpawnSkillEffectByData(const USkillData* Data)
+{
+	if (!Data || !Data->SkillEffect) return;
+
+	FVector SpawnLocation = GetActorLocation();
+	FRotator SpawnRotation = GetActorRotation();
+
+	switch (Data->SpawnType)
+	{
+	case ESkillEffectSpawnType::Self:
+		SpawnLocation = GetActorLocation();
+		break;
+
+	case ESkillEffectSpawnType::Forward:
+		SpawnLocation = GetActorLocation() + GetActorForwardVector() * 200.0f;
+		break;
+
+	case ESkillEffectSpawnType::Ground:
+		SpawnLocation = GetActorLocation() - FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+		break;
+
+	case ESkillEffectSpawnType::Custom:
+		// 혹시 필요하다면 SkillData에 별도 커스텀 위치 변수 추가 가능
+		break;
+
+	default:
+		break;
+	}
+
+	UGameplayStatics::SpawnEmitterAtLocation(
+		GetWorld(),
+		Data->SkillEffect,
+		SpawnLocation,
+		SpawnRotation
+	);
 }
 
 void ABossCharacter::PlayAttackMontageByIndex(int32 Index)

@@ -3,6 +3,7 @@
 
 #include "Third_Person_RPG/Character/EnemyAIController.h"
 #include "Third_Person_RPG/Character/EnemyCharacter.h"
+#include "Third_Person_RPG/Character/BossCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
@@ -23,6 +24,14 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 	if (Enemy && Enemy->BehaviorTreeAsset)
 	{
 		RunBehaviorTree(Enemy->BehaviorTreeAsset);
+
+		CachedBehaviorTree = Cast<UBehaviorTreeComponent>(BrainComponent);
+	}
+
+	ABossCharacter* Boss = Cast<ABossCharacter>(InPawn);
+	if (Boss && Boss->BehaviorTreeAsset)
+	{
+		RunBehaviorTree(Boss->BehaviorTreeAsset);
 
 		CachedBehaviorTree = Cast<UBehaviorTreeComponent>(BrainComponent);
 	}

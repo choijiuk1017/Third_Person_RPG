@@ -8,7 +8,9 @@
 #include "Third_Person_RPG/Interface/AnimationAttackInterface.h"
 #include "Third_Person_RPG/UI/HPBar.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "Third_Person_RPG/Data/SkillData.h"
 #include "BossCharacter.generated.h"
+
 
 USTRUCT(BlueprintType)
 struct FBossStats
@@ -45,6 +47,7 @@ public:
 
 	virtual void BaseAttackCheck() override;
 	virtual void SkillAttackCheck() override {};
+	virtual void SkillAttackCheckByIndex(int32 Index) override;
 	virtual void EnableWeaponHitBox() override {};
 	virtual void DisableWeaponHitBox() override {};
 
@@ -53,13 +56,15 @@ public:
 
 	void TakeDamage(int32 DamageAmount);
 
+	void PlayPatternMontage(int32 Index);
+	int32 GetCurrentPatternIndex() const { return CurrentPatternIndex; }
+
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	TArray<UAnimMontage*> AttackMontages;
 
-
-	UPROPERTY(EditAnywhere, Category = "Animation")
-	TArray<UAnimMontage*> SkillMontages;
+	UPROPERTY(EditAnywhere, Category = "Pattern")
+	TArray<USkillData*> PatternDatas;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Attack")
 	int32 CurrentAttackStep = 0;
@@ -87,6 +92,7 @@ public:
 	float HitReactDuration = 0.5f;
 
 	void PlayHitReactMontage();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -123,4 +129,10 @@ private:
 
 	UFUNCTION()
 	void EndHitReact();
+
+	void SpawnSkillEffectByData(const USkillData* Data);
+
+	void PatternEnd(UAnimMontage* Montage, bool IsEnded);
+
+	int32 CurrentPatternIndex = -1;
 };

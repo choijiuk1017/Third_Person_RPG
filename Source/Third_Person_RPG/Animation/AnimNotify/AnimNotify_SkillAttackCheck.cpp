@@ -14,6 +14,8 @@ void UAnimNotify_SkillAttackCheck::Notify(USkeletalMeshComponent* MeshComp, UAni
 		if (AttackPawn)
 		{
 			AttackPawn->SkillAttackCheck();
+
+			AttackPawn->SkillAttackCheckByIndex(PatternIndex);
 		}
 	}
 }

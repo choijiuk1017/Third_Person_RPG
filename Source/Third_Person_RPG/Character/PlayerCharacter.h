@@ -129,6 +129,8 @@ public:
 
 	virtual void ShowWeaponInfo_Implementation(UWeaponItemData* WeaponData) override;
 
+	virtual void SkillAttackCheckByIndex(int32 Index) override {};
+
 	UPROPERTY(BlueprintReadOnly, Category = "State")
 	bool bIsKneeling;
 

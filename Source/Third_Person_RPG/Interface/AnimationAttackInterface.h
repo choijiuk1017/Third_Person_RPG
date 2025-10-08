@@ -26,6 +26,8 @@ public:
 
 	virtual void SkillAttackCheck() = 0;
 
+	virtual void SkillAttackCheckByIndex(int32 Index) = 0;
+
 	virtual void EnableWeaponHitBox() = 0;
 
 	virtual void DisableWeaponHitBox() = 0;
