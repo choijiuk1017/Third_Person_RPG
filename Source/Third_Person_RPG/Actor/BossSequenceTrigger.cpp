@@ -47,6 +47,7 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
+
 	if (bHasPlayed) return;
 
 
@@ -54,7 +55,7 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 	{
 		bHasPlayed = true;
 
-
+		SetPlayerInputEnabled(false);
 		SetAllUIVisible(false);
 
 
@@ -74,11 +75,11 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 
 void ABossSequenceTrigger::OnSequenceEnd()
 {
+	FVector SpawnLocation = SkeletalMeshActorsToDestroy[0]->GetActorLocation();
+	SpawnLocation.Z += 100.0f; // Z축 위로 100만큼 올리기
 
-	// 스폰 위치는 첫 번째 스켈레탈 메시 액터 기준
 	FTransform SpawnTransform;
-
-	SpawnTransform = SkeletalMeshActorsToDestroy[0]->GetActorTransform();
+	SpawnTransform.SetLocation(SpawnLocation);
 
 	for (AStaticMeshActor* MeshActor : StaticMeshActorsToDestroy)
 	{
@@ -88,7 +89,6 @@ void ABossSequenceTrigger::OnSequenceEnd()
 		}
 	}
 
-	// 스켈레탈 메시 액터 제거
 	for (ASkeletalMeshActor* SkeletalActor : SkeletalMeshActorsToDestroy)
 	{
 		if (IsValid(SkeletalActor))
@@ -97,19 +97,20 @@ void ABossSequenceTrigger::OnSequenceEnd()
 		}
 	}
 
-
-
-	// 보스 스폰
 	if (CombatBossClass && SpawnTransform.IsValid())
 	{
-		GetWorld()->SpawnActor<AActor>(CombatBossClass, SpawnTransform);
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		AActor* SpawnedBoss = GetWorld()->SpawnActor<AActor>(CombatBossClass, SpawnTransform, Params);
 	}
 
-	// UI 다시 보이게
+	SetPlayerInputEnabled(true);
 	SetAllUIVisible(true);
 
-	// 트리거 제거
 	Destroy();
+
+	
 }
 
 void ABossSequenceTrigger::SetAllUIVisible(bool bVisible)
@@ -126,5 +127,20 @@ void ABossSequenceTrigger::SetAllUIVisible(bool bVisible)
 		{
 			Widget->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 		}
+	}
+}
+
+void ABossSequenceTrigger::SetPlayerInputEnabled(bool bEnabled)
+{
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC) return;
+
+	if (bEnabled)
+	{
+		EnableInput(PC);
+	}
+	else
+	{
+		DisableInput(PC);
 	}
 }

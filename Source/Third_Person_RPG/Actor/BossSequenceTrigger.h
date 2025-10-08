@@ -53,4 +53,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnSequenceEnd();
 
+	void SetPlayerInputEnabled(bool bEnabled);
+
 };
