@@ -201,6 +201,8 @@ void APlayerCharacter::BeginPlay()
 			if (InteractionWidgetInstance)
 			{
 				InteractionWidgetInstance->AddToViewport();
+				InteractionWidgetInstance->SetIsEnabled(false);
+				InteractionWidgetInstance->SetRenderOpacity(0.0f);
 				InteractionWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
 			}
 		}
@@ -1460,6 +1462,8 @@ void APlayerCharacter::ShowInteractionUI(const FText& InText)
 	if (InteractionWidgetInstance)
 	{
 		InteractionWidgetInstance->SetHelpText(InText.ToString());
+		InteractionWidgetInstance->SetIsEnabled(true);
+		InteractionWidgetInstance->SetRenderOpacity(1.0f);
 		InteractionWidgetInstance->SetVisibility(ESlateVisibility::Visible);
 	}
 }
@@ -1477,6 +1481,8 @@ void APlayerCharacter::HideInteractionUI()
 {
 	if (InteractionWidgetInstance)
 	{
+		InteractionWidgetInstance->SetIsEnabled(false);
+		InteractionWidgetInstance->SetRenderOpacity(0.0f);
 		InteractionWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
 	}
 }

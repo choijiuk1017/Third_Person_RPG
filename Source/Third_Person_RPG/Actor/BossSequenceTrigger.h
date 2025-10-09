@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/StaticMeshActor.h"
 #include "BossSequenceTrigger.generated.h"
 
 class ALevelSequenceActor;

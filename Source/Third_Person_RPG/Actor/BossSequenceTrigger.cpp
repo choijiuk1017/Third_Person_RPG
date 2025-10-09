@@ -138,10 +138,14 @@ void ABossSequenceTrigger::SetPlayerInputEnabled(bool bEnabled)
 
 	if (bEnabled)
 	{
-		EnableInput(PC);
+		PC->SetIgnoreMoveInput(false);
+		PC->SetIgnoreLookInput(false);
+		PC->bShowMouseCursor = false;
 	}
 	else
 	{
-		DisableInput(PC);
+		PC->SetIgnoreMoveInput(true);
+		PC->SetIgnoreLookInput(true);
+		PC->bShowMouseCursor = false;
 	}
 }

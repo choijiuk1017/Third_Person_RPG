@@ -104,6 +104,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
 	float AttackRange;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 MaxGroggy = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	int32 CurrentGroggy = 0;
+
 private:
 
 	FTimerHandle HitReactTimerHandle;
@@ -135,4 +141,6 @@ private:
 	void PatternEnd(UAnimMontage* Montage, bool IsEnded);
 
 	int32 CurrentPatternIndex = -1;
+
+	APlayerCharacter* PlayerRef;
 };

@@ -35,6 +35,8 @@ void ABossCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	PlayerRef = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
 	{
 		if (HPBarWidgetClass)
@@ -42,7 +44,8 @@ void ABossCharacter::BeginPlay()
 			HPBarWidget = CreateWidget<UHPBar>(PC, HPBarWidgetClass);
 			if (HPBarWidget)
 			{
-				HPBarWidget->AddToViewport();
+				HPBarWidget->AddToViewport(10);
+				HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
 			}
 		}
 	}
@@ -53,15 +56,23 @@ void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (HPBarWidget && !bIsDead)
-	{
-		FVector WorldLocation = GetActorLocation() + FVector(0, 0, 120.f); // 머리 위 위치
-		FVector2D ScreenPosition;
+	if (!PlayerRef || !HPBarWidget) return;
 
-		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-		if (PC && PC->ProjectWorldLocationToScreen(WorldLocation, ScreenPosition))
+	// 플레이어와 거리 계산
+	float Distance = FVector::Dist(PlayerRef->GetActorLocation(), GetActorLocation());
+
+	if (Distance <= 1200.f)
+	{
+		if (HPBarWidget->GetVisibility() != ESlateVisibility::Visible)
 		{
-			HPBarWidget->SetPositionInViewport(ScreenPosition);
+			HPBarWidget->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
+	else
+	{
+		if (HPBarWidget->GetVisibility() != ESlateVisibility::Hidden)
+		{
+			HPBarWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 }
@@ -358,6 +369,7 @@ void ABossCharacter::TakeDamage(int32 DamageAmount)
 
 	BossStats.CurrentHP -= FinalDamage;
 
+	CurrentGroggy += 25;
 
 	if (BossStats.CurrentHP <= 0)
 	{
@@ -401,26 +413,31 @@ void ABossCharacter::TakeDamage(int32 DamageAmount)
 		return;
 	}
 
-	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	if (CurrentGroggy == MaxGroggy)
 	{
-		if (HitReactMontage)
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 		{
-			AnimInstance->Montage_Play(HitReactMontage);
-
-			if (AEnemyAIController* EnemyAI = Cast<AEnemyAIController>(GetController()))
+			if (HitReactMontage)
 			{
-				EnemyAI->PauseAI();
+				AnimInstance->Montage_Play(HitReactMontage);
+
+				if (AEnemyAIController* EnemyAI = Cast<AEnemyAIController>(GetController()))
+				{
+					EnemyAI->PauseAI();
+				}
+
+				GetCharacterMovement()->DisableMovement();
+
+				GetWorld()->GetTimerManager().SetTimer(
+					HitReactTimerHandle,
+					this,
+					&ABossCharacter::EndHitReact,
+					HitReactDuration,
+					false
+				);
+
+				CurrentGroggy = 0;
 			}
-
-			GetCharacterMovement()->DisableMovement();
-
-			GetWorld()->GetTimerManager().SetTimer(
-				HitReactTimerHandle,
-				this,
-				&ABossCharacter::EndHitReact,
-				HitReactDuration,
-				false
-			);
 		}
 	}
 
