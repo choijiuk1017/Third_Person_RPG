@@ -15,6 +15,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Third_Person_RPG/Data/MMComboActionData.h"
 #include "Third_Person_RPG/Character/EnemyCharacter.h"
+#include "Third_Person_RPG/Character/BossCharacter.h"
 #include "Third_Person_RPG/Data/SkillData.h"
 #include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"	
@@ -853,6 +854,7 @@ void APlayerCharacter::BaseAttackCheck()
 		if (bHasHit)
 		{
 			TSet<AEnemyCharacter*> HitEnemies;
+			TSet<ABossCharacter*> HitBosses;
 
 			for (const FOverlapResult& Result : OverlapResults)
 			{
@@ -866,6 +868,20 @@ void APlayerCharacter::BaseAttackCheck()
 						UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
 						Enemy->RegisterAttacker(this);
 						Enemy->TakeDamage(CombatStats.AttackPower);
+					}
+				}
+
+				if (ABossCharacter* Boss = Cast<ABossCharacter>(Result.GetActor()))
+				{
+
+					if (!HitBosses.Contains(Boss))
+					{
+
+
+						HitBosses.Add(Boss);
+						UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
+						Boss->RegisterAttacker(this);
+						Boss->TakeDamage(CombatStats.AttackPower);
 					}
 				}
 			}
@@ -946,7 +962,7 @@ void APlayerCharacter::SkillAttackCheck()
 	if (bHasHit)
 	{
 		TSet<AEnemyCharacter*> HitEnemies;
-
+		TSet<ABossCharacter*> HitBosses;
 		for (const FOverlapResult& Result : OverlapResults)
 		{
 			if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(Result.GetActor()))
@@ -957,6 +973,20 @@ void APlayerCharacter::SkillAttackCheck()
 					UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
 					Enemy->RegisterAttacker(this);
 					Enemy->TakeDamage(CombatStats.AttackPower);
+				}
+			}
+
+			if (ABossCharacter* Boss = Cast<ABossCharacter>(Result.GetActor()))
+			{
+
+				if (!HitBosses.Contains(Boss))
+				{
+
+
+					HitBosses.Add(Boss);
+					UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
+					Boss->RegisterAttacker(this);
+					Boss->TakeDamage(CombatStats.AttackPower);
 				}
 			}
 		}

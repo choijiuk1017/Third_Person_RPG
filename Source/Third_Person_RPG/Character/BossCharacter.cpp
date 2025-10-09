@@ -53,6 +53,17 @@ void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (HPBarWidget && !bIsDead)
+	{
+		FVector WorldLocation = GetActorLocation() + FVector(0, 0, 120.f); // 머리 위 위치
+		FVector2D ScreenPosition;
+
+		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (PC && PC->ProjectWorldLocationToScreen(WorldLocation, ScreenPosition))
+		{
+			HPBarWidget->SetPositionInViewport(ScreenPosition);
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -119,15 +130,30 @@ void ABossCharacter::BaseAttackCheck()
 
 void ABossCharacter::PlayPatternMontage(int32 Index)
 {
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	if (!PatternDatas.IsValidIndex(Index)) return;
 
 	CurrentPatternIndex = Index;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
+		if (Index != 2)
+		{
+			GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+		}
+
+		if (Index == 1)
+		{
+			GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+		}
+
 		AnimInstance->Montage_Play(PatternDatas[Index]->SkillMontage);
 
+		if (Index == 1)
+		{
+			GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap);
+		}
+		
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindUObject(this, &ABossCharacter::PatternEnd);
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, PatternDatas[Index]->SkillMontage);
@@ -137,6 +163,7 @@ void ABossCharacter::PlayPatternMontage(int32 Index)
 void ABossCharacter::PatternEnd(UAnimMontage* Montage, bool IsEnded)
 {
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Block);
 }
 
 
@@ -206,7 +233,7 @@ void ABossCharacter::SkillAttackCheckByIndex(int32 Index)
 					DamagedPlayers.Add(Player);
 					UE_LOG(LogTemp, Warning, TEXT("Player Damaged via Overlap"));
 
-					Player->TakeDamage(BossStats.AttackPower);
+					Player->TakeDamage(SkillData->SkillDamage);
 				}
 			}
 		}

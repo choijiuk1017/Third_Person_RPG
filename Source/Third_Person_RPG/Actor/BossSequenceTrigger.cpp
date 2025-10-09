@@ -77,7 +77,7 @@ void ABossSequenceTrigger::OnSequenceEnd()
 {
 	FVector SpawnLocation = SkeletalMeshActorsToDestroy[0]->GetActorLocation();
 	SpawnLocation.Z += 100.0f; // Z축 위로 100만큼 올리기
-	SpawnLocation.X += 300.0f;
+	SpawnLocation.X += 500.0f;
 
 	FTransform SpawnTransform;
 	SpawnTransform.SetLocation(SpawnLocation);

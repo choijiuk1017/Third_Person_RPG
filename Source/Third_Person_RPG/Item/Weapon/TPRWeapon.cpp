@@ -7,6 +7,7 @@
 #include "Components/PoseableMeshComponent.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Third_Person_RPG/Character/EnemyCharacter.h"
+#include "Third_Person_RPG/Character/BossCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Engine/World.h"
 #include "Engine/EngineTypes.h"
@@ -144,6 +145,20 @@ void ATPRWeapon::OnHitBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 				APlayerCharacter* PlayerOwner = Cast<APlayerCharacter>(GetOwner());
 
 				Enemy->TakeDamage(PlayerOwner->CombatStats.AttackPower);
+
+				// 피격된 액터로 등록
+				DamagedActors.Add(OtherActor);
+			}
+
+			if (ABossCharacter* Boss = Cast<ABossCharacter>(OtherActor))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Boss Damaged via Weapon HitBox"));
+
+				Boss->RegisterAttacker(GetOwner());
+
+				APlayerCharacter* PlayerOwner = Cast<APlayerCharacter>(GetOwner());
+
+				Boss->TakeDamage(PlayerOwner->CombatStats.AttackPower);
 
 				// 피격된 액터로 등록
 				DamagedActors.Add(OtherActor);
