@@ -148,14 +148,18 @@ void ABossCharacter::PlayPatternMontage(int32 Index)
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
-		if (Index != 2)
-		{
-			GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-		}
-
 		if (Index == 1)
 		{
 			GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+		}
+		else if (Index == 2)
+		{
+			GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+		}
+		else
+		{
+			GetCharacterMovement()->StopMovementImmediately();
+			GetCharacterMovement()->DisableMovement();
 		}
 
 		AnimInstance->Montage_Play(PatternDatas[Index]->SkillMontage);
