@@ -1515,12 +1515,10 @@ void APlayerCharacter::TakeDamage(int32 DamageAmount)
 
 	// 경직 애니메이션
 	bIsRoll = false;
-	bIsSkillActing = false;
 	bIsAttacking = false;
-	bIsInteracting = false;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && HitReactMontage)
+	if (AnimInstance && HitReactMontage && !bIsSkillActing)
 	{
 		AnimInstance->Montage_Play(HitReactMontage);
 	}
