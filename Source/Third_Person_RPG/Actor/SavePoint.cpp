@@ -36,6 +36,7 @@ void ASavePoint::BeginPlay()
 {
 	Super::BeginPlay();
 
+
 	SavePointInfo.Location = GetActorLocation();
 	
 }

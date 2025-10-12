@@ -16,9 +16,14 @@
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h"
 #include "Third_Person_RPG/UI/CurrencyWidget.h"
 #include "Third_Person_RPG/UI/CurrentEquipedWidget.h"
-
+#include "Delegates/DelegateCombinations.h"
 
 #include "PlayerCharacter.generated.h"
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHPChanged, int32, int32); //현재, 최대
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnFPChanged, int32, int32); //현재, 최대
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, int32, int32); //현재, 최대
+
 
 USTRUCT(BlueprintType)
 struct FCharacterAttributes
@@ -114,6 +119,10 @@ class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimati
 public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
+
+	FOnHPChanged OnHPChanged;
+	FOnFPChanged OnFPChanged;
+	FOnStaminaChanged OnStaminaChanged;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

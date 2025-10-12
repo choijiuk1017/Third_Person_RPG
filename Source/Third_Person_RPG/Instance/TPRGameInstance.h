@@ -7,8 +7,11 @@
 #include "Third_Person_RPG/TPRSaveGame.h"
 #include "Third_Person_RPG/Actor/SavePoint.h"
 #include "Third_Person_RPG/Inventory/InventoryItem.h"
+#include "Delegates/DelegateCombinations.h"
 
 #include "TPRGameInstance.generated.h"
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSavePointRegistered, const FSavePointInfo&);
 
 USTRUCT(BlueprintType)
 struct FInventoryItemSaveData
@@ -24,10 +27,10 @@ struct FInventoryItemSaveData
 	UPROPERTY()
 	bool bEquipped = false;
 };
-
 /**
  * 
  */
+
 UCLASS()
 class THIRD_PERSON_RPG_API UTPRGameInstance : public UGameInstance
 {
@@ -35,6 +38,8 @@ class THIRD_PERSON_RPG_API UTPRGameInstance : public UGameInstance
 
 public:
 	virtual void Init() override;
+
+	FOnSavePointRegistered OnSavePointRegistered;
 
 	void RegisterSavePoint(const FSavePointInfo& SavePointInfo);
 

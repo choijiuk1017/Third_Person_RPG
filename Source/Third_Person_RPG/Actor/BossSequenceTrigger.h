@@ -49,6 +49,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Cutscene")
 	TArray<AStaticMeshActor*> StaticMeshActorsToDestroy;
 
+	UPROPERTY(EditAnywhere, Category = "BossRoom")
+	TArray<AStaticMeshActor*> BossRoomBlock;
+
 	bool bHasPlayed = false;
 
 	UFUNCTION(BlueprintCallable)

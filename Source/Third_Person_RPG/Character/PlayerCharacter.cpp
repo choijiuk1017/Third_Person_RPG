@@ -1128,9 +1128,9 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 
 	if (PlayerStatusWidgetInstance)
 	{
-		PlayerStatusWidgetInstance->UpdateHP(CombatStats.CurrentHP, DerivedStats.MaxHP);
-		PlayerStatusWidgetInstance->UpdateFP(CombatStats.CurrentFP, DerivedStats.MaxFP);
-		PlayerStatusWidgetInstance->UpdateStamina(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
+		OnHPChanged.Broadcast(CombatStats.CurrentHP, DerivedStats.MaxHP);
+		OnFPChanged.Broadcast(CombatStats.CurrentFP, DerivedStats.MaxFP);
+		OnStaminaChanged.Broadcast(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
 	}
 		
 
@@ -1498,10 +1498,8 @@ void APlayerCharacter::TakeDamage(int32 DamageAmount)
 
 	CombatStats.CurrentHP = FMath::Clamp(CombatStats.CurrentHP - FinalDamage, 0, DerivedStats.MaxHP);
 
-	if (PlayerStatusWidgetInstance)
-	{
-		PlayerStatusWidgetInstance->UpdateHP(CombatStats.CurrentHP, DerivedStats.MaxHP);
-	}
+
+	OnHPChanged.Broadcast(CombatStats.CurrentHP, DerivedStats.MaxHP);
 
 	if (CombatStats.CurrentHP <= 0)
 	{
@@ -1527,19 +1525,13 @@ void APlayerCharacter::TakeDamage(int32 DamageAmount)
 void APlayerCharacter::ConsumeStamina(int32 Amount)
 {
 	CombatStats.CurrentStamina = FMath::Clamp(CombatStats.CurrentStamina - Amount, 0, DerivedStats.MaxStamina);
-	if (PlayerStatusWidgetInstance)
-	{
-		PlayerStatusWidgetInstance->UpdateStamina(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
-	}
+	OnStaminaChanged.Broadcast(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
 }
 
 void APlayerCharacter::RestoreStaminaTick(int32 AmountPerTick)
 {
 	CombatStats.CurrentStamina = FMath::Clamp(CombatStats.CurrentStamina + AmountPerTick, 0, DerivedStats.MaxStamina);
-	if (PlayerStatusWidgetInstance)
-	{
-		PlayerStatusWidgetInstance->UpdateStamina(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
-	}
+	OnStaminaChanged.Broadcast(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
 }
 
 int32 APlayerCharacter::GetStaminaRegenPerSecond() const
@@ -1793,8 +1785,7 @@ void APlayerCharacter::UsePotion(UAnimMontage* Montage, bool bInterrupted)
 					CurrentEquipedWidgetInstance->UpdatePotionCounts(HPPotionCount, FPPotionCount);
 
 				CombatStats.CurrentHP = FMath::Min(CombatStats.CurrentHP + 500, DerivedStats.MaxHP);
-				if (PlayerStatusWidgetInstance)
-					PlayerStatusWidgetInstance->UpdateHP(CombatStats.CurrentHP, DerivedStats.MaxHP);
+				OnHPChanged.Broadcast(CombatStats.CurrentHP, DerivedStats.MaxHP);
 			}
 		}
 		else
@@ -1806,8 +1797,7 @@ void APlayerCharacter::UsePotion(UAnimMontage* Montage, bool bInterrupted)
 					CurrentEquipedWidgetInstance->UpdatePotionCounts(HPPotionCount, FPPotionCount);
 
 				CombatStats.CurrentFP = FMath::Min(CombatStats.CurrentFP + 100, DerivedStats.MaxFP);
-				if (PlayerStatusWidgetInstance)
-					PlayerStatusWidgetInstance->UpdateFP(CombatStats.CurrentFP, DerivedStats.MaxFP);
+				OnFPChanged.Broadcast(CombatStats.CurrentFP, DerivedStats.MaxFP);
 			}
 		}
 
@@ -1863,9 +1853,9 @@ void APlayerCharacter::RecalculateStatsAfterLevelUp(bool bRefillHPFPStamina /*= 
 			DerivedStats.MaxFP,
 			DerivedStats.MaxStamina
 		);
-		PlayerStatusWidgetInstance->UpdateHP(CombatStats.CurrentHP, DerivedStats.MaxHP);
-		PlayerStatusWidgetInstance->UpdateFP(CombatStats.CurrentFP, DerivedStats.MaxFP);
-		PlayerStatusWidgetInstance->UpdateStamina(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
+		OnHPChanged.Broadcast(CombatStats.CurrentHP, DerivedStats.MaxHP);
+		OnFPChanged.Broadcast(CombatStats.CurrentFP, DerivedStats.MaxFP);
+		OnStaminaChanged.Broadcast(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
 	}
 }
 

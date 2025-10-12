@@ -32,6 +32,7 @@ public:
 
 	void ConfirmSelection();
 
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UVerticalBox> VerticalBox_TravelList;

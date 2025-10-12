@@ -16,6 +16,7 @@ void UTPRGameInstance::RegisterSavePoint(const FSavePointInfo& SavePointInfo)
 	if (!DiscoveredSavePoints.Contains(SavePointInfo.SavePointID))
 	{
 		DiscoveredSavePoints.Add(SavePointInfo.SavePointID, SavePointInfo);
+		OnSavePointRegistered.Broadcast(SavePointInfo);
 	}
 }
 

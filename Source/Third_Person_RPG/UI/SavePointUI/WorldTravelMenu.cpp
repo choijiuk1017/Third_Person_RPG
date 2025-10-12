@@ -25,7 +25,6 @@ void UWorldTravelMenu::NativeConstruct()
 
 	if (const UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		// 구조체 기반으로 변경
 		TArray<FSavePointInfo> SavePoints;
 		GI->GetSavePointMap().GenerateValueArray(SavePoints);
 		SetTravelPoints(SavePoints);

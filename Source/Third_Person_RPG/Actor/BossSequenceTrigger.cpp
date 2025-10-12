@@ -33,7 +33,14 @@ ABossSequenceTrigger::ABossSequenceTrigger()
 void ABossSequenceTrigger::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	for (AStaticMeshActor* BlockActor : BossRoomBlock)
+	{
+		if (IsValid(BlockActor))
+		{
+			BlockActor->SetActorHiddenInGame(true);
+			BlockActor->SetActorEnableCollision(false);
+		}
+	}
 }
 
 // Called every frame
@@ -95,6 +102,15 @@ void ABossSequenceTrigger::OnSequenceEnd()
 		if (IsValid(SkeletalActor))
 		{
 			SkeletalActor->Destroy();
+		}
+	}
+
+	for (AStaticMeshActor* BlockActor : BossRoomBlock)
+	{
+		if (IsValid(BlockActor))
+		{
+			BlockActor->SetActorHiddenInGame(false);
+			BlockActor->SetActorEnableCollision(true);
 		}
 	}
 

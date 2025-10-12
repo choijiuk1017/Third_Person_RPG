@@ -15,6 +15,13 @@ void UPlayerStatusWidget::InitWithPlayer(APlayerCharacter* InOwner)
     if (SizeBox_HP && SizeBox_HP->GetWidthOverride() > 0.f)       BaseHPWidth = SizeBox_HP->GetWidthOverride();
     if (SizeBox_FP && SizeBox_FP->GetWidthOverride() > 0.f)       BaseFPWidth = SizeBox_FP->GetWidthOverride();
     if (SizeBox_Stamina && SizeBox_Stamina->GetWidthOverride() > 0.f) BaseStaminaWidth = SizeBox_Stamina->GetWidthOverride();
+
+	if (OwnerPlayer.IsValid())
+	{
+		OwnerPlayer->OnHPChanged.AddUObject(this, &UPlayerStatusWidget::UpdateHP);
+		OwnerPlayer->OnFPChanged.AddUObject(this, &UPlayerStatusWidget::UpdateFP);
+		OwnerPlayer->OnStaminaChanged.AddUObject(this, &UPlayerStatusWidget::UpdateStamina);
+	}
 }
 
 void UPlayerStatusWidget::UpdateHP(int32 Current, int32 Max)
