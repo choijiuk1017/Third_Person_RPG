@@ -10,6 +10,8 @@
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/PlayerController.h"
+#include "Third_Person_RPG/UI/Tutorial/TutorialWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
@@ -46,6 +48,28 @@ void ATutorialWidgetTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedCom
 {
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
-
+		if (!UGameplayStatics::IsGamePaused(GetWorld()))
+		{
+			UGameplayStatics::SetGamePaused(GetWorld(), true);
+		}
 	}
+
+	if (bHasPlayed) return;
+	if (!OtherActor || !OtherActor->ActorHasTag("Player")) return;
+
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC) return;
+
+	if (TutorialWidgetClass)
+	{
+		UTutorialWidget* TutorialWidget = CreateWidget<UTutorialWidget>(PC, TutorialWidgetClass);
+		if (TutorialWidget)
+		{
+			TutorialWidget->AddToViewport();
+			TutorialWidget->SetKeyboardFocus(); 
+		}
+	}
+
+	UGameplayStatics::SetGamePaused(GetWorld(), true); 
+	bHasPlayed = true;
 }

@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "TutorialWidgetTrigger.generated.h"
 
+class UTutorialWidget;
+
 UCLASS()
 class THIRD_PERSON_RPG_API ATutorialWidgetTrigger : public AActor
 {
@@ -17,6 +19,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* TriggerBox;
+
+	UPROPERTY(EditAnywhere, Category = "Tutorial")
+	TSubclassOf<UTutorialWidget> TutorialWidgetClass;
 
 	UFUNCTION()
 	void OnTriggerOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

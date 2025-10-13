@@ -13,5 +13,10 @@ UCLASS()
 class THIRD_PERSON_RPG_API UTutorialWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
+public:
+	UFUNCTION(BlueprintCallable, Category="Tutorial")
+	void CloseWidget();
+
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 };
