@@ -1405,7 +1405,6 @@ void APlayerCharacter::PopUpInventory()
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (PC)
 	{
-		// 입력 모드를 UI + Game으로 설정 (I 키는 계속 인식하게)
 		FInputModeGameAndUI InputMode;
 		InputMode.SetWidgetToFocus(InventoryWidgetInstance->TakeWidget());
 		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
@@ -1414,7 +1413,6 @@ void APlayerCharacter::PopUpInventory()
 		PC->SetInputMode(InputMode);
 		PC->bShowMouseCursor = true;
 
-		// 캐릭터 입력 차단
 		PC->SetIgnoreMoveInput(true);
 		PC->SetIgnoreLookInput(true);
 	}

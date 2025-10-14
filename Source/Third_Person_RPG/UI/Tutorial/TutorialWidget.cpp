@@ -3,17 +3,17 @@
 
 #include "Third_Person_RPG/UI/Tutorial/TutorialWidget.h"
 #include "Kismet/GameplayStatics.h"
-
-void UTutorialWidget::CloseWidget()
-{
-	RemoveFromParent();
-}
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 void UTutorialWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
 	bIsFocusable = true;
+
+	SetKeyboardFocus();
 }
 
 FReply UTutorialWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
@@ -26,5 +26,15 @@ FReply UTutorialWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyE
 		return FReply::Handled();
 	}
 
-	return FReply::Unhandled();
+	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+void UTutorialWidget::CloseWidget()
+{
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		UWidgetBlueprintLibrary::SetInputMode_GameOnly(PC);
+		PC->bShowMouseCursor = false;
+	}
+	RemoveFromParent();
 }

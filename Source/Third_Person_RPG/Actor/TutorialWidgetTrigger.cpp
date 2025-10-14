@@ -58,8 +58,16 @@ void ATutorialWidgetTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedCom
 		UTutorialWidget* TutorialWidget = CreateWidget<UTutorialWidget>(PC, TutorialWidgetClass);
 		if (TutorialWidget)
 		{
-			TutorialWidget->AddToViewport();
-			TutorialWidget->SetKeyboardFocus(); 
+			TutorialWidget->AddToViewport(999);
+
+			FInputModeUIOnly InputMode;
+			InputMode.SetWidgetToFocus(TutorialWidget->TakeWidget());
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+			PC->SetInputMode(InputMode);
+
+			PC->bShowMouseCursor = false;
+
+			TutorialWidget->SetKeyboardFocus();
 		}
 	}
 
