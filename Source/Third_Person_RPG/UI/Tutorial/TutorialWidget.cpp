@@ -9,6 +9,13 @@ void UTutorialWidget::CloseWidget()
 	RemoveFromParent();
 }
 
+void UTutorialWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	bIsFocusable = true;
+}
+
 FReply UTutorialWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
 	Super::NativeOnKeyDown(InGeometry, InKeyEvent);

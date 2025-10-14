@@ -46,13 +46,6 @@ void ATutorialWidgetTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedCom
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor && OtherActor->ActorHasTag("Player"))
-	{
-		if (!UGameplayStatics::IsGamePaused(GetWorld()))
-		{
-			UGameplayStatics::SetGamePaused(GetWorld(), true);
-		}
-	}
 
 	if (bHasPlayed) return;
 	if (!OtherActor || !OtherActor->ActorHasTag("Player")) return;
@@ -70,6 +63,5 @@ void ATutorialWidgetTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedCom
 		}
 	}
 
-	UGameplayStatics::SetGamePaused(GetWorld(), true); 
 	bHasPlayed = true;
 }

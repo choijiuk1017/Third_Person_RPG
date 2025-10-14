@@ -18,5 +18,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Tutorial")
 	void CloseWidget();
 
+	virtual void NativeConstruct() override;
+
 	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 };
