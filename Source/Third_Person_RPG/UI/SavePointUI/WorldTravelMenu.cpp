@@ -131,7 +131,7 @@ void UWorldTravelMenu::ConfirmSelection()
 		{
 			if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 			{
-				GI->CacheInventory(Inventory->GetAllItems()); // 함수 필요, 아래에 정의함
+				GI->CacheInventory(Inventory->GetAllItems());
 			}
 		}
 	}
@@ -140,7 +140,7 @@ void UWorldTravelMenu::ConfirmSelection()
 		LoadingScreenWidget = CreateWidget<UUserWidget>(GetWorld(), LoadingScreen);
 		if (LoadingScreenWidget)
 		{
-			LoadingScreenWidget->AddToViewport(9999); // 가장 위에 표시
+			LoadingScreenWidget->AddToViewport(9999);
 		}
 	}
 

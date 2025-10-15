@@ -11,6 +11,11 @@ void UTutorialWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	if (APlayerCharacter* PC = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
+	{
+		PC->SetStatusHUDVisible(false);
+	}
+
 	bIsFocusable = true;
 
 	SetKeyboardFocus();
@@ -35,6 +40,11 @@ void UTutorialWidget::CloseWidget()
 	{
 		UWidgetBlueprintLibrary::SetInputMode_GameOnly(PC);
 		PC->bShowMouseCursor = false;
+	}
+
+	if (APlayerCharacter* PC = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
+	{
+		PC->SetStatusHUDVisible(true);
 	}
 	RemoveFromParent();
 }
