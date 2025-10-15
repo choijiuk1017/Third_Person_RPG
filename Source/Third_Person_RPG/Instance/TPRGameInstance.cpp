@@ -4,6 +4,7 @@
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Third_Person_RPG/TPRSaveGame.h"
+#include "Third_Person_RPG/UI/Tutorial/TutorialWidget.h"
 
 void UTPRGameInstance::Init()
 {
@@ -118,7 +119,6 @@ void UTPRGameInstance::RegisterPlayerStatFromPlayer(const APlayerCharacter* Play
 {
 	if (!Player) return;
 
-	// 플레이어가 가진 현재 스탯을 통으로 받아 캐시에 보관
 	Player->FillSaveData(CachedPlayerStat);
 	bHasLoadedStat = true;
 }
@@ -127,8 +127,22 @@ void UTPRGameInstance::ApplyLoadedPlayerStatTo(APlayerCharacter* Player)
 {
 	if (!Player) return;
 
-	// 세이브 파일이 없거나 캐시가 없으면 적용하지 않음
 	if (!bHasLoadedStat) return;
 
 	Player->ApplySaveData(CachedPlayerStat);
+}
+
+void UTPRGameInstance::RegisterTutorialWidget(UTutorialWidget* Widget)
+{
+	if (!Widget) return;
+	Widget->OnTutorialFinished.AddDynamic(this, &UTPRGameInstance::OnTutorialFinished);
+}
+
+void UTPRGameInstance::OnTutorialFinished(FName TutorialID)
+{
+	if (!FinishedTutorials.Contains(TutorialID))
+	{
+		FinishedTutorials.Add(TutorialID);
+		UE_LOG(LogTemp, Log, TEXT("Tutorial Finished: %s"), *TutorialID.ToString());
+	}
 }

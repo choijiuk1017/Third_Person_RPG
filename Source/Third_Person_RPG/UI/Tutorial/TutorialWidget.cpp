@@ -23,8 +23,6 @@ void UTutorialWidget::NativeConstruct()
 
 FReply UTutorialWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
-	Super::NativeOnKeyDown(InGeometry, InKeyEvent);
-
 	if (InKeyEvent.GetKey() == EKeys::Enter || InKeyEvent.GetKey() == EKeys::Virtual_Accept)
 	{
 		CloseWidget();
@@ -34,8 +32,15 @@ FReply UTutorialWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyE
 	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 }
 
+void UTutorialWidget::NotifyTutorialFinished()
+{
+	OnTutorialFinished.Broadcast(TutorialID);
+}
+
 void UTutorialWidget::CloseWidget()
 {
+	NotifyTutorialFinished();
+
 	if (APlayerController* PC = GetOwningPlayer())
 	{
 		UWidgetBlueprintLibrary::SetInputMode_GameOnly(PC);

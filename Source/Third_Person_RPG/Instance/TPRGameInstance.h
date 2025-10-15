@@ -13,6 +13,8 @@
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnSavePointRegistered, const FSavePointInfo&);
 
+class UTutorialWidget;
+
 USTRUCT(BlueprintType)
 struct FInventoryItemSaveData
 {
@@ -85,6 +87,14 @@ public:
 
 	void RegisterPlayerStatFromPlayer(const APlayerCharacter* Player);
 	void ApplyLoadedPlayerStatTo(APlayerCharacter* Player);
+
+	UPROPERTY()
+	TSet<FName> FinishedTutorials;
+
+	void RegisterTutorialWidget(UTutorialWidget* Widget);
+
+	UFUNCTION()
+	void OnTutorialFinished(FName TutorialID);
 
 protected:
 	UPROPERTY()

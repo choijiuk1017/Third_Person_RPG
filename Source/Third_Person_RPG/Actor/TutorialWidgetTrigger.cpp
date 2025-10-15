@@ -11,6 +11,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/PlayerController.h"
 #include "Third_Person_RPG/UI/Tutorial/TutorialWidget.h"
+#include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -46,9 +47,14 @@ void ATutorialWidgetTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedCom
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
-
 	if (bHasPlayed) return;
+
 	if (!OtherActor || !OtherActor->ActorHasTag("Player")) return;
+
+	UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (!GI) return;
+
+	if (GI->FinishedTutorials.Contains(TriggerID)) return;
 
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (!PC) return;
@@ -59,16 +65,19 @@ void ATutorialWidgetTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedCom
 		if (TutorialWidget)
 		{
 			TutorialWidget->AddToViewport(999);
+			TutorialWidget->TutorialID = TriggerID;
 
 			FInputModeUIOnly InputMode;
-			InputMode.SetWidgetToFocus(TutorialWidget->TakeWidget());
-			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+			InputMode.SetWidgetToFocus(TutorialWidget->GetCachedWidget());
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 			PC->SetInputMode(InputMode);
-
-			PC->bShowMouseCursor = false;
+			PC->bShowMouseCursor = true;
 
 			TutorialWidget->SetKeyboardFocus();
+			TutorialWidget->OnTutorialFinished.AddDynamic(GI, &UTPRGameInstance::OnTutorialFinished);
+		
 		}
+
 	}
 
 	bHasPlayed = true;
