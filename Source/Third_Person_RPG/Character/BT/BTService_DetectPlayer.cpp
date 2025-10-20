@@ -30,10 +30,8 @@ void UBTService_DetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(ControlledPawn->GetWorld(), 0));
 	if (!Player) return;
 
-	// 거리 계산
 	const float Distance = FVector::Dist(Player->GetActorLocation(), ControlledPawn->GetActorLocation());
 
-	// Blackboard 설정
 	UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
 	if (BlackboardComp)
 	{

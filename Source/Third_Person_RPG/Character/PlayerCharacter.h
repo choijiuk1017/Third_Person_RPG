@@ -23,7 +23,7 @@
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHPChanged, int32, int32); //현재, 최대
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnFPChanged, int32, int32); //현재, 최대
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, int32, int32); //현재, 최대
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrencyChanged, int32, NewCurrency);
 
 USTRUCT(BlueprintType)
 struct FCharacterAttributes
@@ -124,6 +124,9 @@ public:
 	FOnFPChanged OnFPChanged;
 	FOnStaminaChanged OnStaminaChanged;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnCurrencyChanged OnCurrencyChanged;
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -196,10 +199,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Currency")
 	int32 Currency = 0;
 
-	UFUNCTION(BlueprintCallable, Category = "Currency")
 	void AddCurrency(int32 Amount);
-
-	UFUNCTION(BlueprintCallable, Category = "Currency")
 	bool SpendCurrency(int32 Amount);
 
 	UFUNCTION(BlueprintPure, Category = "Currency")
@@ -234,11 +234,30 @@ public:
 
 	void ApplySaveData(const struct FPlayerStatSaveData& InSaveData);
 
+	void BasicAttack();
+
+	//구르기 시작 함수
+	void RollStart();
+
+	void BeginSprint();
+
+	void EndSprint();
+
+	void Interact(); // 상호작용 키로 호출할 함수
+
+	void ToggleInventory();
+
+	void DrinkPotion();
+
+	void ChangePotion();
+
+	//스킬 함수
+	void SkillStart();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	void NotifyCurrencyChanged();
 	//Component Section
 	//스프링 암 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -247,46 +266,6 @@ protected:
 	//카메라 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UCameraComponent* CameraComp;
-
-
-
-	//Input Section
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputMappingContext> IMC_Basic;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_BasicMove;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_BasicLook;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_Sprint;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_Roll;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_Attack;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_Skill;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_UnEquipWeapon_Test;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_Interaction;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_Inventory;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_DrinkPotion;
-
-	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> IA_ChangePotion;
-
 
 	UPROPERTY()
 	class AItem* OverlappingItem;
@@ -376,15 +355,11 @@ protected:
 	//카메라 시점 함수
 	void BasicLook(const FInputActionValue& Value);
 
-	void BeginSprint();
 
-	void EndSprint();
-	//구르기 시작 함수
-	void RollStart();
+	
 	//구르기 종료 함수
 	void RollEnd(class UAnimMontage* Montage, bool IsEnded);
-	//기본 공격 함수
-	void BasicAttack();
+	
 	//콤보 시작 함수
 	void ComboStart();
 	//콤보 종료 함수
@@ -394,14 +369,8 @@ protected:
 	//콤보 체크 호출 시간 설정 함수
 	void SetComboTimer();
 
-	//스킬 함수
-	void SkillStart();
 	//스킬 이펙트 소환 함수
 	void SpawnSkillEffect();
-
-	void DrinkPotion();
-
-	void ChangePotion();
 
 
 	//공격 체크 함수, 인터페이스에서 상속 받음
@@ -415,13 +384,11 @@ protected:
 	//스킬 공격 함수, 인터페이스에서 상속 받음
 	virtual void SkillAttackCheck() override;
 
-	void Interact(); // 상호작용 키로 호출할 함수
+
 
 	void OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted);
 
 	void InteractingSavePoint(UAnimMontage* Montage, bool bInterrupted);
-
-	void ToggleInventory();
 
 	void PopUpInventory();
 

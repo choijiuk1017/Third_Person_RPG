@@ -9,10 +9,6 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "InputAction.h"
-#include "InputMappingContext.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 #include "Third_Person_RPG/Data/MMComboActionData.h"
 #include "Third_Person_RPG/Character/EnemyCharacter.h"
 #include "Third_Person_RPG/Character/BossCharacter.h"
@@ -38,82 +34,6 @@
 APlayerCharacter::APlayerCharacter()
 {
 	Tags.Add(FName("Player"));
-#pragma region Input
-
-	//Input
-	static ConstructorHelpers::FObjectFinder<UInputMappingContext>IMC_BasicRef(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/Input_Action/IMC_BasicPlayer.IMC_BasicPlayer'"));
-	if (IMC_BasicRef.Object)
-	{
-		IMC_Basic = IMC_BasicRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_BasicMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_BasicMove.IA_BasicMove'"));
-	if (IA_BasicMoveRef.Object)
-	{
-		IA_BasicMove = IA_BasicMoveRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_BasicLookRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_BasicLook.IA_BasicLook'"));
-	if (IA_BasicLookRef.Object)
-	{
-		IA_BasicLook = IA_BasicLookRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_SprintRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Sprint.IA_Sprint'"));
-	if (IA_SprintRef.Object)
-	{
-		IA_Sprint = IA_SprintRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_RollRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Roll.IA_Roll'"));
-	if (IA_RollRef.Object)
-	{
-		IA_Roll = IA_RollRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_AttackRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Attack.IA_Attack'"));
-	if (IA_AttackRef.Object)
-	{
-		IA_Attack = IA_AttackRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_SkillRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Skill.IA_Skill'"));
-	if (IA_SkillRef.Object)
-	{
-		IA_Skill = IA_SkillRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_UnEquipWeapon_TestRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_UnEquipWeapon_Test.IA_UnEquipWeapon_Test'"));
-	if (IA_UnEquipWeapon_TestRef.Object)
-	{
-		IA_UnEquipWeapon_Test = IA_UnEquipWeapon_TestRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_InteractionRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Interaction.IA_Interaction'"));
-	if (IA_InteractionRef.Object)
-	{
-		IA_Interaction = IA_InteractionRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_InventoryRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_Inventory.IA_Inventory'"));
-	if (IA_InventoryRef.Object)
-	{
-		IA_Inventory = IA_InventoryRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_DrinkPotionRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_DrinkPotion.IA_DrinkPotion'"));
-	if (IA_DrinkPotionRef.Object)
-	{
-		IA_DrinkPotion = IA_DrinkPotionRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UInputAction>IA_ChangePotionRef(TEXT("/Script/EnhancedInput.InputAction'/Game/Input_Action/IA_ChangePotion.IA_ChangePotion'"));
-	if (IA_ChangePotionRef.Object)
-	{
-		IA_ChangePotion = IA_ChangePotionRef.Object;
-	}
-
-#pragma endregion
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -132,7 +52,7 @@ APlayerCharacter::APlayerCharacter()
 
 	GetCharacterMovement()->bAllowAnyoneToDestroyMe = true;
 
-	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 
 	GetCharacterMovement()->bIgnoreBaseRotation = true;
 
@@ -160,7 +80,10 @@ APlayerCharacter::APlayerCharacter()
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
-	
+	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		GI->ClearSavePoints();
+	}
 }
 
 // Called when the game starts or when spawned
@@ -176,21 +99,6 @@ void APlayerCharacter::BeginPlay()
 	CalculateDerivedStats();
 	InitializeCombatStats();
 
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-
-	if (PlayerController && IMC_Basic)
-	{
-		//서브 시스템 불러오기
-		if (UEnhancedInputLocalPlayerSubsystem* SubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			//매핑 컨텍스트 추가
-			SubSystem->AddMappingContext(IMC_Basic, 0);
-
-			//입력 시작
-			EnableInput(PlayerController);
-		}
-
-	}
 
 	if (InteractionWidgetClass)
 	{
@@ -261,11 +169,15 @@ void APlayerCharacter::BeginPlay()
 
 	if (CurrencyWidgetClass)
 	{
-		CurrencyWidgetInstance = CreateWidget<UCurrencyWidget>(GetWorld(), CurrencyWidgetClass);
-		if (CurrencyWidgetInstance)
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (PC)
 		{
-			CurrencyWidgetInstance->AddToViewport(/*ZOrder=*/10); 
-			CurrencyWidgetInstance->SetCurrency(Currency);         
+			CurrencyWidgetInstance = CreateWidget<UCurrencyWidget>(PC, CurrencyWidgetClass);
+			if (CurrencyWidgetInstance)
+			{
+				CurrencyWidgetInstance->AddToViewport(10);
+				CurrencyWidgetInstance->BindToPlayer(this);
+			}
 		}
 	}
 
@@ -290,20 +202,6 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
-
-	EnhancedInputComponent->BindAction(IA_BasicMove, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicMove);
-	EnhancedInputComponent->BindAction(IA_BasicLook, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicLook);
-	EnhancedInputComponent->BindAction(IA_Sprint, ETriggerEvent::Triggered, this, &APlayerCharacter::BeginSprint);
-	EnhancedInputComponent->BindAction(IA_Sprint, ETriggerEvent::Completed, this, &APlayerCharacter::EndSprint);
-	EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Started, this, &APlayerCharacter::BasicAttack);
-	EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &APlayerCharacter::RollStart);
-	EnhancedInputComponent->BindAction(IA_DrinkPotion, ETriggerEvent::Started, this, &APlayerCharacter::DrinkPotion);
-	EnhancedInputComponent->BindAction(IA_ChangePotion, ETriggerEvent::Started, this, &APlayerCharacter::ChangePotion);
-	EnhancedInputComponent->BindAction(IA_Skill, ETriggerEvent::Started, this, &APlayerCharacter::SkillStart);
-	EnhancedInputComponent->BindAction(IA_Interaction, ETriggerEvent::Started, this, &APlayerCharacter::Interact);
-	EnhancedInputComponent->BindAction(IA_Inventory, ETriggerEvent::Started, this, &APlayerCharacter::ToggleInventory);
 
 }
 
@@ -1687,15 +1585,15 @@ int32 APlayerCharacter::GetCurrentSkillFPCost() const
 	}
 	return 0;
 }
+
 void APlayerCharacter::AddCurrency(int32 Amount)
 {
 	if (Amount <= 0) return;
 
-	// 오버플로우 방지
-	const int64 NewVal64 = static_cast<int64>(Currency) + static_cast<int64>(Amount);
-	Currency = static_cast<int32>(FMath::Clamp<int64>(NewVal64, 0, INT32_MAX));
+	const int64 NewCurrency = static_cast<int64>(Currency) + static_cast<int64>(Amount);
+	Currency = static_cast<int32>(FMath::Clamp<int64>(NewCurrency, 0, INT32_MAX));
 
-	NotifyCurrencyChanged();
+	OnCurrencyChanged.Broadcast(Currency);
 }
 
 bool APlayerCharacter::SpendCurrency(int32 Amount)
@@ -1704,17 +1602,10 @@ bool APlayerCharacter::SpendCurrency(int32 Amount)
 	if (Currency < Amount) return false;
 
 	Currency -= Amount;
-	NotifyCurrencyChanged();
+	OnCurrencyChanged.Broadcast(Currency);
 	return true;
 }
 
-void APlayerCharacter::NotifyCurrencyChanged()
-{
-	if (CurrencyWidgetInstance)
-	{
-		CurrencyWidgetInstance->SetCurrency(Currency);
-	}
-}
 
 void APlayerCharacter::RefreshCurrentEquipped_Weapon(UTexture2D* WeaponIconTexture)
 {

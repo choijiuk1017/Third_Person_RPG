@@ -9,7 +9,7 @@
 UBTTask_PlayBossPattern::UBTTask_PlayBossPattern()
 {
 	NodeName = TEXT("Play Boss Pattern");
-	bNotifyTick = true; // 몽타주 종료 감지를 위해 Tick 필요
+	bNotifyTick = true; 
 }
 
 EBTNodeResult::Type UBTTask_PlayBossPattern::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -20,7 +20,6 @@ EBTNodeResult::Type UBTTask_PlayBossPattern::ExecuteTask(UBehaviorTreeComponent&
 	ABossCharacter* Boss = Cast<ABossCharacter>(AICon->GetPawn());
 	if (!Boss) return EBTNodeResult::Failed;
 
-	// 몽타주 재생 시도
 	Boss->PlayPatternMontage(PatternIndex);
 	return EBTNodeResult::InProgress ;
 }
@@ -32,7 +31,6 @@ void UBTTask_PlayBossPattern::TickTask(UBehaviorTreeComponent& OwnerComp, uint8*
 
 	if (!Boss->GetMesh() || !Boss->GetMesh()->GetAnimInstance()) return;
 
-	// 몽타주가 끝났는지 체크
 	if (!Boss->GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr))
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);

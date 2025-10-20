@@ -3,6 +3,7 @@
 
 #include "Third_Person_RPG/UI/CurrencyWidget.h"
 #include "Components/TextBlock.h"
+#include "Third_Person_RPG/Character/PlayerCharacter.h"
 
 void UCurrencyWidget::SetCurrency(int32 NewValue)
 {
@@ -17,4 +18,25 @@ void UCurrencyWidget::SetCurrency(int32 NewValue)
 	{
 		CurrencyText->SetText(ValueText);
 	}
+}
+
+
+void UCurrencyWidget::BindToPlayer(APlayerCharacter* Player)
+{
+	if (!Player) return;
+	Player->OnCurrencyChanged.AddDynamic(this, &UCurrencyWidget::UpdateCurrency);
+
+	// 초기값 표시
+	UpdateCurrency(Player->GetCurrency());
+}
+
+void UCurrencyWidget::UpdateCurrency(int32 NewValue)
+{
+	if (!CurrencyText) return;
+
+	const FText ValueText = FText::AsNumber(NewValue);
+	if (!Prefix.IsEmpty())
+		CurrencyText->SetText(FText::Format(FText::FromString(TEXT("{0}{1}")), Prefix, ValueText));
+	else
+		CurrencyText->SetText(ValueText);
 }

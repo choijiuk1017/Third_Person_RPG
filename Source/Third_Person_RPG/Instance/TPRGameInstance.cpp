@@ -143,6 +143,5 @@ void UTPRGameInstance::OnTutorialFinished(FName TutorialID)
 	if (!FinishedTutorials.Contains(TutorialID))
 	{
 		FinishedTutorials.Add(TutorialID);
-		UE_LOG(LogTemp, Log, TEXT("Tutorial Finished: %s"), *TutorialID.ToString());
 	}
 }

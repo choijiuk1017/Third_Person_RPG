@@ -33,20 +33,16 @@ EBTNodeResult::Type UBTTask_CircleAroundPlayer::ExecuteTask(UBehaviorTreeCompone
 		if (Direction == 0) Direction = 1.0f;
 	}
 
-	// 타깃과의 방향
 	FVector ToTarget = AIPawn->GetActorLocation() - Target->GetActorLocation();
 	ToTarget.Z = 0.0f;
 	ToTarget.Normalize();
 
-	// 지정된 각도만큼 회전
 	float RotAngle = AngleStep * Direction;
 	FRotator Rot = FRotator(0.f, RotAngle, 0.f);
 	FVector RotatedDir = Rot.RotateVector(ToTarget);
 
-	// 새 목표 위치 계산
 	FVector NewPos = Target->GetActorLocation() + RotatedDir * CircleRadius;
 
-	// 네비게이션 가능한 위치 보정
 	FNavLocation NavLoc;
 	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
 	if (NavSys && NavSys->GetRandomPointInNavigableRadius(NewPos, 100.f, NavLoc))

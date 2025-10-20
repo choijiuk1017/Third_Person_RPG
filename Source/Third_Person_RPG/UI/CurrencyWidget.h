@@ -19,6 +19,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Currency")
 	void SetCurrency(int32 NewValue);
 
+	UFUNCTION()
+	void UpdateCurrency(int32 NewValue);
+
+	UFUNCTION(BlueprintCallable)
+	void BindToPlayer(class APlayerCharacter* Player);
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* CurrencyText;
