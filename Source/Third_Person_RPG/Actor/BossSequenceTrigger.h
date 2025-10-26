@@ -38,8 +38,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss")
 	TSubclassOf<AActor> CombatBossClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ALevelSequenceActor* SequenceActor;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cutscene", meta = (AllowedClasses = "LevelSequenceActor"))
+	TSoftObjectPtr<ALevelSequenceActor> SequenceActor;
 
 	void SetAllUIVisible(bool bVisible);
 
