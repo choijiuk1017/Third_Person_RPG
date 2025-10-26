@@ -224,6 +224,11 @@ void AEnemyCharacter::TakeDamage(int32 DamageAmount)
 
 	if (EnemyStats.CurrentHP <= 0)
 	{
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			AnimInstance->StopAllMontages(0.1f);
+		}
+
 
 		if (AEnemyAIController* AIController = Cast<AEnemyAIController>(GetController()))
 		{

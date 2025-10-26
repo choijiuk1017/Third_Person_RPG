@@ -377,15 +377,24 @@ void ABossCharacter::TakeDamage(int32 DamageAmount)
 
 	if (BossStats.CurrentHP <= 0)
 	{
+		
+		// 荤噶 贸府
+		BossStats.CurrentHP = 0;
+		bIsDead = true;
+
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			AnimInstance->StopAllMontages(0.1f); 
+		}
+
 
 		if (AEnemyAIController* AIController = Cast<AEnemyAIController>(GetController()))
 		{
 			AIController->PauseAI();
+			AIController->StopMovement();
+			AIController->UnPossess();
 		}
 
-		// 荤噶 贸府
-		BossStats.CurrentHP = 0;
-		bIsDead = true;
 
 		GrantCurrencyToKiller();
 
@@ -394,13 +403,6 @@ void ABossCharacter::TakeDamage(int32 DamageAmount)
 			GetWorld()->GetTimerManager().ClearTimer(HideHPBarTimerHandle);
 			HPBarWidget->RemoveFromParent();
 			HPBarWidget = nullptr;
-		}
-
-		AAIController* AIController = Cast<AAIController>(GetController());
-		if (AIController)
-		{
-			AIController->StopMovement();
-			AIController->UnPossess();
 		}
 
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
