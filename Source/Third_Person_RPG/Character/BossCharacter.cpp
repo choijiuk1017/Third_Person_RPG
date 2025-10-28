@@ -19,6 +19,8 @@
 // Sets default values
 ABossCharacter::ABossCharacter()
 {
+	Tags.Add("Boss");
+
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -395,6 +397,7 @@ void ABossCharacter::TakeDamage(int32 DamageAmount)
 			AIController->UnPossess();
 		}
 
+		OnBossDied.Broadcast();
 
 		GrantCurrencyToKiller();
 

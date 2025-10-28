@@ -9,7 +9,12 @@
 #include "Third_Person_RPG/UI/HPBar.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Third_Person_RPG/Data/SkillData.h"
+
+#include "Delegates/DelegateCombinations.h"
+
 #include "BossCharacter.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossDiedDelegate);
 
 
 USTRUCT(BlueprintType)
@@ -38,6 +43,9 @@ class THIRD_PERSON_RPG_API ABossCharacter : public ACharacter, public IAnimation
 public:
 	// Sets default values for this character's properties
 	ABossCharacter();
+
+	UPROPERTY(BlueprintAssignable, Category = "Boss")
+	FOnBossDiedDelegate OnBossDied;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
