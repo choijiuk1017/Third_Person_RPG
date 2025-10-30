@@ -6,6 +6,9 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/LevelStreaming.h"
+#include "Third_Person_RPG/Instance/TPRGameInstance.h"
+#include "Third_Person_RPG/Character/PlayerCharacter.h"
+
 
 // Sets default values
 ALevelConvertTrigger::ALevelConvertTrigger()
@@ -40,22 +43,24 @@ void ALevelConvertTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 {
 	if (!OtherActor || !OtherActor->ActorHasTag("Player")) return;
 
-	//FTimerHandle TimerHandle;
-	//FTimerDelegate TimerDelegate;
-	//TimerDelegate.BindLambda([=, this]()
-	//	{
-	//		UGameplayStatics::OpenLevel(this, NextLevelName);
-	//	});
 
-	//GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.1f, false);
-	UGameplayStatics::OpenLevel(this, NextLevelName);
+	ULevelStreaming* StreamedLevel = UGameplayStatics::GetStreamingLevel(GetWorld(), NextLevelName);
+	if (StreamedLevel && StreamedLevel->IsLevelLoaded())
+	{
+		if (APlayerCharacter* PC = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
+		{
+			if (UInventoryComponent* Inventory = PC->FindComponentByClass<UInventoryComponent>())
+			{
+				if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+				{
+					GI->CacheInventory(Inventory->GetAllItems());
+				}
+			}
+		}
 
-	//ULevelStreaming* StreamedLevel = UGameplayStatics::GetStreamingLevel(GetWorld(), NextLevelName);
-	//if (StreamedLevel && StreamedLevel->IsLevelLoaded())
-	//{
-	//	
-
-	//	UE_LOG(LogTemp, Warning, TEXT("Trying to convert level: %s"), *NextLevelName.ToString());
-	//}
+		
+		UGameplayStatics::OpenLevel(GetWorld(), NextLevelName);
+		UE_LOG(LogTemp, Warning, TEXT("Trying to convert level: %s"), *NextLevelName.ToString());
+	}
 }
 

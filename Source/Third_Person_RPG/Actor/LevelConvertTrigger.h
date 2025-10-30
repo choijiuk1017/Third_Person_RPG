@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/LevelStreamingDynamic.h"
 #include "LevelConvertTrigger.generated.h"
 
 UCLASS()
@@ -24,6 +25,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Level")
 	FName NextLevelName;
+
+	UPROPERTY()
+	ULevelStreamingDynamic* LoadedLevel;
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
