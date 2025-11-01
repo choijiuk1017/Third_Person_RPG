@@ -141,6 +141,20 @@ void ABossCharacter::BaseAttackCheck()
 	DrawDebugCapsule(GetWorld(), CapsuleOrigin, AttackRange * 0.5f, AttackRange, CapsuleRotation, DrawColor, false, 3.0f);
 }
 
+void ABossCharacter::PlayAttackMontageByIndex(int32 Index)
+{
+	if (AttackMontages.IsValidIndex(Index) && GetMesh() && GetMesh()->GetAnimInstance())
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		AnimInstance->Montage_Play(AttackMontages[Index]);
+
+		// 종료 콜백
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &ABossCharacter::OnAttackMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontages[Index]);
+	}
+}
+
 void ABossCharacter::PlayPatternMontage(int32 Index)
 {
 	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
@@ -148,7 +162,8 @@ void ABossCharacter::PlayPatternMontage(int32 Index)
 
 	CurrentPatternIndex = Index;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance)
+
+	if (BossType == 1 && AnimInstance)
 	{
 		if (Index == 1)
 		{
@@ -175,6 +190,14 @@ void ABossCharacter::PlayPatternMontage(int32 Index)
 		EndDelegate.BindUObject(this, &ABossCharacter::PatternEnd);
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, PatternDatas[Index]->SkillMontage);
 	}
+	else
+	{
+		AnimInstance->Montage_Play(PatternDatas[Index]->SkillMontage);
+
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &ABossCharacter::PatternEnd);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, PatternDatas[Index]->SkillMontage);
+	}
 }
 
 void ABossCharacter::PatternEnd(UAnimMontage* Montage, bool IsEnded)
@@ -182,7 +205,6 @@ void ABossCharacter::PatternEnd(UAnimMontage* Montage, bool IsEnded)
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Block);
 }
-
 
 void ABossCharacter::SkillAttackCheckByIndex(int32 Index)
 {
@@ -273,7 +295,6 @@ void ABossCharacter::SkillAttackCheckByIndex(int32 Index)
 	);
 }
 
-
 void ABossCharacter::SpawnSkillEffectByData(const USkillData* Data)
 {
 	if (!Data || !Data->SkillEffect) return;
@@ -311,19 +332,6 @@ void ABossCharacter::SpawnSkillEffectByData(const USkillData* Data)
 	);
 }
 
-void ABossCharacter::PlayAttackMontageByIndex(int32 Index)
-{
-	if (AttackMontages.IsValidIndex(Index) && GetMesh() && GetMesh()->GetAnimInstance())
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		AnimInstance->Montage_Play(AttackMontages[Index]);
-
-		// 종료 콜백
-		FOnMontageEnded EndDelegate;
-		EndDelegate.BindUObject(this, &ABossCharacter::OnAttackMontageEnded);
-		AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontages[Index]);
-	}
-}
 
 void ABossCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
@@ -365,7 +373,6 @@ void ABossCharacter::GrantCurrencyToKiller()
 	bRewardGranted = true;
 }
 
-
 void ABossCharacter::TakeDamage(int32 DamageAmount)
 {
 	int32 Defense = BossStats.Defense;
@@ -379,7 +386,6 @@ void ABossCharacter::TakeDamage(int32 DamageAmount)
 
 	if (BossStats.CurrentHP <= 0)
 	{
-		
 		// 사망 처리
 		BossStats.CurrentHP = 0;
 		bIsDead = true;
@@ -388,7 +394,6 @@ void ABossCharacter::TakeDamage(int32 DamageAmount)
 		{
 			AnimInstance->StopAllMontages(0.1f); 
 		}
-
 
 		if (AEnemyAIController* AIController = Cast<AEnemyAIController>(GetController()))
 		{
@@ -414,8 +419,6 @@ void ABossCharacter::TakeDamage(int32 DamageAmount)
 		USkeletalMeshComponent* MeshComponent = GetMesh();
 		MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		MeshComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
-
-
 
 		UE_LOG(LogTemp, Error, TEXT("Monster Dead"));
 
@@ -449,8 +452,6 @@ void ABossCharacter::TakeDamage(int32 DamageAmount)
 			}
 		}
 	}
-
-
 
 	if (HPBarWidget)
 	{

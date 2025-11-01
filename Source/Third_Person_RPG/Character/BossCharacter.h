@@ -101,6 +101,9 @@ public:
 
 	void PlayHitReactMontage();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 BossType;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

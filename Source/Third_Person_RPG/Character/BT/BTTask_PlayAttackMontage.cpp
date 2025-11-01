@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Animation/AnimInstance.h"
 #include "Third_Person_RPG/Character/EnemyCharacter.h"
+#include "Third_Person_RPG/Character/BossCharacter.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -21,20 +22,39 @@ EBTNodeResult::Type UBTTask_PlayAttackMontage::ExecuteTask(UBehaviorTreeComponen
     AAIController* AIController = OwnerComp.GetAIOwner();
     if (!AIController) return EBTNodeResult::Failed;
 
-    AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(AIController->GetPawn());
-    if (!Enemy) return EBTNodeResult::Failed;
+    AActor* ControlledPawn = AIController->GetPawn();
+    if (!ControlledPawn) return EBTNodeResult::Failed;
 
-	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(Enemy->GetWorld(), 0));
-	if (Player)
-	{
-		FVector Direction = (Player->GetActorLocation() - Enemy->GetActorLocation());
-		FRotator LookAtRotation = Direction.Rotation();
-		LookAtRotation.Pitch = 0.f; // 위아래 각도 제거
-		LookAtRotation.Roll = 0.f;
-		Enemy->SetActorRotation(LookAtRotation);
-	}
+    AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(ControlledPawn);
+    ABossCharacter* Boss = Cast<ABossCharacter>(ControlledPawn);
+    APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(ControlledPawn->GetWorld(), 0));
 
-	Enemy->PlayAttackMontageByIndex(Enemy->CurrentAttackStep);
+    if (Enemy)
+    {
+        // 일반 몬스터 공격
+        if (Player)
+        {
+            FVector Direction = (Player->GetActorLocation() - Enemy->GetActorLocation());
+            FRotator LookAtRotation = Direction.Rotation();
+            LookAtRotation.Pitch = 0.f;
+            LookAtRotation.Roll = 0.f;
+            Enemy->SetActorRotation(LookAtRotation);
+        }
+        Enemy->PlayAttackMontageByIndex(Enemy->CurrentAttackStep);
+    }
+    else if (Boss)
+    {
+        // 보스 공격
+        if (Player)
+        {
+            FVector Direction = (Player->GetActorLocation() - Boss->GetActorLocation());
+            FRotator LookAtRotation = Direction.Rotation();
+            LookAtRotation.Pitch = 0.f;
+            LookAtRotation.Roll = 0.f;
+            Boss->SetActorRotation(LookAtRotation);
+        }
+        Boss->PlayAttackMontageByIndex(Boss->CurrentAttackStep);
+    }
 
     return EBTNodeResult::Succeeded;
 }
