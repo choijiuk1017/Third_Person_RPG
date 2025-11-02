@@ -29,9 +29,7 @@ struct FInventoryItemSaveData
 	UPROPERTY()
 	bool bEquipped = false;
 };
-/**
- * 
- */
+
 
 UCLASS()
 class THIRD_PERSON_RPG_API UTPRGameInstance : public UGameInstance

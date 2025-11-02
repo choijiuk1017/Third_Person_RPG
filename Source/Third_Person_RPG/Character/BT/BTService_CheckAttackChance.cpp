@@ -34,7 +34,7 @@ void UBTService_CheckAttackChance::TickNode(UBehaviorTreeComponent& OwnerComp, u
 		Accumulated += ActionWeights[i].Weight;
 		if (RandValue <= Accumulated)
 		{
-			ChosenIndex = i + 1; // 1부터 시작
+			ChosenIndex = i + 1; 
 			break;
 		}
 	}

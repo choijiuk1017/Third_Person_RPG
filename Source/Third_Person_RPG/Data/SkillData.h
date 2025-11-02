@@ -48,4 +48,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = Effects, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UParticleSystem> SkillEffect;
 
+	UPROPERTY(EditAnywhere, Category = "Custom Spawn", meta = (EditCondition = "SpawnType == ESkillEffectSpawnType::Custom"))
+	FVector CustomSpawnOffset = FVector::ZeroVector;
+
 };

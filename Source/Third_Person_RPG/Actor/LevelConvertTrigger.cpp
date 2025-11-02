@@ -62,5 +62,7 @@ void ALevelConvertTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 		UGameplayStatics::OpenLevel(GetWorld(), NextLevelName);
 		UE_LOG(LogTemp, Warning, TEXT("Trying to convert level: %s"), *NextLevelName.ToString());
 	}
+
+
 }
 

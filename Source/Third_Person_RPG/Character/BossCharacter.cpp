@@ -244,7 +244,8 @@ void ABossCharacter::SkillAttackCheckByIndex(int32 Index)
 		break;
 
 	case ESkillEffectSpawnType::Custom:
-		// 필요시 커스텀 위치 로직 추가
+		Start = GetActorLocation() + GetActorRotation().RotateVector(SkillData->CustomSpawnOffset);
+		End = Start + Forward * SkillData->SkillRange;
 		break;
 	}
 
@@ -317,7 +318,7 @@ void ABossCharacter::SpawnSkillEffectByData(const USkillData* Data)
 		break;
 
 	case ESkillEffectSpawnType::Custom:
-		// 혹시 필요하다면 SkillData에 별도 커스텀 위치 변수 추가 가능
+		SpawnLocation = GetActorLocation() + GetActorRotation().RotateVector(Data->CustomSpawnOffset);
 		break;
 
 	default:

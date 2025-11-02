@@ -44,6 +44,18 @@ EBTNodeResult::Type UBTTask_PlayAttackMontage::ExecuteTask(UBehaviorTreeComponen
     }
     else if (Boss)
     {
+        UE_LOG(LogTemp, Warning, TEXT("Boss AttackMontage Index=%d, Num=%d, AnimBP=%s"),
+            Boss->CurrentAttackStep,
+            Boss->AttackMontages.Num(),
+            *Boss->GetMesh()->GetAnimInstance()->GetClass()->GetName());
+
+        if (Boss->AttackMontages.IsValidIndex(Boss->CurrentAttackStep))
+        {
+            UAnimMontage* Montage = Boss->AttackMontages[Boss->CurrentAttackStep];
+            UE_LOG(LogTemp, Warning, TEXT("Montage=%s, Skeleton=%s"),
+                *Montage->GetName(),
+                *Montage->GetSkeleton()->GetName());
+        }
         // 보스 공격
         if (Player)
         {
