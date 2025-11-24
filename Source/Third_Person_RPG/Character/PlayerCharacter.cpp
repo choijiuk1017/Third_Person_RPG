@@ -80,17 +80,13 @@ APlayerCharacter::APlayerCharacter()
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
-	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-	{
-		GI->ClearSavePoints();
-	}
 }
 
 // Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
 		GI->ApplyLoadedPlayerStatTo(this);
@@ -130,6 +126,9 @@ void APlayerCharacter::BeginPlay()
 
 			// 클리어
 			const_cast<UTPRGameInstance*>(GI)->ClearPendingSavePoint();
+
+			
+
 		}
 
 		if (InventoryComponent)
@@ -929,7 +928,6 @@ void APlayerCharacter::Interact()
 	{
 		FPrimaryAssetId AssetId = OverlappingItem->ItemData->GetPrimaryAssetId();
 
-		// 2. GameInstance에 등록
 		if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 		{
 			GI->RegisterCollectedItemAsset(AssetId);
@@ -1010,8 +1008,8 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 	{
 		GI->RegisterSavePoint(OverlappingSavePoint->SavePointInfo);
 
-		GI->RegisterPlayerStatFromPlayer(this); 
-		GI->SaveGameData();
+		//GI->RegisterPlayerStatFromPlayer(this); 
+		//GI->SaveGameData();
 	}
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);

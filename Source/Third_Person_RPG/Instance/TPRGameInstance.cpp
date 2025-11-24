@@ -17,8 +17,12 @@ void UTPRGameInstance::RegisterSavePoint(const FSavePointInfo& SavePointInfo)
 	if (!DiscoveredSavePoints.Contains(SavePointInfo.SavePointID))
 	{
 		DiscoveredSavePoints.Add(SavePointInfo.SavePointID, SavePointInfo);
-		OnSavePointRegistered.Broadcast(SavePointInfo);
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("RegisterSavePoint: %s, %s, %s"),
+		*SavePointInfo.SavePointID.ToString(),
+		*SavePointInfo.DisplayName.ToString(),
+		*SavePointInfo.MapName.ToString());
 }
 
 const TMap<FName, FSavePointInfo>& UTPRGameInstance::GetSavePointMap() const
