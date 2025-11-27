@@ -121,8 +121,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	int32 CurrentGroggy = 0;
 
-private:
-
 	FTimerHandle HitReactTimerHandle;
 
 	FTimerHandle HideHPBarTimerHandle;
