@@ -16,7 +16,28 @@ class THIRD_PERSON_RPG_API ABossDragon : public ABossCharacter
 public:
 	//ABossDragon();
 
-
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsFly;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UParticleSystem* BreathEffect;
+
+	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UAnimMontage> GroundBreathMontage;
+
+	UPROPERTY(EditAnywhere, Category = Montage, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UAnimMontage> FlyBreathMontage;
+
+	FTimerHandle BreathTimerHandle;
+
+	UPROPERTY()
+	UParticleSystemComponent* BreathPSC;
+
+
+
+	void StartBreath();
+	void ApplyBreathDamage();
+	void EndBreath();
+
+
 };
