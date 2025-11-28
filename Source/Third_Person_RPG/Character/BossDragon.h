@@ -14,7 +14,10 @@ class THIRD_PERSON_RPG_API ABossDragon : public ABossCharacter
 {
 	GENERATED_BODY()
 public:
-	//ABossDragon();
+	ABossDragon();
+
+	virtual void Tick(float DeltaTime) override;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsFly;
@@ -33,11 +36,41 @@ public:
 	UPROPERTY()
 	UParticleSystemComponent* BreathPSC;
 
+	TMap<APlayerCharacter*, float> DamageCooldownMap;
 
+	UPROPERTY(EditAnywhere)
+	float FlyHeight = 600.f;
+
+	UPROPERTY(EditAnywhere)
+	float FlyUpSpeed = 300.f;
+
+	UPROPERTY(EditAnywhere)
+	float FallSpeed = 2000.f;
+
+	UPROPERTY(EditAnywhere)
+	float LandAttackRadius = 300.f;
+
+	UPROPERTY(EditAnywhere)
+	float LandAttackDamage = 200.f;
+
+	bool bFalling = false;
+
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* LandAttackEffect;
+
+	UPROPERTY(EditAnywhere)
+	float BreathDamageCooldown = 0.2f;
+
+	bool bHasTriggeredFlyPhase = false;
 
 	void StartBreath();
 	void ApplyBreathDamage();
 	void EndBreath();
+
+	void StartFlyPhase();
+	void FlyTick(float DeltaSeconds);
+	void OnLand(const FVector& LandPos);
 
 
 };
