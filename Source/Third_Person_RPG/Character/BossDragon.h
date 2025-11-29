@@ -39,10 +39,10 @@ public:
 	TMap<APlayerCharacter*, float> DamageCooldownMap;
 
 	UPROPERTY(EditAnywhere)
-	float FlyHeight = 600.f;
+	float FlyHeight = 16000.f;
 
 	UPROPERTY(EditAnywhere)
-	float FlyUpSpeed = 300.f;
+	float FlyUpSpeed = 1600.f;
 
 	UPROPERTY(EditAnywhere)
 	float FallSpeed = 2000.f;
@@ -53,6 +53,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	float LandAttackDamage = 200.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bFalling = false;
 
 
@@ -64,13 +65,18 @@ public:
 
 	bool bHasTriggeredFlyPhase = false;
 
+	FTimerHandle FlyFallTimerHandle;
+
+	UPROPERTY()
+	FVector TargetFallLocation;
+
 	void StartBreath();
 	void ApplyBreathDamage();
 	void EndBreath();
 
 	void StartFlyPhase();
+	void StartFalling();
 	void FlyTick(float DeltaSeconds);
 	void OnLand(const FVector& LandPos);
-
 
 };

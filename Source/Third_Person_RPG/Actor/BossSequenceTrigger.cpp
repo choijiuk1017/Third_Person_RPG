@@ -27,6 +27,15 @@ ABossSequenceTrigger::ABossSequenceTrigger()
 	TriggerBox->SetGenerateOverlapEvents(true);
 	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &ABossSequenceTrigger::OnTriggerOverlap);
 
+	for (AStaticMeshActor* BlockActor : BossRoomBlock)
+	{
+		if (IsValid(BlockActor))
+		{
+			BlockActor->SetActorHiddenInGame(true);
+			BlockActor->SetActorEnableCollision(false);
+		}
+	}
+
 }
 
 // Called when the game starts or when spawned
@@ -82,12 +91,9 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 
 void ABossSequenceTrigger::OnSequenceEnd()
 {
-	FVector SpawnLocation = SkeletalMeshActorsToDestroy[0]->GetActorLocation();
-	SpawnLocation.Z += 100.0f; // Z축 위로 100만큼 올리기
-	SpawnLocation.X += 500.0f;
 
-	FTransform SpawnTransform;
-	SpawnTransform.SetLocation(SpawnLocation);
+	FTransform SpawnTransform = SequenceActor->GetTransform();
+	SpawnTransform.AddToTranslation(FVector(0, 0, 100.f));
 
 	for (AStaticMeshActor* MeshActor : StaticMeshActorsToDestroy)
 	{

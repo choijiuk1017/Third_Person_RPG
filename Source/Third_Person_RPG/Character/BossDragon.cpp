@@ -5,6 +5,7 @@
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Third_Person_RPG/Character/EnemyAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/OverlapResult.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -27,7 +28,6 @@ void ABossDragon::Tick(float DeltaSeconds)
         return;
     }
 
-    // 아직 비행 시작 안했고, 체력이 절반 이하
     if (!bHasTriggeredFlyPhase && BossStats.CurrentHP <= BossStats.MaxHP * 0.5f)
     {
         bHasTriggeredFlyPhase = true;
@@ -40,42 +40,67 @@ void ABossDragon::StartFlyPhase()
     bIsFly = true;
     bFalling = false;
 
+    if (AEnemyAIController* EnemyAI = Cast<AEnemyAIController>(GetController()))
+    {
+        EnemyAI->PauseAI();
+    }
+
+    if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+    {
+        AnimInstance->StopAllMontages(0.1f);
+    }
+
     GetCharacterMovement()->GravityScale = 0.f;
+    GetCharacterMovement()->SetMovementMode(MOVE_Flying);
     GetCharacterMovement()->RotationRate = FRotator(0, 0, 0);
 
-    GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+    FVector Loc = GetActorLocation();
+    Loc.Z += 10.f;
+    SetActorLocation(Loc, false, nullptr, ETeleportType::TeleportPhysics);
 
-    AAIController* AI = Cast<AAIController>(GetController());
-    if (AI)
+    GetWorld()->GetTimerManager().SetTimer(
+        FlyFallTimerHandle,
+        this,
+        &ABossDragon::StartFalling,
+        5.0f,   
+        false
+    );
+}
+
+void ABossDragon::StartFalling()
+{
+    bFalling = true;
+
+    APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+    if (Player)
     {
-        AI->StopMovement();        // 즉시 이동 중지
+        TargetFallLocation = Player->GetActorLocation();
     }
 }
 
 void ABossDragon::FlyTick(float DeltaSeconds)
 {
-    FVector Loc = GetActorLocation();
-
     if (!bFalling)
     {
-        Loc.Z += FlyUpSpeed * DeltaSeconds;
-
-        if (Loc.Z >= FlyHeight)
-        {
-            bFalling = true;
-            GetCharacterMovement()->GravityScale = 4.f;
-            GetCharacterMovement()->Velocity = FVector(0, 0, -FallSpeed);
-        }
-
-        SetActorLocation(Loc);
+        AddActorWorldOffset(FVector(0, 0, FlyUpSpeed * DeltaSeconds), false);
         return;
     }
 
-    FHitResult Hit;
-    FVector Start = Loc;
-    FVector End = Loc - FVector(0, 0, 50);
+    FVector Direction3D = (TargetFallLocation - GetActorLocation()).GetSafeNormal();
 
-    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility))
+    float HorizontalSpeed = 1200.f;
+    FVector HorizontalMove = Direction3D;
+    HorizontalMove.Z = 0; 
+    HorizontalMove.Normalize();
+
+    AddActorWorldOffset(HorizontalMove * HorizontalSpeed * DeltaSeconds, true);
+
+    FVector FallMove = FVector(0, 0, -FallSpeed * DeltaSeconds);
+
+    FHitResult Hit;
+    AddActorWorldOffset(FallMove, true, &Hit);
+
+    if (Hit.bBlockingHit)
     {
         OnLand(Hit.Location);
     }
@@ -86,13 +111,21 @@ void ABossDragon::OnLand(const FVector& LandPos)
     bIsFly = false;
     bFalling = false;
 
+    GetCharacterMovement()->SetMovementMode(MOVE_Walking);
     GetCharacterMovement()->GravityScale = 1.f;
     GetCharacterMovement()->RotationRate = FRotator(0, 200.f, 0);
 
     if (LandAttackEffect)
     {
+        FVector EffectPos = LandPos;
+        EffectPos.Z -= 150.f;
+
         UGameplayStatics::SpawnEmitterAtLocation(
-            GetWorld(), LandAttackEffect, LandPos
+            GetWorld(),
+            LandAttackEffect,
+            EffectPos,
+            FRotator::ZeroRotator,
+            FVector(10.0f) 
         );
     }
 
@@ -111,10 +144,9 @@ void ABossDragon::OnLand(const FVector& LandPos)
             if (P) P->TakeDamage(LandAttackDamage);
         }
     }
-    AAIController* AI = Cast<AAIController>(GetController());
-    if (AI)
+    if (AEnemyAIController* EnemyAI = Cast<AEnemyAIController>(GetController()))
     {
-        AI->BrainComponent->RestartLogic();
+        EnemyAI->ResumeAI();
     }
 
 }
@@ -216,4 +248,5 @@ void ABossDragon::EndBreath()
 		BreathPSC = nullptr;
 	}
 }
+
 
