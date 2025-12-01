@@ -1007,9 +1007,6 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 	if (GI)
 	{
 		GI->RegisterSavePoint(OverlappingSavePoint->SavePointInfo);
-
-		//GI->RegisterPlayerStatFromPlayer(this); 
-		//GI->SaveGameData();
 	}
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);

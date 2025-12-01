@@ -43,26 +43,28 @@ void ALevelConvertTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 {
 	if (!OtherActor || !OtherActor->ActorHasTag("Player")) return;
 
-
 	ULevelStreaming* StreamedLevel = UGameplayStatics::GetStreamingLevel(GetWorld(), NextLevelName);
-	if (StreamedLevel && StreamedLevel->IsLevelLoaded())
+
+	if (APlayerCharacter* PC = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
 	{
-		if (APlayerCharacter* PC = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
+		if (UInventoryComponent* Inventory = PC->FindComponentByClass<UInventoryComponent>())
 		{
-			if (UInventoryComponent* Inventory = PC->FindComponentByClass<UInventoryComponent>())
+			if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 			{
-				if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-				{
-					GI->CacheInventory(Inventory->GetAllItems());
-				}
+				GI->CacheInventory(Inventory->GetAllItems());
 			}
 		}
-
-		
-		UGameplayStatics::OpenLevel(GetWorld(), NextLevelName);
-		UE_LOG(LogTemp, Warning, TEXT("Trying to convert level: %s"), *NextLevelName.ToString());
 	}
 
+	
+	if (StreamedLevel && StreamedLevel->IsLevelLoaded())
+	{
+		UGameplayStatics::OpenLevel(GetWorld(), NextLevelName);
+		UE_LOG(LogTemp, Warning, TEXT("Trying to convert level: %s"), *NextLevelName.ToString());
+		return;
+	}
 
+	UGameplayStatics::OpenLevel(GetWorld(), NextLevelName);
+	UE_LOG(LogTemp, Warning, TEXT("Trying to convert level: %s"), *NextLevelName.ToString());
 }
 

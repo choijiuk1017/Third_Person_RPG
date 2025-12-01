@@ -40,7 +40,6 @@ TArray<FString> UTPRGameInstance::GetActivatedSavePointNames() const
 	return Names;
 }
 
-
 void UTPRGameInstance::ClearSavePoints()
 {
 	DiscoveredSavePoints.Empty();
