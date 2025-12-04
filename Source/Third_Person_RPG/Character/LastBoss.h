@@ -16,7 +16,25 @@ class THIRD_PERSON_RPG_API ALastBoss : public ABossCharacter
 public:
 	ALastBoss();
 
+	virtual void Tick(float DeltaTime) override;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	class UStaticMeshComponent* WeaponMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Cutscene")
+	class ULevelSequence* BossCutscene;
+
+	UPROPERTY()
+	class ULevelSequencePlayer* SequencePlayer;
+
+	FTimerHandle CutSceneStartTimer;
+
+	bool bCutsceneStarted = false;
+
+	UFUNCTION()
+	void StartCutScene();
+
+	UFUNCTION()
+	void OnCutSceneFinished();
 };
