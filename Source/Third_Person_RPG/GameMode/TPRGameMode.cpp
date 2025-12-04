@@ -51,5 +51,12 @@ void ATPRGameMode::BeginPlay()
 				}
 			}
 		}
+
+		FInputModeGameOnly InputMode;
+		PC->SetInputMode(InputMode);
+		PC->bShowMouseCursor = false;  
 	}
+
+
+
 }

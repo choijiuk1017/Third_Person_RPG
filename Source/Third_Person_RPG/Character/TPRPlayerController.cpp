@@ -61,7 +61,7 @@ void ATPRPlayerController::SetupInputComponent()
 
 void ATPRPlayerController::Input_Move(const FInputActionValue& Value)
 {
-	if (!CachedCharacter) return;
+	if (!CachedCharacter || CachedCharacter->bIsDead) return;
 
 	const FVector2D Movement = Value.Get<FVector2D>();
 	const FRotator ControlRot = GetControlRotation();
@@ -83,46 +83,46 @@ void ATPRPlayerController::Input_Look(const FInputActionValue& Value)
 
 void ATPRPlayerController::Input_Sprint_Start()
 {
-	if (CachedCharacter) CachedCharacter->BeginSprint();
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->BeginSprint();
 }
 
 void ATPRPlayerController::Input_Sprint_End()
 {
-	if (CachedCharacter) CachedCharacter->EndSprint();
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->EndSprint();
 }
 
 void ATPRPlayerController::Input_Attack()
 {
-	if (CachedCharacter) CachedCharacter->BasicAttack();
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->BasicAttack();
 }
 
 void ATPRPlayerController::Input_Roll()
 {
-	if (CachedCharacter) CachedCharacter->RollStart();
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->RollStart();
 }
 
 void ATPRPlayerController::Input_Skill()
 {
-	if (CachedCharacter) CachedCharacter->SkillStart();
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->SkillStart();
 }
 
 
 void ATPRPlayerController::Input_Interaction()
 {
-	if (CachedCharacter) CachedCharacter->Interact();
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->Interact();
 }
 
 void ATPRPlayerController::Input_Inventory()
 {
-	if (CachedCharacter) CachedCharacter->ToggleInventory();
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->ToggleInventory();
 }
 
 void ATPRPlayerController::Input_DrinkPotion()
 {
-	if (CachedCharacter) CachedCharacter->DrinkPotion();
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->DrinkPotion();
 }
 
 void ATPRPlayerController::Input_ChangePotion()
 {
-	if (CachedCharacter) CachedCharacter->ChangePotion();
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->ChangePotion();
 }

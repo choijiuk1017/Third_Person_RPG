@@ -89,9 +89,22 @@ public:
 	UFUNCTION()
 	void OnTutorialFinished(FName TutorialID);
 
-protected:
+	UPROPERTY(BlueprintReadWrite)
+	FName LastRestedSavePointID;
+
 	UPROPERTY()
 	TMap<FName, FSavePointInfo> DiscoveredSavePoints;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bShouldRespawn = false;
+
+	UPROPERTY(BlueprintReadWrite)
+	FVector RespawnLocation;
+
+	UPROPERTY(BlueprintReadWrite)
+	FRotator RespawnRotation;
+protected:
+
 
 	UPROPERTY()
 	FName PendingSavePointID;

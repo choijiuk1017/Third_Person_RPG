@@ -9,9 +9,11 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/GameModeBase.h"
 #include "Third_Person_RPG/Data/MMComboActionData.h"
 #include "Third_Person_RPG/Character/EnemyCharacter.h"
 #include "Third_Person_RPG/Character/BossCharacter.h"
+#include "Third_Person_RPG/Character/TPRPlayerController.h"
 #include "Third_Person_RPG/Data/SkillData.h"
 #include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"	
@@ -21,6 +23,7 @@
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h" 
+#include "Third_Person_RPG/UI/DeathScreenWidget.h"
 #include "Third_Person_RPG/UI/CurrencyWidget.h" 
 #include "Third_Person_RPG/UI/CurrentEquipedWidget.h" 
 #include "Blueprint/UserWidget.h" 
@@ -87,10 +90,8 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-	{
-		GI->ApplyLoadedPlayerStatTo(this);
-	}
+	UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
 
 	CalculateDerivedStats();
 	InitializeCombatStats();
@@ -112,7 +113,7 @@ void APlayerCharacter::BeginPlay()
 		}
 	}
 
-	if (const UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	if (GI)
 	{
 		const FName TargetID = GI->GetPendingSavePoint();
 		if (TargetID != NAME_None)
@@ -141,7 +142,22 @@ void APlayerCharacter::BeginPlay()
 			}
 		}
 
-	
+		if (GI->bShouldRespawn)
+		{
+			const FName LastID = GI->LastRestedSavePointID;
+			if (LastID != NAME_None)
+			{
+				const TMap<FName, FSavePointInfo>& SaveMap = GI->GetSavePointMap();
+				if (const FSavePointInfo* FoundInfo = SaveMap.Find(LastID))
+				{
+					SetActorLocation(FoundInfo->Location + FVector(70.f, 0.f, 50.f));	
+				}
+			}
+
+			GI->bShouldRespawn = false;
+		}
+
+		GI->ApplyLoadedPlayerStatTo(this);
 	}	
 
 	if (PlayerStatusWidgetClass)
@@ -333,7 +349,7 @@ void APlayerCharacter::BasicLook(const FInputActionValue& Value)
 void APlayerCharacter::BeginSprint()
 {
 	if (bIsSprinting) return;
-
+	if (bIsDead) return;
 	// 시작 즉시 소모가 있다면 체크
 	if (StaminaCost_SprintStart > 0)
 	{
@@ -363,7 +379,7 @@ void APlayerCharacter::RollStart()
 {
 	// 구르기 중이면 리턴
 	if (bIsInteracting || bIsRoll || bIsSkillActing) return;
-
+	if (bIsDead) return;
 	if (CombatStats.CurrentStamina < StaminaCost_Roll) return;
 	ConsumeStamina(StaminaCost_Roll);
 
@@ -414,7 +430,7 @@ void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
 void APlayerCharacter::BasicAttack()
 {
 	if (bIsInteracting || bIsRoll || bIsSkillActing || bIsInteracting || bIsKneeling || bIsPopupInventory) return;
-
+	if (bIsDead) return;
 	if (CurrentComboCount == 0)
 	{
 		ComboStart();
@@ -435,7 +451,7 @@ void APlayerCharacter::BasicAttack()
 void APlayerCharacter::SkillStart()
 {
 	if (bIsInteracting || bIsRoll || !SkillData || !SkillData->SkillMontage || bIsSkillActing) return;
-
+	if (bIsDead) return;
 	if (CombatStats.CurrentStamina < StaminaCost_Skill) return;
 	ConsumeStamina(StaminaCost_Skill);
 
@@ -919,6 +935,7 @@ void APlayerCharacter::SkillAttackCheck()
 void APlayerCharacter::Interact()
 {
 	if (bIsRoll || bIsSkillActing || bIsAttacking || bIsInteracting) return;
+	if (bIsDead) return;
 	UE_LOG(LogTemp, Warning, TEXT("상호작용 키 입력됨"));
 
 	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
@@ -1007,6 +1024,7 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 	if (GI)
 	{
 		GI->RegisterSavePoint(OverlappingSavePoint->SavePointInfo);
+		GI->LastRestedSavePointID = OverlappingSavePoint->SavePointInfo.SavePointID;
 	}
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
@@ -1273,6 +1291,8 @@ void APlayerCharacter::UnEquipWeapon_Implementation(UInventoryItem* WeaponItem)
 }
 void APlayerCharacter::ToggleInventory()
 {
+	if (bIsDead) return;
+
 	if (bIsPopupInventory)
 	{
 		CloseInventory();
@@ -1380,6 +1400,7 @@ void APlayerCharacter::HideInteractionUI()
 
 void APlayerCharacter::TakeDamage(int32 DamageAmount)
 {
+	if (bIsDead) return;
 	if (CombatStats.CurrentHP <= 0)
 		return;
 
@@ -1396,9 +1417,24 @@ void APlayerCharacter::TakeDamage(int32 DamageAmount)
 	{
 		// 사망 처리
 		CombatStats.CurrentHP = 0;
+
+		bIsDead = true;
+
 		UE_LOG(LogTemp, Error, TEXT("플레이어 사망"));
 
-		DisableInput(Cast<APlayerController>(GetController()));
+		DisableInput(Cast<ATPRPlayerController>(GetController()));
+
+		if (DeathScreenWidgetClass)
+		{
+			UUserWidget* DeathWidget = CreateWidget<UUserWidget>(GetWorld(), DeathScreenWidgetClass);
+			if (DeathWidget)
+			{
+				DeathWidget->AddToViewport();
+			}
+		}
+
+		GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &APlayerCharacter::RespawnPlayer, 6.0f, false);
+
 		return;
 	}
 
@@ -1622,6 +1658,7 @@ void APlayerCharacter::RefreshCurrentEquipped_Potion(UTexture2D* PotionIconTextu
 
 void APlayerCharacter::DrinkPotion()
 {
+	if (bIsDead) return;
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
@@ -1759,4 +1796,18 @@ void APlayerCharacter::ApplySaveData(const FPlayerStatSaveData& InSaveData)
 	CombatStats = InSaveData.CombatStats;
 
 	Currency = InSaveData.Currency;
+}
+
+void APlayerCharacter::RespawnPlayer()
+{
+	UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	FString CurrentMapName = GetWorld()->GetMapName();
+	CurrentMapName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+
+	if (GI)
+	{
+		GI->bShouldRespawn = true;
+	}
+
+	UGameplayStatics::OpenLevel(GetWorld(), *CurrentMapName);
 }

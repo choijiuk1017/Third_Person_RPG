@@ -199,6 +199,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Currency")
 	int32 Currency = 0;
 
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	bool bIsDead;
+
 	void AddCurrency(int32 Amount);
 	bool SpendCurrency(int32 Amount);
 
@@ -323,6 +326,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UPlayerStatusWidget> PlayerStatusWidgetClass;
 
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class UUserWidget> DeathScreenWidgetClass;
+
 	UPROPERTY()
 	UPlayerStatusWidget* PlayerStatusWidgetInstance;
 
@@ -409,6 +415,10 @@ protected:
 
 	void StaminaRegenTick(float DeltaSeconds);
 
+	UFUNCTION()
+	void RespawnPlayer();
+
+	FTimerHandle RespawnTimerHandle;
 
 	int32 GetStaminaRegenPerSecond() const;
 	

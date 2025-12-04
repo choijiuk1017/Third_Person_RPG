@@ -4,26 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "TPRGameMode.generated.h"
+#include "TitleGameMode.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class THIRD_PERSON_RPG_API ATPRGameMode : public AGameModeBase
+class THIRD_PERSON_RPG_API ATitleGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
-
 	virtual void BeginPlay() override;
 
-	ATPRGameMode();
+protected:
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UUserWidget> TitleWidgetClass;
 
 	UPROPERTY()
 	class UUserWidget* TitleWidgetInstance;
-	
 };
