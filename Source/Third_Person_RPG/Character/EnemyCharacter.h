@@ -98,6 +98,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Heal(int32 Amount);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	class UStaticMeshComponent* WeaponMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	class UStaticMeshComponent* ShieldMesh;
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
