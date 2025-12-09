@@ -14,12 +14,6 @@ ALastBoss::ALastBoss()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
-
-
-	WeaponMesh->SetupAttachment(GetMesh(), TEXT("WeaponSocket"));
-
-
 	//WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 

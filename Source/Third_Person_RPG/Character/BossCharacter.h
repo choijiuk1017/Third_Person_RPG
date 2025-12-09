@@ -104,6 +104,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 BossType;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	class UStaticMeshComponent* WeaponMesh;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
