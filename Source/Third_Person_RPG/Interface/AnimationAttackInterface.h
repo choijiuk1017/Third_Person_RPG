@@ -31,4 +31,8 @@ public:
 	virtual void EnableWeaponHitBox() = 0;
 
 	virtual void DisableWeaponHitBox() = 0;
+
+	virtual void StartRolling() = 0;
+
+	virtual void EndRolling() = 0;
 };

@@ -1811,3 +1811,21 @@ void APlayerCharacter::RespawnPlayer()
 
 	UGameplayStatics::OpenLevel(GetWorld(), *CurrentMapName);
 }
+
+void APlayerCharacter::StartRolling()
+{
+	UCapsuleComponent* Capsule = GetCapsuleComponent();
+
+	if (!Capsule) return;
+
+	Capsule->SetCollisionResponseToChannel(CHANNEL_ACTION, ECR_Ignore);
+
+}
+
+void APlayerCharacter::EndRolling()
+{
+	UCapsuleComponent* Capsule = GetCapsuleComponent();
+	if (!Capsule) return;
+
+	Capsule->SetCollisionResponseToChannel(CHANNEL_ACTION, ECR_Block);
+}

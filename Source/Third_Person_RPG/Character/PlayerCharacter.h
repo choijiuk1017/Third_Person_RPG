@@ -390,6 +390,9 @@ protected:
 	//스킬 공격 함수, 인터페이스에서 상속 받음
 	virtual void SkillAttackCheck() override;
 
+	virtual void StartRolling() override;
+	virtual void EndRolling() override;
+
 
 
 	void OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted);

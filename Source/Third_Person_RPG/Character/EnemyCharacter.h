@@ -50,6 +50,8 @@ public:
 	virtual void EnableWeaponHitBox() override {};
 	virtual void DisableWeaponHitBox() override {};
 	virtual void SkillAttackCheckByIndex(int32 Index) override {};
+	virtual void StartRolling() override {};
+	virtual void EndRolling() override {};
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	class UBehaviorTree* BehaviorTreeAsset;
