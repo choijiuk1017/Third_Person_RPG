@@ -20,6 +20,8 @@
 
 #include "PlayerCharacter.generated.h"
 
+
+
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHPChanged, int32, int32); //현재, 최대
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnFPChanged, int32, int32); //현재, 최대
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, int32, int32); //현재, 최대
@@ -110,6 +112,9 @@ struct FCombatStats
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Poise;
 };
+
+class ANPC;
+class UDialogueWidget;
 
 UCLASS()
 class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimationAttackInterface, public IInventoryInterface
@@ -257,6 +262,13 @@ public:
 	//스킬 함수
 	void SkillStart();
 
+	void SetCurrentNPC(ANPC* InNPC);
+	void OpenDialogueUI();
+	void CloseDialogueUI();
+	void SetDialogueLine(const FText& InText);
+
+	void OnAdvanceDialogue();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -273,9 +285,17 @@ protected:
 	UPROPERTY()
 	class AItem* OverlappingItem;
 
-
 	UPROPERTY()
 	class ASavePoint* OverlappingSavePoint;
+
+	UPROPERTY()
+	ANPC* CurrentNPC = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UDialogueWidget> DialogueWidgetClass;
+
+	UPROPERTY()
+	UDialogueWidget* DialogueWidgetInstance = nullptr;
 
 	//Montage Section
 	//구르기 애니메이션 몽타주

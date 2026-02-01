@@ -56,6 +56,7 @@ void ATPRPlayerController::SetupInputComponent()
 	EIC->BindAction(IA_Skill, ETriggerEvent::Started, this, &ATPRPlayerController::Input_Skill);
 	EIC->BindAction(IA_Interaction, ETriggerEvent::Started, this, &ATPRPlayerController::Input_Interaction);
 	EIC->BindAction(IA_Inventory, ETriggerEvent::Started, this, &ATPRPlayerController::Input_Inventory);
+	EIC->BindAction(IA_Enter, ETriggerEvent::Started, this, &ATPRPlayerController::Input_Enter);
 }
 
 
@@ -125,4 +126,14 @@ void ATPRPlayerController::Input_DrinkPotion()
 void ATPRPlayerController::Input_ChangePotion()
 {
 	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->ChangePotion();
+}
+
+void ATPRPlayerController::Input_Enter()
+{
+	if (!IA_Enter)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[PC] IA_Enter is NULL"));
+		return;
+	}
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->OnAdvanceDialogue();
 }

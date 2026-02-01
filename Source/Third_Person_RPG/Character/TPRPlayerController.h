@@ -66,6 +66,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> IA_ChangePotion;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> IA_Enter;
+
 private:
 	UPROPERTY()
 	APlayerCharacter* CachedCharacter;
@@ -81,5 +84,7 @@ private:
 	void Input_Inventory();
 	void Input_DrinkPotion();
 	void Input_ChangePotion();
+
+	void Input_Enter();
 
 };

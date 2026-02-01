@@ -26,6 +26,8 @@
 #include "Third_Person_RPG/UI/DeathScreenWidget.h"
 #include "Third_Person_RPG/UI/CurrencyWidget.h" 
 #include "Third_Person_RPG/UI/CurrentEquipedWidget.h" 
+#include "Third_Person_RPG/UI/DialogueWidget.h"
+#include "Third_Person_RPG/Actor/NPC.h"
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"  
@@ -1009,6 +1011,11 @@ void APlayerCharacter::Interact()
 			return;
 		}
 	}
+
+	if (CurrentNPC)
+	{
+		CurrentNPC->StartTalk(this);
+	}
 }
 
 void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterrupted)
@@ -1828,4 +1835,69 @@ void APlayerCharacter::EndRolling()
 	if (!Capsule) return;
 
 	Capsule->SetCollisionResponseToChannel(CHANNEL_ACTION, ECR_Block);
+}
+
+void APlayerCharacter::SetCurrentNPC(ANPC* InNPC)
+{
+	CurrentNPC = InNPC;
+}
+
+void APlayerCharacter::OnAdvanceDialogue()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[DIALOGUE] OnAdvanceDialogue. CurrentNPC=%s"),
+		CurrentNPC ? *CurrentNPC->GetName() : TEXT("NULL"));
+	if (CurrentNPC)
+	{
+		CurrentNPC->AdvanceTalk(this);
+	}
+}
+
+void APlayerCharacter::OpenDialogueUI()
+{
+	if (!DialogueWidgetClass) return;
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	if (!DialogueWidgetInstance)
+	{
+		DialogueWidgetInstance = CreateWidget<UDialogueWidget>(PC, DialogueWidgetClass);
+	}
+
+	if (DialogueWidgetInstance && !DialogueWidgetInstance->IsInViewport())
+	{
+		DialogueWidgetInstance->AddToViewport(100);
+
+		FInputModeGameAndUI Mode;
+		Mode.SetWidgetToFocus(DialogueWidgetInstance->TakeWidget());
+		Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		Mode.SetHideCursorDuringCapture(true);
+
+		PC->SetInputMode(Mode);
+		PC->bShowMouseCursor = false;
+	}
+}
+
+void APlayerCharacter::CloseDialogueUI()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		FInputModeGameOnly Mode;
+		PC->SetInputMode(Mode);
+		PC->bShowMouseCursor = false;
+	}
+
+	if (DialogueWidgetInstance && DialogueWidgetInstance->IsInViewport())
+	{
+		DialogueWidgetInstance->RemoveFromParent();
+	}
+}
+
+void APlayerCharacter::SetDialogueLine(const FText& InText)
+{
+	if (DialogueWidgetInstance)
+	{
+		DialogueWidgetInstance->SetDialogueText(InText);
+	}
 }
