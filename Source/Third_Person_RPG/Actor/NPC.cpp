@@ -91,47 +91,59 @@ void ANPC::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 void ANPC::StartTalk(APlayerCharacter* Player)
 {
 	if (!Player) return;
+	if (bIsTalking) return;
 
 	Player->HideInteractionUI();
 
-	if (bIsTalking) return;
-
 	if (!bHasMetPlayer && FirstEncounterLines.Num() > 0)
 	{
-		ActiveLines = &FirstEncounterLines;
+		SetTalkPhase(ENPCTalkPhase::FirstEncounter);
 	}
 	else
 	{
-		ActiveLines = &RepeatLines;
+		SetTalkPhase(ENPCTalkPhase::Repeat);
 	}
 
-	if (!ActiveLines || ActiveLines->Num() == 0) return;
+
+	if (!ActiveLines || ActiveLines->Num() == 0)
+	{
+		return;
+	}
 
 	bIsTalking = true;
-	CurrentLineIndex = 0;
 
 	Player->OpenDialogueUI();
 	Player->SetDialogueLine((*ActiveLines)[CurrentLineIndex]);
-
-	if (!bHasMetPlayer)
-	{
-		bHasMetPlayer = true;
-	}
 }
 
 void ANPC::AdvanceTalk(APlayerCharacter* Player)
 {
 	if (!Player) return;
+	if (!bIsTalking || !ActiveLines) return;
 
 	Player->HideInteractionUI();
-
-	if (!bIsTalking || !ActiveLines) return;
 
 	CurrentLineIndex++;
 
 	if (CurrentLineIndex < ActiveLines->Num())
 	{
 		Player->SetDialogueLine((*ActiveLines)[CurrentLineIndex]);
+		return;
+	}
+
+	if (TalkPhase == ENPCTalkPhase::FirstEncounter)
+	{
+		bHasMetPlayer = true;
+
+		if (RepeatLines.Num() > 0)
+		{
+			SetTalkPhase(ENPCTalkPhase::Repeat);
+
+			Player->SetDialogueLine((*ActiveLines)[CurrentLineIndex]);
+			return;
+		}
+
+		EndTalk(Player);
 		return;
 	}
 
@@ -147,9 +159,28 @@ void ANPC::EndTalk(APlayerCharacter* Player)
 	bIsTalking = false;
 	CurrentLineIndex = 0;
 	ActiveLines = nullptr;
+	TalkPhase = ENPCTalkPhase::None;
 
 	Player->CloseDialogueUI();
 }
 
+void ANPC::SetTalkPhase(ENPCTalkPhase NewPhase)
+{
+	TalkPhase = NewPhase;
+	CurrentLineIndex = 0;
+
+	switch (TalkPhase)
+	{
+	case ENPCTalkPhase::FirstEncounter:
+		ActiveLines = &FirstEncounterLines;
+		break;
+	case ENPCTalkPhase::Repeat:
+		ActiveLines = &RepeatLines;
+		break;
+	default:
+		ActiveLines = nullptr;
+		break;
+	}
+}
 
 

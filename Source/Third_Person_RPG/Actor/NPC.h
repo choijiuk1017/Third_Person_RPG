@@ -9,6 +9,14 @@
 class USphereComponent;
 class APlayerCharacter;
 
+UENUM(BlueprintType)
+enum class ENPCTalkPhase : uint8
+{
+	None,
+	FirstEncounter,
+	Repeat
+};
+
 UCLASS()
 class THIRD_PERSON_RPG_API ANPC : public ACharacter
 {
@@ -39,6 +47,8 @@ protected:
 
 	const TArray<FText>* ActiveLines = nullptr;
 
+	ENPCTalkPhase TalkPhase = ENPCTalkPhase::None;
+
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -55,6 +65,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	class UStaticMeshComponent* ShieldMesh;
+
+	void SetTalkPhase(ENPCTalkPhase NewPhase);
 
 public:	
 	// Called every frame
