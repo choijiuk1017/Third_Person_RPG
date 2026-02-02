@@ -68,6 +68,9 @@ protected:
 
 	void SetTalkPhase(ENPCTalkPhase NewPhase);
 
+
+	virtual void OnTalkFinished(APlayerCharacter* Player);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -76,5 +79,5 @@ public:
 
 	void AdvanceTalk(APlayerCharacter* Player);
 
-	void EndTalk(APlayerCharacter* Player);
+	virtual void EndTalk(APlayerCharacter* Player);
 };

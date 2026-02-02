@@ -34,6 +34,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	TArray<UInventoryItem*> GetAllItems() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void GetValidItemsByType(EItemType Type, TArray<UInventoryItem*>& OutItems) const;
+
 protected:
 	virtual void BeginPlay() override;
 

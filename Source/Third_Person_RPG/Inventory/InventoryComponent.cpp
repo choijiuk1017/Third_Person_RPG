@@ -85,6 +85,18 @@ TArray<UInventoryItem*> UInventoryComponent::GetAllItems() const
 	return AllItems;
 }
 
+void UInventoryComponent::GetValidItemsByType(EItemType Type, TArray<UInventoryItem*>& OutItems) const
+{
+	OutItems.Reset();
 
+	const TArray<UInventoryItem*>& Src = GetItemsByType(Type);
+	for (UInventoryItem* Item : Src)
+	{
+		if (IsValid(Item))
+		{
+			OutItems.Add(Item);
+		}
+	}
+}
 
 

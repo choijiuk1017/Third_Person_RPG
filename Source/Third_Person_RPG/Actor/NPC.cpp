@@ -18,8 +18,8 @@ ANPC::ANPC()
 	PrimaryActorTick.bCanEverTick = false;
 
 	Trigger = CreateDefaultSubobject<USphereComponent>(TEXT("Trigger"));
-	Trigger->SetupAttachment(GetCapsuleComponent());   // ¡Ú ÇÙ½É
-	Trigger->SetRelativeLocation(FVector::ZeroVector); // ¡Ú Ä¸½¶ Áß½É¿¡ °íÁ¤
+	Trigger->SetupAttachment(GetCapsuleComponent());  
+	Trigger->SetRelativeLocation(FVector::ZeroVector); 
 	Trigger->InitSphereRadius(200.f);
 
 	Trigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -162,6 +162,8 @@ void ANPC::EndTalk(APlayerCharacter* Player)
 	TalkPhase = ENPCTalkPhase::None;
 
 	Player->CloseDialogueUI();
+
+	OnTalkFinished(Player);
 }
 
 void ANPC::SetTalkPhase(ENPCTalkPhase NewPhase)
@@ -181,6 +183,10 @@ void ANPC::SetTalkPhase(ENPCTalkPhase NewPhase)
 		ActiveLines = nullptr;
 		break;
 	}
+}
+
+void ANPC::OnTalkFinished(APlayerCharacter* Player)
+{
 }
 
 

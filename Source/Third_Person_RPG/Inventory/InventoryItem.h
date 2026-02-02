@@ -22,8 +22,24 @@ public:
 	UPROPERTY()
 	bool bEquipped = false;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Enhance")
+	int32 EnhanceLevel = 0;
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	UTPRItemData* GetItemData() const { return ItemData; }
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	EItemType GetItemType() const { return ItemData ? ItemData->ItemType : EItemType::IT_None; }
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
 	UTexture2D* GetItemTexture() const
 	{
 		return ItemData ? ItemData->ItemTexture : nullptr;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	FString GetItemName() const
+	{
+		return ItemData ? ItemData->ItemName : FString();
 	}
 };

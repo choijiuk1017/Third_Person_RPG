@@ -58,6 +58,8 @@ void ASavePoint::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
 	if (Player)
 	{
 		Player->SetOverlappingSavePoint(this);
+
+
 		Player->ShowInteractionUI(HelpText);
 	}
 }
