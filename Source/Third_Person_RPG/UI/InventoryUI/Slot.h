@@ -56,6 +56,8 @@ public:
 
     void UnequipItem();
 
+    void RefreshAmountText();
+
 protected:
     UPROPERTY(VisibleAnywhere, Category = "Slot")
     ESlotType SlotType;

@@ -219,6 +219,19 @@ void UWeaponUpgradeWidget::DoUpgrade(UInventoryItem* Item, int32 NeededCurrency)
 	{
 		CachedInvComp->OnInventoryChanged.Broadcast();
 	}
+
+	if (Player && Player->GetCurrentWeapon()) 
+	{
+		Player->ApplyWeaponStats(Player->GetCurrentWeapon());
+	}
+
+	if (Player)
+	{
+		if (UInventoryComponent* Inv = Player->FindComponentByClass<UInventoryComponent>())
+		{
+			Inv->OnInventoryChanged.Broadcast();
+		}
+	}
 }
 
 void UWeaponUpgradeWidget::RefreshRightPanel()

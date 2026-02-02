@@ -44,8 +44,7 @@ void USlot::SetItem(UInventoryItem* NewItem)
         IMG_Item->SetBrushFromTexture(NewItem->GetItemTexture());
         IMG_Item->SetVisibility(ESlateVisibility::Visible);
 
-        TXT_Quantity->SetText(FText::AsNumber(NewItem->Quantity));
-        TXT_Quantity->SetVisibility(ESlateVisibility::Visible);
+        RefreshAmountText();
     }
     else
     {
@@ -184,3 +183,38 @@ void USlot::UnequipItem()
     }
 }
 
+void USlot::RefreshAmountText()
+{
+    if (!TXT_Quantity)
+        return;
+
+    if (!InventoryItem)
+    {
+        TXT_Quantity->SetText(FText::GetEmpty());
+        TXT_Quantity->SetVisibility(ESlateVisibility::Collapsed);
+        return;
+    }
+
+    const EItemType Type = InventoryItem->GetItemType();
+
+    if (Type == EItemType::IT_Weapon)
+    {
+        const FString EnhanceStr = FString::Printf(TEXT("+%d"), InventoryItem->EnhanceLevel);
+        TXT_Quantity->SetText(FText::FromString(EnhanceStr));
+        TXT_Quantity->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+    }
+    else
+    {
+        const int32 Qty = InventoryItem->Quantity;
+        if (Qty > 1)
+        {
+            TXT_Quantity->SetText(FText::AsNumber(Qty));
+            TXT_Quantity->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        }
+        else
+        {
+            TXT_Quantity->SetText(FText::GetEmpty());
+            TXT_Quantity->SetVisibility(ESlateVisibility::Collapsed);
+        }
+    }
+}

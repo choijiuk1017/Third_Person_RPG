@@ -303,11 +303,17 @@ void APlayerCharacter::ApplyWeaponStats(ATPRWeapon* Weapon)
 	int32 TotalLightning = Stat.Lightning + FMath::RoundToInt(LightningScaling);
 	int32 TotalHoly = Stat.Holy + FMath::RoundToInt(HolyScaling);
 
-	// 총합 공격력 = 속성 포함 전체
-	int32 TotalAttackPower = TotalPhysical + TotalMagic + TotalFire + TotalLightning + TotalHoly;
+	const int32 EnhanceLv = GetEquippedWeaponEnhanceLevel();
+	const float EnhanceMul = 1.0f + (EnhanceDamageRatePerLevel * (float)EnhanceLv);
 
+	TotalPhysical = FMath::RoundToInt((float)TotalPhysical * EnhanceMul);
+	TotalMagic = FMath::RoundToInt((float)TotalMagic * EnhanceMul);
+	TotalFire = FMath::RoundToInt((float)TotalFire * EnhanceMul);
+	TotalLightning = FMath::RoundToInt((float)TotalLightning * EnhanceMul);
+	TotalHoly = FMath::RoundToInt((float)TotalHoly * EnhanceMul);
+
+	const int32 TotalAttackPower = TotalPhysical + TotalMagic + TotalFire + TotalLightning + TotalHoly;
 	CombatStats.AttackPower = TotalAttackPower;
-
 
 	UE_LOG(LogTemp, Warning, TEXT("총 공격력: %d (물리 %d / 마법 %d / 화염 %d / 번개 %d / 신성 %d)"),
 		TotalAttackPower, TotalPhysical, TotalMagic, TotalFire, TotalLightning, TotalHoly);
@@ -1244,6 +1250,13 @@ void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
 
 		InventoryComponent->EquippedWeaponItem = nullptr;
 	}
+
+	if (InventoryComponent)
+	{
+		InventoryComponent->EquippedWeaponItem = WeaponItem;
+	}
+	WeaponItem->bEquipped = true;
+
 	// 새 무기 생성
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
@@ -1258,15 +1271,18 @@ void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
 	if (NewWeapon)
 	{
 		SetWeapon(NewWeapon);
-
-		InventoryComponent->EquippedWeaponItem = WeaponItem;
 	}
-
-	WeaponItem->bEquipped = true;
 
 	RefreshCurrentEquipped_Weapon(WeaponIcon);
 }
 
+int32 APlayerCharacter::GetEquippedWeaponEnhanceLevel() const
+{
+	if (!InventoryComponent) return 0;
+	if (!InventoryComponent->EquippedWeaponItem) return 0;
+
+	return InventoryComponent->EquippedWeaponItem->EnhanceLevel;
+}
 
 void APlayerCharacter::UnEquipWeapon_Implementation(UInventoryItem* WeaponItem)
 {

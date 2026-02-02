@@ -115,6 +115,7 @@ struct FCombatStats
 
 class ANPC;
 class UDialogueWidget;
+class ATPRWeapon;
 
 UCLASS()
 class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimationAttackInterface, public IInventoryInterface
@@ -178,6 +179,9 @@ public:
 	void SetStatusHUDVisible(bool bVisible);
 
 	float GetCurrentWeaponWeight() const;
+
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	ATPRWeapon* GetCurrentWeapon() const { return CurrentWeapon; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class UInventoryComponent> InventoryComponent;
@@ -268,6 +272,7 @@ public:
 	void SetDialogueLine(const FText& InText);
 
 	void OnAdvanceDialogue();
+	void ApplyWeaponStats(class ATPRWeapon* Weapon);
 
 
 protected:
@@ -429,8 +434,6 @@ protected:
 
 	float ConvertScalingToMultiplier(const FString& Scaling);
 
-	void ApplyWeaponStats(class ATPRWeapon* Weapon);
-
 	void ResetCombatStats();
 
 	void ConsumeStamina(int32 Amount);
@@ -543,4 +546,10 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Potion")
 	void UsePotion(UAnimMontage* Montage, bool bInterrupted);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Enhance")
+	float EnhanceDamageRatePerLevel = 0.05f; 
+
+	int32 GetEquippedWeaponEnhanceLevel() const;
+
 };
