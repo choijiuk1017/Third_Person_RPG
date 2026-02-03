@@ -39,7 +39,7 @@ void ABlackSmith::OnTalkFinished(APlayerCharacter* Player)
 	UpgradeWidgetInstance = CreateWidget<UWeaponUpgradeWidget>(PC, UpgradeWidgetClass);
 	if (!UpgradeWidgetInstance) return;
 
-	UpgradeWidgetInstance->AddToViewport();
+	UpgradeWidgetInstance->AddToViewport(99999);
 	bUpgradeUIOpened = true;
 
 	UpgradeWidgetInstance->OnClosed.AddDynamic(this, &ABlackSmith::OnUpgradeWidgetClosed);
