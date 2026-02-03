@@ -9,6 +9,7 @@
 
 class UTextBlock;
 class UImage;
+class UBorder;
 class UWeaponListItemObject;
 /**
  * 
@@ -17,9 +18,17 @@ UCLASS()
 class THIRD_PERSON_RPG_API UWeaponUpgradeEntryWidget : public UUserWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
+public:
+	UFUNCTION()
+	UObject* GetMyListItemObject() const;
+
+	UFUNCTION()
+	void SetSelectedVisual(bool bSelected);
 
 protected:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
+
+	virtual void NativeOnItemSelectionChanged(bool bIsSelected) override;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> ItemIconImage;
@@ -36,9 +45,16 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> AffordableText;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UBorder> SelectionBorder;
+
+	
+
+	
 private:
 	UPROPERTY()
 	TObjectPtr<UWeaponListItemObject> CachedItemObject;
 
 	void Refresh();
+
 };

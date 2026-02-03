@@ -5,6 +5,10 @@
 
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
+#include "Components/Border.h"
+#include "Components/ListView.h"
+#include "Components/ListViewBase.h"
+
 #include "Third_Person_RPG/Inventory/WeaponListItemObject.h"
 #include "Third_Person_RPG/Inventory/InventoryItem.h"
 
@@ -12,6 +16,21 @@ void UWeaponUpgradeEntryWidget::NativeOnListItemObjectSet(UObject* ListItemObjec
 {
 	CachedItemObject = Cast<UWeaponListItemObject>(ListItemObject);
 	Refresh();
+
+	if (UListView* ListView = Cast<UListView>(GetOwningListView()))
+	{
+		const bool bSelectedNow = (ListView->GetSelectedItem() == ListItemObject);
+		SetSelectedVisual(bSelectedNow);
+	}
+	else
+	{
+		SetSelectedVisual(false);
+	}
+}
+
+void UWeaponUpgradeEntryWidget::NativeOnItemSelectionChanged(bool bIsSelected)
+{
+	SetSelectedVisual(bIsSelected);
 }
 
 void UWeaponUpgradeEntryWidget::Refresh()
@@ -57,4 +76,17 @@ void UWeaponUpgradeEntryWidget::Refresh()
 			? FText::FromString(TEXT("OK"))
 			: FText::FromString(TEXT("NO")));
 	}
+}
+
+void UWeaponUpgradeEntryWidget::SetSelectedVisual(bool bSelected)
+{
+	if (SelectionBorder)
+	{
+		SelectionBorder->SetVisibility(bSelected ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+	}
+}
+
+UObject* UWeaponUpgradeEntryWidget::GetMyListItemObject() const
+{
+	return CachedItemObject.Get();
 }

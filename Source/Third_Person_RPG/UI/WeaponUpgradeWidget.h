@@ -65,6 +65,9 @@ protected:
 	UFUNCTION()
 	void OnUpgradeClicked();
 
+	bool MoveListSelection(int32 Delta);
+
+
 	UFUNCTION()
 	void RefreshFromInventory(); 
 
@@ -76,4 +79,8 @@ protected:
 	int32 CalcNeededCurrency(const UInventoryItem* Item) const;
 	bool CanUpgrade(const UInventoryItem* Item, int32& OutNeededCurrency) const;
 	void DoUpgrade(UInventoryItem* Item, int32 NeededCurrency);
+
+	void UpdateHighlightFromSelection();
+
+	FTimerHandle HighlightTimerHandle;
 };

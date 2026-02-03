@@ -4,6 +4,7 @@
 #include "Third_Person_RPG/UI/WeaponUpgradeWidget.h"
 
 #include "Components/ListView.h"
+#include "Components/ListViewBase.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "Input/Reply.h"
@@ -14,7 +15,10 @@
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
 #include "Third_Person_RPG/Inventory/InventoryItem.h"
 #include "Third_Person_RPG/Inventory/WeaponListItemObject.h"
+#include "Third_Person_RPG/UI/WeaponUpgradeEntryWidget.h"
 #include "Third_Person_RPG/Inventory/InventoryComponent.h"
+#include "InputCoreTypes.h" 
+
 
 void UWeaponUpgradeWidget::NativeConstruct()
 {
@@ -52,6 +56,7 @@ void UWeaponUpgradeWidget::InitUpgradeUI(APlayerCharacter* InPlayer, const TArra
 	if (WeaponListView && ListItems.Num() > 0)
 	{
 		WeaponListView->SetSelectedItem(ListItems[0]);
+		UpdateHighlightFromSelection();
 	}
 
 	RefreshRightPanel();
@@ -65,13 +70,29 @@ void UWeaponUpgradeWidget::InitUpgradeUI(APlayerCharacter* InPlayer, const TArra
 		PC->SetInputMode(Mode);
 		PC->bShowMouseCursor = true;
 
-		SetKeyboardFocus();
+		if (WeaponListView)
+		{
+			WeaponListView->SetKeyboardFocus();
+		}
+		else
+		{
+			SetKeyboardFocus();
+		}
 	}
 }
 
 FReply UWeaponUpgradeWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
 	const FKey Key = InKeyEvent.GetKey();
+
+	if (Key == EKeys::Down || Key == EKeys::S)
+	{
+		if (MoveListSelection(+1)) return FReply::Handled();
+	}
+	else if (Key == EKeys::Up || Key == EKeys::W)
+	{
+		if (MoveListSelection(-1)) return FReply::Handled();
+	}
 
 	if (Key == EKeys::Enter || Key == EKeys::Virtual_Accept)
 	{
@@ -143,6 +164,7 @@ void UWeaponUpgradeWidget::RefreshFromInventory()
 		if (NewSelect)
 		{
 			WeaponListView->SetSelectedItem(NewSelect);
+			UpdateHighlightFromSelection();
 		}
 	}
 
@@ -183,6 +205,7 @@ void UWeaponUpgradeWidget::RebuildList(const TArray<UInventoryItem*>& Weapons)
 void UWeaponUpgradeWidget::OnWeaponSelectionChanged(UObject* SelectedItem)
 {
 	SelectedItemObject = Cast<UWeaponListItemObject>(SelectedItem);
+	UpdateHighlightFromSelection();
 	RefreshRightPanel();
 }
 
@@ -271,3 +294,58 @@ void UWeaponUpgradeWidget::OnUpgradeClicked()
 	}
 	DoUpgrade(Item, Needed);
 }
+
+bool UWeaponUpgradeWidget::MoveListSelection(int32 Delta)
+{
+	if (!WeaponListView) return false;
+
+	const int32 Num = ListItems.Num();
+	if (Num <= 0) return false;
+
+	UObject* CurSelected = WeaponListView->GetSelectedItem();
+	int32 CurIndex = 0;
+
+	if (CurSelected)
+	{
+		for (int32 i = 0; i < Num; ++i)
+		{
+			if (ListItems[i] == CurSelected)
+			{
+				CurIndex = i;
+				break;
+			}
+		}
+	}
+
+	int32 NewIndex = CurIndex + Delta;
+	NewIndex = FMath::Clamp(NewIndex, 0, Num - 1);
+
+	if (NewIndex == CurIndex && CurSelected) return false;
+
+	UObject* NewItem = ListItems[NewIndex].Get();
+	if (!NewItem) return false;
+
+	WeaponListView->SetSelectedItem(NewItem);
+	WeaponListView->ScrollIndexIntoView(NewIndex);
+
+	WeaponListView->SetKeyboardFocus();
+	return true;
+}
+
+void UWeaponUpgradeWidget::UpdateHighlightFromSelection()
+{
+	if (!WeaponListView) return;
+
+	UObject* Selected = WeaponListView->GetSelectedItem();
+
+	const TArray<UUserWidget*>& Entries = WeaponListView->GetDisplayedEntryWidgets();
+	for (UUserWidget* W : Entries)
+	{
+		UWeaponUpgradeEntryWidget* Entry = Cast<UWeaponUpgradeEntryWidget>(W);
+		if (!Entry) continue;
+
+		const bool bSelected = (Entry->GetMyListItemObject() == Selected);
+		Entry->SetSelectedVisual(bSelected);
+	}
+}
+
