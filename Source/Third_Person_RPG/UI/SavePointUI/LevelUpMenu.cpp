@@ -222,8 +222,6 @@ int32 ULevelUpMenu::SumPendingLevels() const
 
 int32 ULevelUpMenu::GetCostForLevel(int32 TargetLevel) const
 {
-	// === 임시 비용 공식 ===
-	// 프로젝트 룰(데이터 테이블/커브)을 여기에 연결하세요.
 	const int32 Base = 100;
 	const int32 Step = 50;
 	return Base + (TargetLevel - 1) * Step;
@@ -264,7 +262,7 @@ void ULevelUpMenu::AdjustStat(int32 Index, int32 Delta)
 			const int32 Need = RequiredCurrencyForLevels(NextSum);
 			if (Need <= PC->Currency)
 			{
-				Pending[Index] += 1; // 재화가 될 때만 증가
+				Pending[Index] += 1; 
 			}
 		}
 		else if (Delta < 0)
@@ -301,6 +299,8 @@ void ULevelUpMenu::ApplyPendingToPlayer()
 		Attr.Arcane += Pending[7];
 
 		PC->Level += PendingLevels;
+
+		PC->SpentCurrencyOnStats += NeedCurrency;
 
 		PC->SpendCurrency(NeedCurrency);
 

@@ -244,6 +244,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
 	int32 FPPotionCount = 2;
 
+	UPROPERTY(SaveGame)
+	int32 SpentCurrencyOnStats = 0;
+
 	void FillSaveData(struct FPlayerStatSaveData& OutSaveData) const;
 
 	void ApplySaveData(const struct FPlayerStatSaveData& InSaveData);
@@ -279,6 +282,8 @@ public:
 
 	void OpenChoiceUI(const FText& Question, const FText& Yes, const FText& No);
 	void CloseChoiceUI();
+
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -425,7 +430,7 @@ protected:
 	virtual void StartRolling() override;
 	virtual void EndRolling() override;
 
-
+	
 
 	void OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted);
 
