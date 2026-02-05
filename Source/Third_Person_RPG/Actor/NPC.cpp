@@ -138,17 +138,47 @@ void ANPC::AdvanceTalk(APlayerCharacter* Player)
 		if (RepeatLines.Num() > 0)
 		{
 			SetTalkPhase(ENPCTalkPhase::Repeat);
-
-			Player->SetDialogueLine((*ActiveLines)[CurrentLineIndex]);
+			if (ActiveLines && ActiveLines->Num() > 0)
+			{
+				Player->SetDialogueLine((*ActiveLines)[0]);
+			}
 			return;
 		}
+	}
 
-		EndTalk(Player);
+	if (bHasChoice)
+	{
+		BeginChoice(Player);
 		return;
 	}
 
 	EndTalk(Player);
 }
+
+void ANPC::BeginChoice(APlayerCharacter* Player)
+{
+	if (!Player) return;
+
+	InteractionPhase = ENPCInteractionPhase::Choosing;
+
+	Player->OpenChoiceUI(ChoiceQuestion, YesText, NoText);
+}
+
+void ANPC::ConfirmChoice(APlayerCharacter* Player, bool bYes)
+{
+	if (!Player) return;
+	if (InteractionPhase != ENPCInteractionPhase::Choosing) return;
+
+	Player->CloseChoiceUI();
+
+	InteractionPhase = ENPCInteractionPhase::Ended;
+
+	if (bYes) OnYesSelected(Player);
+	else      OnNoSelected(Player);
+
+	EndTalk(Player);
+}
+
 
 void ANPC::EndTalk(APlayerCharacter* Player)
 {
@@ -160,8 +190,10 @@ void ANPC::EndTalk(APlayerCharacter* Player)
 	CurrentLineIndex = 0;
 	ActiveLines = nullptr;
 	TalkPhase = ENPCTalkPhase::None;
+	InteractionPhase = ENPCInteractionPhase::Ended;
 
 	Player->CloseDialogueUI();
+	Player->CloseChoiceUI();
 
 	OnTalkFinished(Player);
 }
@@ -189,4 +221,11 @@ void ANPC::OnTalkFinished(APlayerCharacter* Player)
 {
 }
 
+void ANPC::OnYesSelected(APlayerCharacter* Player)
+{
+}
+
+void ANPC::OnNoSelected(APlayerCharacter* Player)
+{
+}
 

@@ -116,6 +116,7 @@ struct FCombatStats
 class ANPC;
 class UDialogueWidget;
 class ATPRWeapon;
+class UDialogueChoiceWidget;
 
 UCLASS()
 class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimationAttackInterface, public IInventoryInterface
@@ -157,6 +158,7 @@ public:
 	class ATPRWeapon* CurrentWeapon;
 
 	bool CanSetWeapon();
+
 	void SetWeapon(class ATPRWeapon* NewWeapon);
 
 
@@ -266,6 +268,7 @@ public:
 	//스킬 함수
 	void SkillStart();
 
+
 	void SetCurrentNPC(ANPC* InNPC);
 	void OpenDialogueUI();
 	void CloseDialogueUI();
@@ -274,6 +277,8 @@ public:
 	void OnAdvanceDialogue();
 	void ApplyWeaponStats(class ATPRWeapon* Weapon);
 
+	void OpenChoiceUI(const FText& Question, const FText& Yes, const FText& No);
+	void CloseChoiceUI();
 
 protected:
 	// Called when the game starts or when spawned
@@ -377,6 +382,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "UI")
 	bool bPausedBySavePoint = false;
 
+	void HandleChoiceConfirmed(bool bYes);
 
 	UFUNCTION()
 	void SprintStaminaTick(float DeltaSeconds);
@@ -441,6 +447,15 @@ protected:
 	void RestoreStaminaTick(int32 AmountPerTick);
 
 	void StaminaRegenTick(float DeltaSeconds);
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UDialogueChoiceWidget> DialogueChoiceWidgetClass;
+
+	UPROPERTY()
+	UDialogueChoiceWidget* DialogueChoiceWidgetInstance = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "UI")
+	bool bChoiceUIOpen = false;
 
 	UFUNCTION()
 	void RespawnPlayer();

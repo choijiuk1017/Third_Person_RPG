@@ -17,6 +17,15 @@ enum class ENPCTalkPhase : uint8
 	Repeat
 };
 
+UENUM(BlueprintType)
+enum class ENPCInteractionPhase : uint8
+{
+	None,
+	Talking,
+	Choosing,
+	Ended
+};
+
 UCLASS()
 class THIRD_PERSON_RPG_API ANPC : public ACharacter
 {
@@ -48,6 +57,7 @@ protected:
 	const TArray<FText>* ActiveLines = nullptr;
 
 	ENPCTalkPhase TalkPhase = ENPCTalkPhase::None;
+	ENPCInteractionPhase InteractionPhase = ENPCInteractionPhase::Ended;
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -71,6 +81,22 @@ protected:
 
 	virtual void OnTalkFinished(APlayerCharacter* Player);
 
+
+	UPROPERTY(EditAnywhere, Category = "Dialogue|Choice")
+	bool bHasChoice = false;
+
+	UPROPERTY(EditAnywhere, Category = "Dialogue|Choice")
+	FText ChoiceQuestion;
+
+	UPROPERTY(EditAnywhere, Category = "Dialogue|Choice")
+	FText YesText;
+
+	UPROPERTY(EditAnywhere, Category = "Dialogue|Choice")
+	FText NoText;
+
+	virtual void OnYesSelected(APlayerCharacter* Player);
+	virtual void OnNoSelected(APlayerCharacter* Player);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -80,4 +106,7 @@ public:
 	void AdvanceTalk(APlayerCharacter* Player);
 
 	virtual void EndTalk(APlayerCharacter* Player);
+
+	void BeginChoice(APlayerCharacter* Player);
+	void ConfirmChoice(APlayerCharacter* Player, bool bYes);
 };

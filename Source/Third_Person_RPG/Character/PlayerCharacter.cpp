@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/GameModeBase.h"
+
 #include "Third_Person_RPG/Data/MMComboActionData.h"
 #include "Third_Person_RPG/Character/EnemyCharacter.h"
 #include "Third_Person_RPG/Character/BossCharacter.h"
@@ -19,7 +20,7 @@
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"	
 #include "Third_Person_RPG/UI/InventoryUI/InventoryWidget.h"
 #include "Third_Person_RPG/Interface/InventoryInterface.h"
-#include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
+#include "Third_Person_RPG/UI/DialogueChoiceWidget.h"
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h" 
@@ -28,9 +29,13 @@
 #include "Third_Person_RPG/UI/CurrentEquipedWidget.h" 
 #include "Third_Person_RPG/UI/DialogueWidget.h"
 #include "Third_Person_RPG/Actor/NPC.h"
+#include "Third_Person_RPG/UI/DialogueChoiceWidget.h"
+
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"  
+#include "InputCoreTypes.h" 
+#include "GameFramework/PlayerController.h"
 
 
 #define CHANNEL_ACTION ECollisionChannel::ECC_GameTraceChannel2
@@ -1860,8 +1865,8 @@ void APlayerCharacter::SetCurrentNPC(ANPC* InNPC)
 
 void APlayerCharacter::OnAdvanceDialogue()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[DIALOGUE] OnAdvanceDialogue. CurrentNPC=%s"),
-		CurrentNPC ? *CurrentNPC->GetName() : TEXT("NULL"));
+	if (bChoiceUIOpen) return;
+
 	if (CurrentNPC)
 	{
 		CurrentNPC->AdvanceTalk(this);
@@ -1915,5 +1920,70 @@ void APlayerCharacter::SetDialogueLine(const FText& InText)
 	if (DialogueWidgetInstance)
 	{
 		DialogueWidgetInstance->SetDialogueText(InText);
+	}
+}
+
+void APlayerCharacter::OpenChoiceUI(const FText& Question, const FText& Yes, const FText& No)
+{
+	if (!DialogueChoiceWidgetClass) return;
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	if (!DialogueChoiceWidgetInstance)
+	{
+		DialogueChoiceWidgetInstance = CreateWidget<UDialogueChoiceWidget>(PC, DialogueChoiceWidgetClass);
+		if (!DialogueChoiceWidgetInstance) return;
+
+		DialogueChoiceWidgetInstance->OnChoiceConfirmed.AddUObject(this, &APlayerCharacter::HandleChoiceConfirmed);
+	}
+
+	DialogueChoiceWidgetInstance->SetTexts(Question, Yes, No);
+	DialogueChoiceWidgetInstance->SetSelectedIndex(0);
+
+	if (!DialogueChoiceWidgetInstance->IsInViewport())
+	{
+		DialogueChoiceWidgetInstance->AddToViewport(110);
+	}
+
+	bChoiceUIOpen = true;
+
+	FInputModeGameAndUI Mode;
+	Mode.SetWidgetToFocus(DialogueChoiceWidgetInstance->TakeWidget());
+	Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	Mode.SetHideCursorDuringCapture(true);
+
+	PC->SetInputMode(Mode);
+	PC->bShowMouseCursor = false;
+
+
+	DialogueChoiceWidgetInstance->SetKeyboardFocus();
+}
+
+void APlayerCharacter::CloseChoiceUI()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
+	bChoiceUIOpen = false;
+
+	if (DialogueChoiceWidgetInstance && DialogueChoiceWidgetInstance->IsInViewport())
+	{
+		DialogueChoiceWidgetInstance->RemoveFromParent();
+	}
+	if (PC)
+	{
+		PC->SetIgnoreMoveInput(false);
+		PC->SetIgnoreLookInput(false);
+
+	}
+}
+
+void APlayerCharacter::HandleChoiceConfirmed(bool bYes)
+{
+	CloseChoiceUI();
+
+	if (CurrentNPC)
+	{
+		CurrentNPC->ConfirmChoice(this, bYes);
 	}
 }
