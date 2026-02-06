@@ -283,6 +283,11 @@ public:
 	void OpenChoiceUI(const FText& Question, const FText& Yes, const FText& No);
 	void CloseChoiceUI();
 
+	void Prayer();
+	void EndPrayer();
+
+	FTimerHandle PrayerTimerHandle;
+
 
 
 protected:
@@ -468,7 +473,14 @@ protected:
 	FTimerHandle RespawnTimerHandle;
 
 	int32 GetStaminaRegenPerSecond() const;
+
+	void ApplyPrayerBuff();
+	void RemovePrayerBuff();
 	
+
+	uint8 bIsPray : 1;
+
+
 	//Variable Section
 	//구르기 확인 변수
 	uint8 bIsRoll : 1;

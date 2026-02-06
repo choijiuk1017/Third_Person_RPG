@@ -1987,3 +1987,69 @@ void APlayerCharacter::HandleChoiceConfirmed(bool bYes)
 		CurrentNPC->ConfirmChoice(this, bYes);
 	}
 }
+
+void APlayerCharacter::ApplyPrayerBuff()
+{
+	CombatStats.CurrentHP += 500;
+	CombatStats.CurrentFP += 200;
+
+	CombatStats.CurrentStamina += 500;
+
+	CombatStats.AttackPower += 50;
+
+	CombatStats.Defense += 10;
+
+	CombatStats.Poise += 10;
+}
+
+void APlayerCharacter::RemovePrayerBuff()
+{
+	CombatStats.CurrentHP -= 500;
+	CombatStats.CurrentFP -= 200;
+
+	CombatStats.CurrentStamina -= 500;
+
+	CombatStats.AttackPower -= 50;
+
+	CombatStats.Defense -= 10;
+
+	CombatStats.Poise -= 10;
+}
+
+void APlayerCharacter::Prayer()
+{
+	if (bIsPray)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(PrayerTimerHandle);
+			World->GetTimerManager().SetTimer(PrayerTimerHandle, this, &APlayerCharacter::EndPrayer, 300.0f, false);
+		}
+		return;
+	}
+
+	bIsPray = true;
+
+	ApplyPrayerBuff();
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(PrayerTimerHandle);
+		World->GetTimerManager().SetTimer(PrayerTimerHandle, this, &APlayerCharacter::EndPrayer, 300.0f, false);
+	}
+}
+
+void APlayerCharacter::EndPrayer()
+{
+	if (!bIsPray)
+	{
+		return;
+	}
+
+	RemovePrayerBuff();
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(PrayerTimerHandle);
+	}
+}
