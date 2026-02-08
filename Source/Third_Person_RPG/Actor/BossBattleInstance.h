@@ -7,6 +7,7 @@
 #include "BossBattleInstance.generated.h"
 
 class ABossCharacter;
+class ABossSequenceTrigger;
 
 UCLASS()
 class THIRD_PERSON_RPG_API ABossBattleInstance : public AActor
@@ -25,6 +26,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Boss Battle")
 	ABossCharacter* BossRef;
 
+	UPROPERTY(EditAnywhere, Category = "Boss Battle")
+	ABossSequenceTrigger* BossSequenceTrigger;
+
 	UPROPERTY(EditAnywhere, Category = "BossRoom")
 	TArray<AStaticMeshActor*> BossRoomBlock;
 
@@ -34,6 +38,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Boss")
 	FName BossActorTag = "Boss";
 
+	UPROPERTY(EditAnywhere, Category = "Boss")
+	FName BossSequenceTag = "BossSequence";
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -15,6 +15,9 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "Engine/StaticMeshActor.h"
+
+#include "Third_Person_RPG/Instance/TPRGameInstance.h"
+
 // Sets default values
 ABossSequenceTrigger::ABossSequenceTrigger()
 {
@@ -42,6 +45,43 @@ ABossSequenceTrigger::ABossSequenceTrigger()
 void ABossSequenceTrigger::BeginPlay()
 {
 	Super::BeginPlay();
+
+
+	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(GetGameInstance()))
+	{
+		if (GI->HasClearedBoss(BossID))
+		{
+			bHasClearedBoss = true;
+		}
+	}
+
+	if (bHasClearedBoss)
+	{
+		for (AStaticMeshActor* MeshActor : StaticMeshActorsToDestroy)
+		{
+			if (IsValid(MeshActor))
+			{
+				MeshActor->Destroy();
+			}
+		}
+
+		for (ASkeletalMeshActor* SkeletalActor : SkeletalMeshActorsToDestroy)
+		{
+			if (IsValid(SkeletalActor))
+			{
+				SkeletalActor->Destroy();
+			}
+		}
+
+		for (AStaticMeshActor* BlockActor : BossRoomBlock)
+		{
+			if (IsValid(BlockActor))
+			{
+				BlockActor->Destroy();
+			}
+		}
+	}
+
 	for (AStaticMeshActor* BlockActor : BossRoomBlock)
 	{
 		if (IsValid(BlockActor))
@@ -65,7 +105,7 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 {
 
 	if (bHasPlayed) return;
-
+	if (bHasClearedBoss) return;
 
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
@@ -160,14 +200,21 @@ void ABossSequenceTrigger::SetPlayerInputEnabled(bool bEnabled)
 
 	if (bEnabled)
 	{
+		PC->EnableInput(PC);
 		PC->SetIgnoreMoveInput(false);
 		PC->SetIgnoreLookInput(false);
+
 		PC->bShowMouseCursor = false;
+		PC->SetInputMode(FInputModeGameOnly());
 	}
 	else
 	{
+		PC->DisableInput(PC);
+
 		PC->SetIgnoreMoveInput(true);
 		PC->SetIgnoreLookInput(true);
+
 		PC->bShowMouseCursor = false;
+		PC->SetInputMode(FInputModeUIOnly());
 	}
 }

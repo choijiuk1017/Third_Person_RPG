@@ -2,6 +2,7 @@
 
 
 #include "Third_Person_RPG/Character/BossCharacter.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Third_Person_RPG/Character/EnemyAIController.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
@@ -56,6 +57,7 @@ void ABossCharacter::BeginPlay()
 			}
 		}
 	}
+
 }
 
 // Called every frame

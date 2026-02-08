@@ -25,6 +25,10 @@ struct FPlayerStatSaveData
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Economy")
 	int32 Currency = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Economy")
+
+	int32 SpentCurrencyOnStats = 0;
 };
 /**
  * 

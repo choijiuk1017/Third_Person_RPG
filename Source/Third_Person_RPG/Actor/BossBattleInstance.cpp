@@ -4,8 +4,11 @@
 #include "Third_Person_RPG/Actor/BossBattleInstance.h"
 
 #include "Third_Person_RPG/Character/BossCharacter.h"
+#include "Third_Person_RPG/Actor/BossSequenceTrigger.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/StaticMeshActor.h"
+
+#include "Third_Person_RPG/Instance/TPRGameInstance.h"
 
 // Sets default values
 ABossBattleInstance::ABossBattleInstance()
@@ -19,6 +22,12 @@ ABossBattleInstance::ABossBattleInstance()
 void ABossBattleInstance::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (BossSequenceTrigger && BossSequenceTrigger->bHasClearedBoss)
+	{
+		Destroy();
+		return;
+	}
 
 	if (BossRef)
 	{
@@ -48,6 +57,21 @@ void ABossBattleInstance::Tick(float DeltaTime)
 		}
 	}
 
+	if (!BossSequenceTrigger)
+	{
+		TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), BossSequenceTag, FoundActors);
+
+		if (FoundActors.Num() > 0)
+		{
+			ABossSequenceTrigger* FoundBoss = Cast<ABossSequenceTrigger>(FoundActors[0]);
+			if (FoundBoss)
+			{
+				BossSequenceTrigger = FoundBoss;
+			}
+		}
+	}
+
 }
 
 void ABossBattleInstance::OnBossDiedHandler()
@@ -58,6 +82,13 @@ void ABossBattleInstance::OnBossDiedHandler()
 		{
 			BlockActor->Destroy();
 		}
+	}
+
+	BossSequenceTrigger->bHasClearedBoss = true;
+
+	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(GetGameInstance()))
+	{
+		GI->RegisterClearedBoss(BossSequenceTrigger->BossID);
 	}
 
 }

@@ -1826,6 +1826,7 @@ void APlayerCharacter::FillSaveData(FPlayerStatSaveData& OutSaveData) const
 	OutSaveData.DerivedStats = DerivedStats;
 	OutSaveData.CombatStats = CombatStats;
 	OutSaveData.Currency = Currency;
+	OutSaveData.SpentCurrencyOnStats = SpentCurrencyOnStats;
 }
 
 void APlayerCharacter::ApplySaveData(const FPlayerStatSaveData& InSaveData)
@@ -1836,6 +1837,8 @@ void APlayerCharacter::ApplySaveData(const FPlayerStatSaveData& InSaveData)
 	CombatStats = InSaveData.CombatStats;
 
 	Currency = InSaveData.Currency;
+
+	SpentCurrencyOnStats = InSaveData.SpentCurrencyOnStats;
 }
 
 void APlayerCharacter::RespawnPlayer()

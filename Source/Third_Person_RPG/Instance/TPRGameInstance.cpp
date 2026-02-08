@@ -164,3 +164,17 @@ bool UTPRGameInstance::HasMetNPC(FName NPCID) const
 	if (NPCID.IsNone()) return false;
 	return MetNPCs.Contains(NPCID);
 }
+
+void UTPRGameInstance::RegisterClearedBoss(FName BossID)
+{
+	if (BossID.IsNone()) return;
+	ClearedBoss.Add(BossID);
+}
+
+bool UTPRGameInstance::HasClearedBoss(FName BossID) const
+{
+	if (BossID.IsNone()) return false;
+	return ClearedBoss.Contains(BossID);
+}
+
+

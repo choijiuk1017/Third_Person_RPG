@@ -115,6 +115,16 @@ public:
 	UPROPERTY()
 	TSet<FName> MetNPCs;
 
+
+	UFUNCTION()
+	void RegisterClearedBoss(FName BossID);
+
+	UFUNCTION()
+	bool HasClearedBoss(FName BossID) const;
+
+	UPROPERTY()
+	TSet<FName> ClearedBoss;
+
 protected:
 
 

@@ -59,4 +59,10 @@ public:
 
 	void SetPlayerInputEnabled(bool bEnabled);
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boss")
+	FName BossID;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boss")
+	bool bHasClearedBoss = false;
 };
