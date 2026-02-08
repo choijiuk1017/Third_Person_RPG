@@ -65,13 +65,7 @@ void ABossSequenceTrigger::BeginPlay()
 			}
 		}
 
-		for (ASkeletalMeshActor* SkeletalActor : SkeletalMeshActorsToDestroy)
-		{
-			if (IsValid(SkeletalActor))
-			{
-				SkeletalActor->Destroy();
-			}
-		}
+		
 
 		for (AStaticMeshActor* BlockActor : BossRoomBlock)
 		{
@@ -90,6 +84,15 @@ void ABossSequenceTrigger::BeginPlay()
 			BlockActor->SetActorEnableCollision(false);
 		}
 	}
+
+	for (ASkeletalMeshActor* SkeletalActor : SkeletalMeshActorsToDestroy)
+	{
+		if (IsValid(SkeletalActor))
+		{
+			SkeletalActor->SetActorHiddenInGame(true);
+			SkeletalActor->SetActorEnableCollision(false);
+		}
+	}
 }
 
 // Called every frame
@@ -106,6 +109,15 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 
 	if (bHasPlayed) return;
 	if (bHasClearedBoss) return;
+
+	for (ASkeletalMeshActor* SkeletalActor : SkeletalMeshActorsToDestroy)
+	{
+		if (IsValid(SkeletalActor))
+		{
+			SkeletalActor->SetActorHiddenInGame(false);
+			SkeletalActor->SetActorEnableCollision(true);
+		}
+	}
 
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
@@ -173,7 +185,6 @@ void ABossSequenceTrigger::OnSequenceEnd()
 
 	Destroy();
 
-	
 }
 
 void ABossSequenceTrigger::SetAllUIVisible(bool bVisible)

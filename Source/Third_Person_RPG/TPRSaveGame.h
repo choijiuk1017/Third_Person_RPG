@@ -52,5 +52,12 @@ public:
 	FPlayerStatSaveData PlayerStat;
 
 	UPROPERTY()
+	FName LastSavedMapName;
+
+
+	UPROPERTY()
 	TSet<FName> MetNPCs;
+
+	UPROPERTY()
+	TSet<FName> ClearedBoss;
 };

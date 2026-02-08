@@ -6,6 +6,9 @@
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Third_Person_RPG/TPRSaveGame.h"
+#include "Third_Person_RPG/Instance/TPRGameInstance.h"
+
 
 void UTitleScreenWidget::NativeConstruct()
 {
@@ -80,12 +83,42 @@ void UTitleScreenWidget::ExecuteSelection()
 	switch (CurrentIndex)
 	{
 	case 0:
-		UGameplayStatics::OpenLevel(GetWorld(), TEXT("Dungeon1"));
+		if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(GetGameInstance()))
+		{
+			GI->DeleteSaveData();
+		}
+
+		UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
 		break;
 
 	case 1:
-		break;
+	{
+		const FString SaveSlotName = TEXT("PlayerSaveSlot");
+		const int32 UserIndex = 0;
 
+		if (!UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+		{
+			UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
+			break;
+		}
+
+		UTPRSaveGame* Loaded = Cast<UTPRSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+		if (!Loaded)
+		{
+			UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
+			break;
+		}
+
+		if (!Loaded->LastSavedMapName.IsNone())
+		{
+			UGameplayStatics::OpenLevel(GetWorld(), Loaded->LastSavedMapName);
+		}
+		else
+		{
+			UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
+		}
+		break;
+	}
 	case 2:
 		UKismetSystemLibrary::QuitGame(GetWorld(), nullptr, EQuitPreference::Quit, true);
 		break;

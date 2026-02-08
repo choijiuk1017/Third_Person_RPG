@@ -106,6 +106,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	class UStaticMeshComponent* ShieldMesh;
 
+	UPROPERTY(EditAnywhere, Category = "UI|HPBar")
+	float HPBarVisibleDistance = 1000.f;
+
 
 protected:
 	// Called when the game starts or when spawned

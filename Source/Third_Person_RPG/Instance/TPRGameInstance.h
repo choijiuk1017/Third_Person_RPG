@@ -125,6 +125,9 @@ public:
 	UPROPERTY()
 	TSet<FName> ClearedBoss;
 
+	UFUNCTION(BlueprintCallable)
+	bool DeleteSaveData();
+
 protected:
 
 

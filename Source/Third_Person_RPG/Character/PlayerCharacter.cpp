@@ -1021,12 +1021,13 @@ void APlayerCharacter::Interact()
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, KneelingDownMontage);
 			return;
 		}
+
+		if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+		{
+			GI->SaveGameData();
+		}
 	}
 
-	if (CurrentNPC)
-	{
-		CurrentNPC->StartTalk(this);
-	}
 }
 
 void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterrupted)
@@ -1043,6 +1044,8 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 	{
 		GI->RegisterSavePoint(OverlappingSavePoint->SavePointInfo);
 		GI->LastRestedSavePointID = OverlappingSavePoint->SavePointInfo.SavePointID;
+
+		//GI->SaveGameData();
 	}
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);

@@ -51,6 +51,8 @@ void UTPRGameInstance::SaveGameData()
 
 	if (SaveGameInstance)
 	{
+		SaveGameInstance->LastSavedMapName = FName(*UGameplayStatics::GetCurrentLevelName(GetWorld(), true));
+
 		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
 		{
 			if (APawn* Pawn = PC->GetPawn())
@@ -68,6 +70,8 @@ void UTPRGameInstance::SaveGameData()
 		SaveGameInstance->PlayerStat = CachedPlayerStat;
 
 		SaveGameInstance->MetNPCs = MetNPCs;
+
+		SaveGameInstance->ClearedBoss = ClearedBoss;
 
 		UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, UserIndex);
 	}
@@ -175,6 +179,21 @@ bool UTPRGameInstance::HasClearedBoss(FName BossID) const
 {
 	if (BossID.IsNone()) return false;
 	return ClearedBoss.Contains(BossID);
+}
+
+bool UTPRGameInstance::DeleteSaveData()
+{
+	const bool bDeleted = UGameplayStatics::DeleteGameInSlot(SaveSlotName, UserIndex);
+
+	DiscoveredSavePoints.Empty();
+	CachedInventoryItems.Empty();
+	MetNPCs.Empty();
+	ClearedBoss.Empty();
+	bHasLoadedStat = false;
+	PendingSavePointID = NAME_None;
+	LastRestedSavePointID = NAME_None;
+
+	return bDeleted;
 }
 
 

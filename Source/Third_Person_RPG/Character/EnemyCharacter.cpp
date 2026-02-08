@@ -64,18 +64,40 @@ void AEnemyCharacter::BeginPlay()
 // Called every frame
 void AEnemyCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-
-	if (HPBarWidget && !bIsDead)
+	if (!HPBarWidget || bIsDead)
 	{
-		FVector WorldLocation = GetActorLocation() + FVector(0, 0, 120.f); // 머리 위 위치
-		FVector2D ScreenPosition;
+		return;
+	}
 
-		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-		if (PC && PC->ProjectWorldLocationToScreen(WorldLocation, ScreenPosition))
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC)
+	{
+		return;
+	}
+
+	APawn* PlayerPawn = PC->GetPawn();
+	if (!PlayerPawn)
+	{
+		return;
+	}
+
+	const float Distance = FVector::Dist(PlayerPawn->GetActorLocation(), GetActorLocation());
+
+	if (Distance > HPBarVisibleDistance)
+	{
+		if (HPBarWidget->GetVisibility() != ESlateVisibility::Collapsed)
 		{
-			HPBarWidget->SetPositionInViewport(ScreenPosition);
+			HPBarWidget->SetVisibility(ESlateVisibility::Collapsed);
 		}
+		return;
+	}
+
+	FVector WorldLocation = GetActorLocation() + FVector(0, 0, 120.f);
+	FVector2D ScreenPosition;
+
+	if (PC->ProjectWorldLocationToScreen(WorldLocation, ScreenPosition))
+	{
+		HPBarWidget->SetPositionInViewport(ScreenPosition);
 	}
 }
 
