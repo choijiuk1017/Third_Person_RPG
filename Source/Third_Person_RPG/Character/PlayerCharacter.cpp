@@ -1028,6 +1028,11 @@ void APlayerCharacter::Interact()
 		}
 	}
 
+	if (CurrentNPC)
+	{
+		CurrentNPC->StartTalk(this);
+		return;
+	}
 }
 
 void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterrupted)

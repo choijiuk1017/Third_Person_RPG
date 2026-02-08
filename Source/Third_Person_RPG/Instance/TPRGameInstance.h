@@ -29,6 +29,15 @@ struct FInventoryItemSaveData
 	bool bEquipped = false;
 };
 
+USTRUCT(BlueprintType)
+struct FHiddenBossRequirement
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FPrimaryAssetId> RequiredWeaponAssets;
+};
+
 
 UCLASS()
 class THIRD_PERSON_RPG_API UTPRGameInstance : public UGameInstance
@@ -127,6 +136,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool DeleteSaveData();
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bHiddenBossUnlocked = false;
+
+	UFUNCTION(BlueprintCallable)
+	bool CheckAndUnlockHiddenBoss(const TArray<FPrimaryAssetId>& RequiredWeaponAssets);
+
+	UFUNCTION(BlueprintCallable)
+	bool IsHiddenBossUnlocked() const { return bHiddenBossUnlocked; }
 
 protected:
 

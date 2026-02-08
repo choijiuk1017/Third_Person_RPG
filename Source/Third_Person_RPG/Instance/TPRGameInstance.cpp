@@ -73,6 +73,10 @@ void UTPRGameInstance::SaveGameData()
 
 		SaveGameInstance->ClearedBoss = ClearedBoss;
 
+		SaveGameInstance->CollectedItemAssets = CollectedItemAssets;
+
+		SaveGameInstance->bHiddenBossUnlocked = bHiddenBossUnlocked;
+
 		UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, UserIndex);
 	}
 }
@@ -96,6 +100,12 @@ bool UTPRGameInstance::LoadGameData()
 			MetNPCs = LoadedGame->MetNPCs;
 
 			bHasLoadedStat = true;
+
+			CollectedItemAssets = LoadedGame->CollectedItemAssets;
+			bHiddenBossUnlocked = LoadedGame->bHiddenBossUnlocked;
+
+			ClearedBoss = LoadedGame->ClearedBoss;
+
 			return true;
 
 			return true;
@@ -196,4 +206,21 @@ bool UTPRGameInstance::DeleteSaveData()
 	return bDeleted;
 }
 
+
+bool UTPRGameInstance::CheckAndUnlockHiddenBoss(const TArray<FPrimaryAssetId>& RequiredWeaponAssets)
+{
+	if (bHiddenBossUnlocked) return true;
+
+	for (const FPrimaryAssetId& Req : RequiredWeaponAssets)
+	{
+		if (!CollectedItemAssets.Contains(Req))
+		{
+			return false;
+		}
+	}
+
+	bHiddenBossUnlocked = true;
+
+	return true;
+}
 

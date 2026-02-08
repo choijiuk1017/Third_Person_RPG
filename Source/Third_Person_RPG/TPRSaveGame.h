@@ -60,4 +60,10 @@ public:
 
 	UPROPERTY()
 	TSet<FName> ClearedBoss;
+
+	UPROPERTY()
+	bool bHiddenBossUnlocked = false;
+
+	UPROPERTY()
+	TSet<FPrimaryAssetId> CollectedItemAssets;
 };

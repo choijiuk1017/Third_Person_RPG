@@ -97,6 +97,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "NPC|Persistence")
 	FName NPCID;
 
+	bool bEndAfterChoice = false;
+
 	virtual void OnYesSelected(APlayerCharacter* Player);
 	virtual void OnNoSelected(APlayerCharacter* Player);
 

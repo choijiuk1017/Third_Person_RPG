@@ -131,6 +131,14 @@ void ANPC::AdvanceTalk(APlayerCharacter* Player)
 
 	Player->HideInteractionUI();
 
+	if (bEndAfterChoice)
+	{
+		bEndAfterChoice = false;
+		EndTalk(Player);
+		return;
+	}
+
+
 	CurrentLineIndex++;
 
 	if (CurrentLineIndex < ActiveLines->Num())
@@ -189,7 +197,9 @@ void ANPC::ConfirmChoice(APlayerCharacter* Player, bool bYes)
 	if (bYes) OnYesSelected(Player);
 	else      OnNoSelected(Player);
 
-	EndTalk(Player);
+	Player->OpenDialogueUI();
+
+	bEndAfterChoice = true;
 }
 
 

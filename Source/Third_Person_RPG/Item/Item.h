@@ -26,6 +26,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ItemData")
 	UTPRItemData* ItemData;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ItemID")
+	FName ItemID;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
