@@ -52,6 +52,7 @@ void ALevelConvertTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 			if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 			{
 				GI->CacheInventory(Inventory->GetAllItems());
+				GI->RegisterPlayerStatFromPlayer(PC);
 			}
 		}
 	}

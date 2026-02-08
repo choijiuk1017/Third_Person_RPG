@@ -1459,6 +1459,16 @@ void APlayerCharacter::TakeDamage(int32 DamageAmount)
 			{
 				DeathWidget->AddToViewport();
 			}
+
+			if (UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>())
+			{
+				if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+				{
+					GI->CacheInventory(Inventory->GetAllItems());
+					GI->RegisterPlayerStatFromPlayer(this);
+				}
+			}
+			
 		}
 
 		GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &APlayerCharacter::RespawnPlayer, 6.0f, false);

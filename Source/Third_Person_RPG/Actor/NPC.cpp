@@ -49,6 +49,14 @@ ANPC::ANPC()
 void ANPC::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(GetGameInstance()))
+	{
+		if (GI->HasMetNPC(NPCID))
+		{
+			bHasMetPlayer = true;
+		}
+	}
 }
 
 // Called every frame
@@ -134,6 +142,11 @@ void ANPC::AdvanceTalk(APlayerCharacter* Player)
 	if (TalkPhase == ENPCTalkPhase::FirstEncounter)
 	{
 		bHasMetPlayer = true;
+
+		if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(GetGameInstance()))
+		{
+			GI->RegisterMetNPC(NPCID);
+		}
 
 		if (RepeatLines.Num() > 0)
 		{

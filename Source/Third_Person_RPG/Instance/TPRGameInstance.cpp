@@ -67,6 +67,7 @@ void UTPRGameInstance::SaveGameData()
 
 		SaveGameInstance->PlayerStat = CachedPlayerStat;
 
+		SaveGameInstance->MetNPCs = MetNPCs;
 
 		UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, UserIndex);
 	}
@@ -87,6 +88,9 @@ bool UTPRGameInstance::LoadGameData()
 			}
 
 			CachedPlayerStat = LoadedGame->PlayerStat;
+
+			MetNPCs = LoadedGame->MetNPCs;
+
 			bHasLoadedStat = true;
 			return true;
 
@@ -147,4 +151,16 @@ void UTPRGameInstance::OnTutorialFinished(FName TutorialID)
 	{
 		FinishedTutorials.Add(TutorialID);
 	}
+}
+
+void UTPRGameInstance::RegisterMetNPC(FName NPCID)
+{
+	if (NPCID.IsNone()) return;
+	MetNPCs.Add(NPCID);
+}
+
+bool UTPRGameInstance::HasMetNPC(FName NPCID) const
+{
+	if (NPCID.IsNone()) return false;
+	return MetNPCs.Contains(NPCID);
 }

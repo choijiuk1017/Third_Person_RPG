@@ -7,6 +7,8 @@
 #include "Third_Person_RPG/TPRSaveGame.h"
 #include "Third_Person_RPG/Actor/SavePoint.h"
 #include "Third_Person_RPG/Inventory/InventoryItem.h"
+#include "Engine/AssetManager.h"
+
 #include "TPRGameInstance.generated.h"
 
 
@@ -103,6 +105,16 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	FRotator RespawnRotation;
+
+	UFUNCTION()
+	void RegisterMetNPC(FName NPCID);
+
+	UFUNCTION()
+	bool HasMetNPC(FName NPCID) const;
+
+	UPROPERTY()
+	TSet<FName> MetNPCs;
+
 protected:
 
 

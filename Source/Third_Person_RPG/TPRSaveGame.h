@@ -46,4 +46,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save")
 	FPlayerStatSaveData PlayerStat;
+
+	UPROPERTY()
+	TSet<FName> MetNPCs;
 };

@@ -94,6 +94,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Dialogue|Choice")
 	FText NoText;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "NPC|Persistence")
+	FName NPCID;
+
 	virtual void OnYesSelected(APlayerCharacter* Player);
 	virtual void OnNoSelected(APlayerCharacter* Player);
 
