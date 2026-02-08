@@ -29,7 +29,7 @@
 #include "Third_Person_RPG/UI/CurrentEquipedWidget.h" 
 #include "Third_Person_RPG/UI/DialogueWidget.h"
 #include "Third_Person_RPG/Actor/NPC.h"
-#include "Third_Person_RPG/UI/DialogueChoiceWidget.h"
+#include "Third_Person_RPG/UI/Tutorial/TutorialWidget.h"
 
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
@@ -1567,11 +1567,13 @@ void APlayerCharacter::SetStatusHUDVisible(bool bVisible)
 	{
 		PlayerStatusWidgetInstance->SetVisibility(StatusHUDSavedVisibility);
 		CurrentEquipedWidgetInstance->SetVisibility(StatusHUDSavedVisibility);
+		CurrencyWidgetInstance->SetVisibility(StatusHUDSavedVisibility);
 	}
 	else
 	{
 		PlayerStatusWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
 		CurrentEquipedWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
+		CurrencyWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 
@@ -2051,5 +2053,24 @@ void APlayerCharacter::EndPrayer()
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(PrayerTimerHandle);
+	}
+}
+
+void APlayerCharacter::OpenMovementTutorial()
+{
+	if (!TutorialWidgetClass) return;
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	if (!TutorialWidgetInstance)
+	{
+		TutorialWidgetInstance = CreateWidget<UTutorialWidget>(PC, TutorialWidgetClass);
+		if (!TutorialWidgetInstance) return;
+	}
+
+	if (!TutorialWidgetInstance->IsInViewport())
+	{
+		TutorialWidgetInstance->AddToViewport(1000000);
 	}
 }

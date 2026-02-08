@@ -25,7 +25,7 @@ ATPRGameMode::ATPRGameMode()
 	}
 
 	//PlayerControllerClass ¼³Á¤
-	static ConstructorHelpers::FClassFinder<APlayerController> ControllerClassRef(TEXT("/Script/CoreUObject.Class'/Script/Third_Person_RPG.TPRPlayerController'"));
+	static ConstructorHelpers::FClassFinder<APlayerController> ControllerClassRef(TEXT("/Script/Engine.Blueprint'/Game/BluePrint/Player_Controller.Player_Controller'"));
 	if (ControllerClassRef.Succeeded())
 	{
 		PlayerControllerClass = ControllerClassRef.Class;

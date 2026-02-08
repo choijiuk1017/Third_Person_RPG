@@ -117,7 +117,7 @@ class ANPC;
 class UDialogueWidget;
 class ATPRWeapon;
 class UDialogueChoiceWidget;
-
+class UTutorialWidget;
 UCLASS()
 class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimationAttackInterface, public IInventoryInterface
 {
@@ -288,6 +288,7 @@ public:
 
 	FTimerHandle PrayerTimerHandle;
 
+	void OpenMovementTutorial();
 
 
 protected:
@@ -317,6 +318,14 @@ protected:
 
 	UPROPERTY()
 	UDialogueWidget* DialogueWidgetInstance = nullptr;
+
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UTutorialWidget> TutorialWidgetClass;
+
+	UPROPERTY()
+	UTutorialWidget* TutorialWidgetInstance = nullptr;
+
 
 	//Montage Section
 	//구르기 애니메이션 몽타주
