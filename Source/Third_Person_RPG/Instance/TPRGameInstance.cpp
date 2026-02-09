@@ -77,6 +77,15 @@ void UTPRGameInstance::SaveGameData()
 
 		SaveGameInstance->bHiddenBossUnlocked = bHiddenBossUnlocked;
 
+		SaveGameInstance->ItemEnhanceLevels.Empty();
+		for (const FInventoryItemSaveData& It : CachedInventoryItems)
+		{
+			if (!It.ItemData) continue;
+
+			const FPrimaryAssetId Id = It.ItemData->GetPrimaryAssetId();
+			SaveGameInstance->ItemEnhanceLevels.Add(Id, It.EnhanceLevel); // ¡Ú ÇÙ½É
+		}
+
 		UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, UserIndex);
 	}
 }
@@ -106,6 +115,8 @@ bool UTPRGameInstance::LoadGameData()
 
 			ClearedBoss = LoadedGame->ClearedBoss;
 
+			LoadedEnhanceLevels = LoadedGame->ItemEnhanceLevels;
+
 			return true;
 
 			return true;
@@ -125,6 +136,8 @@ void UTPRGameInstance::CacheInventory(const TArray<UInventoryItem*>& Items)
 			SaveData.ItemData = Item->ItemData;
 			SaveData.Quantity = Item->Quantity;
 			SaveData.bEquipped = Item->bEquipped;
+
+			SaveData.EnhanceLevel = Item->EnhanceLevel;
 
 			CachedInventoryItems.Add(SaveData);
 		}

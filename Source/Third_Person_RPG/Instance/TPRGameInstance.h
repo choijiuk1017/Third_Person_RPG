@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "Third_Person_RPG/TPRSaveGame.h"
-#include "Third_Person_RPG/Actor/SavePoint.h"
 #include "Third_Person_RPG/Inventory/InventoryItem.h"
 #include "Engine/AssetManager.h"
 
 #include "TPRGameInstance.generated.h"
 
+class UTPRSaveGame;
 
 class UTutorialWidget;
 
@@ -27,6 +27,9 @@ struct FInventoryItemSaveData
 
 	UPROPERTY()
 	bool bEquipped = false;
+
+	UPROPERTY()
+	int32 EnhanceLevel = 0;
 };
 
 USTRUCT(BlueprintType)
@@ -145,6 +148,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool IsHiddenBossUnlocked() const { return bHiddenBossUnlocked; }
+
+	UPROPERTY()
+	TMap<FPrimaryAssetId, int32> LoadedEnhanceLevels;
 
 protected:
 

@@ -126,17 +126,31 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 		SetPlayerInputEnabled(false);
 		SetAllUIVisible(false);
 
-
-		// ÄÆ¾À Àç»ý
-		if (SequenceActor)
+		if (bIsHiddenBoss && HiddenBossSequenceActor)
 		{
-
-			ULevelSequencePlayer* Player = SequenceActor->GetSequencePlayer();
-			if (Player)
+			UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			if (!GI) return;
+			if (GI->bHiddenBossUnlocked)
 			{
-				Player->OnFinished.AddDynamic(this, &ABossSequenceTrigger::OnSequenceEnd);
-				Player->Play();
+				ULevelSequencePlayer* Player = HiddenBossSequenceActor->GetSequencePlayer();
+				if (Player)
+				{
+					Player->OnFinished.AddDynamic(this, &ABossSequenceTrigger::OnSequenceEnd);
+					Player->Play();
+				}
 			}
+		}
+		else
+		{
+			if (SequenceActor)
+			{
+				ULevelSequencePlayer* Player = SequenceActor->GetSequencePlayer();
+				if (Player)
+				{
+					Player->OnFinished.AddDynamic(this, &ABossSequenceTrigger::OnSequenceEnd);
+					Player->Play();
+				}
+			}	
 		}
 	}
 }
@@ -172,12 +186,25 @@ void ABossSequenceTrigger::OnSequenceEnd()
 		}
 	}
 
-	if (CombatBossClass && SpawnTransform.IsValid())
+	if (bIsHiddenBoss)
 	{
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		if (HiddenBossClass && SpawnTransform.IsValid())
+		{
+			FActorSpawnParameters Params;
+			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		AActor* SpawnedBoss = GetWorld()->SpawnActor<AActor>(CombatBossClass, SpawnTransform, Params);
+			AActor* SpawnedBoss = GetWorld()->SpawnActor<AActor>(HiddenBossClass, SpawnTransform, Params);
+		}
+	}
+	else
+	{
+		if (CombatBossClass && SpawnTransform.IsValid())
+		{
+			FActorSpawnParameters Params;
+			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			AActor* SpawnedBoss = GetWorld()->SpawnActor<AActor>(CombatBossClass, SpawnTransform, Params);
+		}
 	}
 
 	SetPlayerInputEnabled(true);

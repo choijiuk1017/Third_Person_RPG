@@ -38,6 +38,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss")
 	TSubclassOf<AActor> CombatBossClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss")
+	TSubclassOf<AActor> HiddenBossClass;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cutscene", meta = (AllowedClasses = "LevelSequenceActor"))
 	TSoftObjectPtr<ALevelSequenceActor> SequenceActor;
 
@@ -65,4 +68,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boss")
 	bool bHasClearedBoss = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss")
+	bool bIsHiddenBoss = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cutscene", meta = (AllowedClasses = "LevelSequenceActor"))
+	TSoftObjectPtr<ALevelSequenceActor> HiddenBossSequenceActor;
 };

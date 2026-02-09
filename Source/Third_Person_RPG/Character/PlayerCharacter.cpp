@@ -146,6 +146,11 @@ void APlayerCharacter::BeginPlay()
 				bool bShouldEquip = SaveData.bEquipped;
 
 				UInventoryItem* AddedItem = InventoryComponent->AddItemByData(SaveData.ItemData, SaveData.Quantity, bShouldEquip);
+
+				if (AddedItem)
+				{
+					AddedItem->EnhanceLevel = SaveData.EnhanceLevel; // 핵심
+				}
 			}
 		}
 

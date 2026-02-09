@@ -66,4 +66,7 @@ public:
 
 	UPROPERTY()
 	TSet<FPrimaryAssetId> CollectedItemAssets;
+
+	UPROPERTY()
+	TMap<FPrimaryAssetId, int32> ItemEnhanceLevels;
 };
