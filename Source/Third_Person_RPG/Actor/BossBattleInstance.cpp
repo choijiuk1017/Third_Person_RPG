@@ -91,5 +91,10 @@ void ABossBattleInstance::OnBossDiedHandler()
 		GI->RegisterClearedBoss(BossSequenceTrigger->BossID);
 	}
 
+	if (BossSequenceTrigger)
+	{
+		BossSequenceTrigger->StopBossBGMAndResumeAmbient();
+	}
+
 }
 

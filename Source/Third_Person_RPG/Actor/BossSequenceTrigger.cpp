@@ -46,7 +46,10 @@ void ABossSequenceTrigger::BeginPlay()
 {
 	Super::BeginPlay();
 
-
+	if (AmbientBGMActor)
+	{
+		AmbientBGMComp = AmbientBGMActor->FindComponentByClass<UAudioComponent>();
+	}
 	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(GetGameInstance()))
 	{
 		if (GI->HasClearedBoss(BossID))
@@ -121,6 +124,11 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
+		if (APlayerCharacter* PC = Cast<APlayerCharacter>(OtherActor))
+		{
+			PC->ForceStopActionsForCutscene();
+		}
+
 		bHasPlayed = true;
 
 		SetPlayerInputEnabled(false);
@@ -136,6 +144,7 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 				if (Player)
 				{
 					Player->OnFinished.AddDynamic(this, &ABossSequenceTrigger::OnSequenceEnd);
+					StartBossBGM();
 					Player->Play();
 				}
 			}
@@ -148,6 +157,7 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 				if (Player)
 				{
 					Player->OnFinished.AddDynamic(this, &ABossSequenceTrigger::OnSequenceEnd);
+					StartBossBGM();
 					Player->Play();
 				}
 			}	
@@ -254,5 +264,52 @@ void ABossSequenceTrigger::SetPlayerInputEnabled(bool bEnabled)
 
 		PC->bShowMouseCursor = false;
 		PC->SetInputMode(FInputModeUIOnly());
+	}
+}
+
+void ABossSequenceTrigger::StartBossBGM()
+{
+	if (AmbientBGMComp)
+	{
+		if (FadeOutTime > 0.f)
+		{
+			AmbientBGMComp->FadeOut(FadeOutTime, 0.f);
+		}
+		else
+		{
+			AmbientBGMComp->SetPaused(true);
+		}
+	}
+
+	if (!BossBGM) return;
+
+	if (!BossBGMComp)
+	{
+		BossBGMComp = UGameplayStatics::SpawnSound2D(
+			GetWorld(), BossBGM, 1.0f, 1.0f, 0.0f, nullptr, false, false
+		);
+	}
+
+	if (BossBGMComp)
+	{
+		if (FadeInTime > 0.f) BossBGMComp->FadeIn(FadeInTime, 1.0f);
+		else BossBGMComp->Play();
+	}
+}
+
+void ABossSequenceTrigger::StopBossBGMAndResumeAmbient()
+{
+	if (BossBGMComp)
+	{
+		if (FadeOutTime > 0.f) BossBGMComp->FadeOut(FadeOutTime, 0.f);
+		else BossBGMComp->Stop();
+
+		BossBGMComp = nullptr;
+	}
+
+	if (AmbientBGMComp && bResumeAmbientAfterBoss)
+	{
+		if (FadeInTime > 0.f) AmbientBGMComp->FadeIn(FadeInTime, 1.0f);
+		else AmbientBGMComp->SetPaused(false);
 	}
 }

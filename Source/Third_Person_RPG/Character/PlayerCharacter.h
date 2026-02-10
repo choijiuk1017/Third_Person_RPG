@@ -182,6 +182,8 @@ public:
 
 	float GetCurrentWeaponWeight() const;
 
+	void ForceStopActionsForCutscene();
+
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	ATPRWeapon* GetCurrentWeapon() const { return CurrentWeapon; }
 

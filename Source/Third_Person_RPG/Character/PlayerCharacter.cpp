@@ -233,8 +233,6 @@ void APlayerCharacter::BeginPlay()
 			CurrentEquipedWidgetInstance->ChangePotion(bIsHPPotion, bIsHPPotion ? MaxHPPotionCount : MaxFPPotionCount);
 		}
 	}
-
-	
 }
 
 // Called to bind functionality to input
@@ -1865,7 +1863,7 @@ void APlayerCharacter::FillSaveData(FPlayerStatSaveData& OutSaveData) const
 {
 	OutSaveData.BaseAttributes = CharacterAttributes;
 	OutSaveData.DerivedStats = DerivedStats;
-	OutSaveData.CombatStats = CombatStats;
+	//OutSaveData.CombatStats = CombatStats;
 	OutSaveData.Currency = Currency;
 	OutSaveData.SpentCurrencyOnStats = SpentCurrencyOnStats;
 }
@@ -1873,13 +1871,22 @@ void APlayerCharacter::FillSaveData(FPlayerStatSaveData& OutSaveData) const
 void APlayerCharacter::ApplySaveData(const FPlayerStatSaveData& InSaveData)
 {
 	CharacterAttributes = InSaveData.BaseAttributes;
-
-	DerivedStats = InSaveData.DerivedStats;
-	CombatStats = InSaveData.CombatStats;
-
 	Currency = InSaveData.Currency;
-
 	SpentCurrencyOnStats = InSaveData.SpentCurrencyOnStats;
+
+	CalculateDerivedStats();
+
+	CombatStats.CurrentHP = DerivedStats.MaxHP;
+	CombatStats.CurrentFP = DerivedStats.MaxFP;
+	CombatStats.CurrentStamina = DerivedStats.MaxStamina;
+
+	ResetCombatStats();
+	CombatStats.Poise = DerivedStats.Poise;
+
+	if (CurrentWeapon)
+	{
+		ApplyWeaponStats(CurrentWeapon);
+	}
 }
 
 void APlayerCharacter::RespawnPlayer()
@@ -2127,4 +2134,15 @@ void APlayerCharacter::OpenMovementTutorial()
 	{
 		TutorialWidgetInstance->AddToViewport(1000000);
 	}
+}
+
+void APlayerCharacter::ForceStopActionsForCutscene()
+{
+	EndSprint();            
+
+	bIsAttacking = false;
+	bIsRoll = false;
+	bIsSkillActing = false;
+
+	GetCharacterMovement()->StopMovementImmediately();
 }

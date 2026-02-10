@@ -118,6 +118,12 @@ void UWorldTravelMenu::ConfirmSelection()
 		GI->SetPendingSavePoint(Info.SavePointID);
 	}
 
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
+	{
+		Player->EndInteractSavePoint();    
+		Player->SavePointMenuInstance = nullptr;
+	}
+
 	RemoveFromParent();
 
 	if (APlayerController* PC = GetOwningPlayer())

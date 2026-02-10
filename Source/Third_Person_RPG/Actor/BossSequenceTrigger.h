@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Engine/StaticMeshActor.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
+
 #include "BossSequenceTrigger.generated.h"
 
 class ALevelSequenceActor;
@@ -74,4 +77,29 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cutscene", meta = (AllowedClasses = "LevelSequenceActor"))
 	TSoftObjectPtr<ALevelSequenceActor> HiddenBossSequenceActor;
+
+	UPROPERTY(EditInstanceOnly, Category = "BGM")
+	AActor* AmbientBGMActor = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "BGM")
+	UAudioComponent* AmbientBGMComp = nullptr;  
+
+	UPROPERTY(EditAnywhere, Category = "BGM")
+	USoundBase* BossBGM = nullptr;
+
+	UPROPERTY()
+	UAudioComponent* BossBGMComp = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "BGM")
+	bool bResumeAmbientAfterBoss = true;
+
+	UPROPERTY(EditAnywhere, Category = "BGM")
+	float FadeOutTime = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "BGM")
+	float FadeInTime = 0.5f;
+
+	void StartBossBGM();
+
+	void StopBossBGMAndResumeAmbient();
 };

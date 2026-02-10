@@ -20,8 +20,8 @@ struct FPlayerStatSaveData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	FDerivedStats DerivedStats;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	FCombatStats CombatStats; // HP/FP/Stamina의 Current 값 포함된 걸로 가정
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	//FCombatStats CombatStats; // HP/FP/Stamina의 Current 값 포함된 걸로 가정
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Economy")
 	int32 Currency = 0;
