@@ -593,4 +593,8 @@ protected:
 
 	int32 GetEquippedWeaponEnhanceLevel() const;
 
+
+	bool bPausedByInventory = false;
+
+	float SavedGlobalTimeDilation = 1.0f;
 };

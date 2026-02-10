@@ -45,6 +45,18 @@ APlayerCharacter::APlayerCharacter()
 {
 	Tags.Add(FName("Player"));
 
+	bIsDead = false;
+	bIsRoll = false;
+	bIsAttacking = false;
+	bIsInteracting = false;
+	bIsKneeling = false;
+	bIsPopupInventory = false;
+	bIsSkillActing = false;
+	bHasComboInput = false;
+	bIsSprinting = false;
+	bChoiceUIOpen = false;
+	bIsPray = false;
+
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -1099,9 +1111,10 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 				PC->SetIgnoreLookInput(true);
 			}
 
-			if (!UGameplayStatics::IsGamePaused(GetWorld()))
+			if (!bPausedBySavePoint)
 			{
-				UGameplayStatics::SetGamePaused(GetWorld(), true);
+				SavedGlobalTimeDilation = UGameplayStatics::GetGlobalTimeDilation(GetWorld());
+				UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
 				bPausedBySavePoint = true;
 			}
 		}
@@ -1127,9 +1140,12 @@ void APlayerCharacter::EndInteractSavePoint()
 			SavePointMenuInstance = nullptr;
 		}
 
-		if (bPausedBySavePoint && UGameplayStatics::IsGamePaused(GetWorld()))
+		if (bPausedBySavePoint)
 		{
-			UGameplayStatics::SetGamePaused(GetWorld(), false);
+			if (!bPausedByInventory)
+			{
+				UGameplayStatics::SetGlobalTimeDilation(GetWorld(), SavedGlobalTimeDilation);
+			}
 			bPausedBySavePoint = false;
 		}
 
@@ -1346,7 +1362,12 @@ void APlayerCharacter::ToggleInventory()
 
 void APlayerCharacter::PopUpInventory()
 {
-	UGameplayStatics::SetGamePaused(GetWorld(), true);
+	if (!bPausedByInventory)
+	{
+		SavedGlobalTimeDilation = UGameplayStatics::GetGlobalTimeDilation(GetWorld());
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
+		bPausedByInventory = true;
+	}
 
 	if (!InventoryWidgetInstance && InventoryWidgetClass)
 	{
@@ -1378,7 +1399,14 @@ void APlayerCharacter::PopUpInventory()
 
 void APlayerCharacter::CloseInventory()
 {
-	UGameplayStatics::SetGamePaused(GetWorld(), false);
+	if (bPausedByInventory)
+	{
+		if (!bPausedBySavePoint)
+		{
+			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), SavedGlobalTimeDilation);
+		}
+		bPausedByInventory = false;
+	}
 
 	if (InventoryWidgetInstance)
 	{
