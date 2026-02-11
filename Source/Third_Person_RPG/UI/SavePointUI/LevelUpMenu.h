@@ -64,7 +64,6 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* DecisionButton;
 
-	UPROPERTY(meta = (BindWidget)) UButton* ExitButton;
 
 	int32 SelectedIndex = 0;
 

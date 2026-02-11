@@ -24,10 +24,6 @@ void ULevelUpMenu::NativeConstruct()
 		DecisionButton->OnClicked.AddDynamic(this, &ULevelUpMenu::OnDecisionClicked);
 	}
 
-	if (ExitButton)
-	{
-		ExitButton->OnClicked.AddDynamic(this, &ULevelUpMenu::OnExitClicked);
-	}
 }
 
 
@@ -198,7 +194,7 @@ FReply ULevelUpMenu::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEven
 		OnDecisionClicked();
 		return FReply::Handled();
 	}
-	if (Key == EKeys::Escape)
+	if (Key == EKeys::X)
 	{
 		OnExitClicked();
 		return FReply::Handled();

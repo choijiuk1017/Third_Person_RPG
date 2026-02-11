@@ -30,11 +30,6 @@ void UWorldTravelMenu::NativeConstruct()
 		SetTravelPoints(SavePoints);
 	}
 
-	if (ExitButton)
-	{
-		ExitButton->OnClicked.AddDynamic(this, &UWorldTravelMenu::OnExitClicked);
-	}
-
 	SelectedIndex = 0;
 	UpdateSelectionVisual();
 }
@@ -58,7 +53,7 @@ FReply UWorldTravelMenu::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
 		ConfirmSelection();
 		return FReply::Handled();
 	}
-	if (PressedKey == EKeys::Escape)
+	if (PressedKey == EKeys::X)
 	{
 		OnExitClicked();
 		return FReply::Handled();

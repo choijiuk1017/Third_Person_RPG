@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+Ôªø// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
@@ -20,7 +20,7 @@ void USavePointMenu::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	//// √ ±‚»≠
+	//// Ï¥àÍ∏∞Ìôî
 	EntryWidgets.Empty();
 
 	if (!EntryClass || !VerticalBox_MenuList) return;
@@ -127,9 +127,8 @@ void USavePointMenu::ConfirmSelection()
 
 	const FString& SelectedText = MenuOptions[SelectedIndex].ToString();
 
-	if (SelectedText == TEXT("Leave"))
+	if (SelectedText == TEXT("Îñ†ÎÇúÎã§"))
 	{
-		// UI ¥›∞Ì «√∑π¿ÃæÓ ¡¶æÓ±« ∫πø¯
 		RemoveFromParent();
 		APlayerController* PC = GetOwningPlayer();
 		if (PC)
@@ -143,7 +142,7 @@ void USavePointMenu::ConfirmSelection()
 				APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(Pawn);
 				if (PlayerCharacter)
 				{
-					PlayerCharacter->EndInteractSavePoint(); // »£√‚
+					PlayerCharacter->EndInteractSavePoint();
 
 					PlayerCharacter->SavePointMenuInstance = nullptr;
 				}
@@ -151,7 +150,7 @@ void USavePointMenu::ConfirmSelection()
 			
 		}
 	}
-	else if (SelectedText == TEXT("Level Up"))
+	else if (SelectedText == TEXT("Î†àÎ≤® ÏóÖ"))
 	{
 		if (LevelUpMenuClass)
 		{
@@ -172,7 +171,7 @@ void USavePointMenu::ConfirmSelection()
 		}
 		RemoveFromParent();
 	}
-	else if (SelectedText == TEXT("Travel"))
+	else if (SelectedText == TEXT("ÌôîÌÜ≥Î∂à Ïù¥Îèô"))
 	{
 		if (WorldTravelMenuClass)
 		{

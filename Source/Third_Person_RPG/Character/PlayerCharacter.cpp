@@ -2139,7 +2139,7 @@ void APlayerCharacter::OpenMovementTutorial()
 void APlayerCharacter::ForceStopActionsForCutscene()
 {
 	EndSprint();            
-
+	
 	bIsAttacking = false;
 	bIsRoll = false;
 	bIsSkillActing = false;

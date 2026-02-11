@@ -246,6 +246,8 @@ void ABossSequenceTrigger::SetPlayerInputEnabled(bool bEnabled)
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (!PC) return;
 
+	PC->FlushPressedKeys();
+
 	if (bEnabled)
 	{
 		PC->EnableInput(PC);

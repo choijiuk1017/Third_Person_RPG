@@ -48,7 +48,6 @@ protected:
 
 	UUserWidget* LoadingScreenWidget;
 
-	UPROPERTY(meta = (BindWidget)) UButton* ExitButton;
 
 private:
 	TArray<UWorldTravelMenuEntry*> EntryWidgets;

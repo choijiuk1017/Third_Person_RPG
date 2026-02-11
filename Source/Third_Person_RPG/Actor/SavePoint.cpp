@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 #include "Third_Person_RPG/Actor/SavePoint.h"
 
 #include "Components/SphereComponent.h"
@@ -27,7 +27,7 @@ ASavePoint::ASavePoint()
 	Trigger->OnComponentEndOverlap.AddDynamic(this, &ASavePoint::OnOverlapEnd);
 
 
-	HelpText = FText::FromString(TEXT("Press 'F' to active save point."));
+	HelpText = FText::FromString(TEXT("'F'키를 눌러 휴식"));
 
 }
 
