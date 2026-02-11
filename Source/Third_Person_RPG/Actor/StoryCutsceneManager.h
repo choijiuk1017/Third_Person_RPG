@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/StaticMeshActor.h"
 #include "StoryCutsceneManager.generated.h"
 
 class UTexture2D;
 class UStoryCutsceneWidget;
 class ASkeletalMeshActor;
+class AStaticMeshActor;
 
 UCLASS()
 class THIRD_PERSON_RPG_API AStoryCutsceneManager : public AActor

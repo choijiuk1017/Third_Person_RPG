@@ -40,6 +40,8 @@ void ABossDragon::StartFlyPhase()
     bIsFly = true;
     bFalling = false;
 
+    bPlayedLandImpactSFX = false;
+
     if (AEnemyAIController* EnemyAI = Cast<AEnemyAIController>(GetController()))
     {
         EnemyAI->PauseAI();
@@ -108,6 +110,18 @@ void ABossDragon::FlyTick(float DeltaSeconds)
 
 void ABossDragon::OnLand(const FVector& LandPos)
 {
+    if (!bPlayedLandImpactSFX && LandImpactSFX)
+    {
+        UGameplayStatics::PlaySoundAtLocation(
+            this,
+            LandImpactSFX,
+            LandPos,
+            LandImpactVolume,
+            LandImpactPitch
+        );
+        bPlayedLandImpactSFX = true;
+    }
+
     bIsFly = false;
     bFalling = false;
 

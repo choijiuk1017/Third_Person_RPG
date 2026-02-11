@@ -118,8 +118,6 @@ bool UTPRGameInstance::LoadGameData()
 			LoadedEnhanceLevels = LoadedGame->ItemEnhanceLevels;
 
 			return true;
-
-			return true;
 		}
 	}
 	return false;

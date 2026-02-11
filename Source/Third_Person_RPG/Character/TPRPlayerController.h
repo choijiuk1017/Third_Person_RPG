@@ -69,6 +69,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> IA_Enter;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> IA_ESC;
+
 private:
 	UPROPERTY()
 	APlayerCharacter* CachedCharacter;
@@ -87,4 +90,5 @@ private:
 
 	void Input_Enter();
 
+	void Input_ESC();
 };

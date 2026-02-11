@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/StaticMeshActor.h"
 #include "BossBattleInstance.generated.h"
 
+class AStaticMeshActor;
 class ABossCharacter;
 class ABossSequenceTrigger;
 

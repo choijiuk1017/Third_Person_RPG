@@ -10,7 +10,6 @@
 #include "Third_Person_RPG/Item/Item.h"
 #include "Third_Person_RPG/Actor/SavePoint.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"
-
 #include "Third_Person_RPG/UI/SavePointUI/SavePointMenu.h"
 #include "Blueprint/UserWidget.h"
 #include "Third_Person_RPG/UI/PlayerStatusWidget.h"
@@ -118,6 +117,8 @@ class UDialogueWidget;
 class ATPRWeapon;
 class UDialogueChoiceWidget;
 class UTutorialWidget;
+class UpauseMenuWidget;
+
 UCLASS()
 class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimationAttackInterface, public IInventoryInterface
 {
@@ -292,6 +293,14 @@ public:
 
 	void OpenMovementTutorial();
 
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UpauseMenuWidget> PauseMenuWidgetClass;
+
+	UPROPERTY()
+	UpauseMenuWidget* PauseMenuWidget = nullptr;
+
+	void TogglePauseMenu();
 
 protected:
 	// Called when the game starts or when spawned

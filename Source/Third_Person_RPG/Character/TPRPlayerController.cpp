@@ -57,6 +57,7 @@ void ATPRPlayerController::SetupInputComponent()
 	EIC->BindAction(IA_Interaction, ETriggerEvent::Started, this, &ATPRPlayerController::Input_Interaction);
 	EIC->BindAction(IA_Inventory, ETriggerEvent::Started, this, &ATPRPlayerController::Input_Inventory);
 	EIC->BindAction(IA_Enter, ETriggerEvent::Started, this, &ATPRPlayerController::Input_Enter);
+	EIC->BindAction(IA_ESC, ETriggerEvent::Started, this, &ATPRPlayerController::Input_ESC);
 }
 
 
@@ -147,4 +148,10 @@ void ATPRPlayerController::Input_Enter()
 		return;
 	}
 	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->OnAdvanceDialogue();
+}
+
+void ATPRPlayerController::Input_ESC()
+{
+	if (!CachedCharacter) return;
+	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->TogglePauseMenu();
 }

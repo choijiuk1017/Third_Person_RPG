@@ -15,13 +15,14 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "Engine/StaticMeshActor.h"
+#include "LevelSequenceActor.h"
 
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
 
 // Sets default values
 ABossSequenceTrigger::ABossSequenceTrigger()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
 	RootComponent = TriggerBox;
@@ -96,6 +97,8 @@ void ABossSequenceTrigger::BeginPlay()
 			SkeletalActor->SetActorEnableCollision(false);
 		}
 	}
+	ResolveSequenceActorsByTag();
+
 }
 
 // Called every frame
@@ -103,6 +106,18 @@ void ABossSequenceTrigger::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	const bool bNeedNormal = !IsValid(SequenceActor.Get());
+	const bool bNeedHidden = (bIsHiddenBoss && !IsValid(HiddenBossSequenceActor.Get()));
+
+	if (bNeedNormal || bNeedHidden)
+	{
+		ResolveSequenceActorsByTag();
+	}
+	else
+	{
+		// 다 찾았으면 Tick 끄기 (성능/안정성)
+		SetActorTickEnabled(false);
+	}
 }
 
 void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -169,7 +184,8 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 
 void ABossSequenceTrigger::OnSequenceEnd()
 {
-	ALevelSequenceActor* SeqActorForTransform = PlayedSequenceActor ? PlayedSequenceActor : SequenceActor;
+	ALevelSequenceActor* SeqActorForTransform =
+		PlayedSequenceActor ? PlayedSequenceActor.Get() : SequenceActor.Get();
 	if (!SeqActorForTransform)
 	{
 		SetPlayerInputEnabled(true);
@@ -178,7 +194,7 @@ void ABossSequenceTrigger::OnSequenceEnd()
 		return;
 	}
 
-	FTransform SpawnTransform = SequenceActor->GetTransform();
+	FTransform SpawnTransform = SeqActorForTransform->GetTransform();
 	SpawnTransform.AddToTranslation(FVector(0, 0, 100.f));
 
 	for (AStaticMeshActor* MeshActor : StaticMeshActorsToDestroy)
@@ -321,5 +337,38 @@ void ABossSequenceTrigger::StopBossBGMAndResumeAmbient()
 	{
 		if (FadeInTime > 0.f) AmbientBGMComp->FadeIn(FadeInTime, 1.0f);
 		else AmbientBGMComp->SetPaused(false);
+	}
+}
+
+void ABossSequenceTrigger::ResolveSequenceActorsByTag()
+{
+	if (!IsValid(SequenceActor.Get()) && !SequenceActorTag.IsNone())
+	{
+		TArray<AActor*> Found;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), SequenceActorTag, Found);
+
+		for (AActor* A : Found)
+		{
+			if (ALevelSequenceActor* LSA = Cast<ALevelSequenceActor>(A))
+			{
+				SequenceActor = LSA;
+				break;
+			}
+		}
+	}
+
+	if (bIsHiddenBoss && !IsValid(HiddenBossSequenceActor.Get()) && !HiddenSequenceActorTag.IsNone())
+	{
+		TArray<AActor*> Found;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), HiddenSequenceActorTag, Found);
+
+		for (AActor* A : Found)
+		{
+			if (ALevelSequenceActor* LSA = Cast<ALevelSequenceActor>(A))
+			{
+				HiddenBossSequenceActor = LSA;
+				break;
+			}
+		}
 	}
 }

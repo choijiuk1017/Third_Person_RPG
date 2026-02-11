@@ -22,6 +22,7 @@ public:
 	// Sets default values for this actor's properties
 	ABossSequenceTrigger();
 
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -34,18 +35,20 @@ protected:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 		bool bFromSweep, const FHitResult& SweepResult);
 
+	void ResolveSequenceActorsByTag();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Boss")
 	TSubclassOf<AActor> CombatBossClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Boss")
 	TSubclassOf<AActor> HiddenBossClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cutscene", meta = (AllowedClasses = "LevelSequenceActor"))
-	ALevelSequenceActor* SequenceActor;
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Cutscene")
+	TObjectPtr<ALevelSequenceActor> SequenceActor;
 
 	void SetAllUIVisible(bool bVisible);
 
@@ -75,8 +78,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss")
 	bool bIsHiddenBoss = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cutscene", meta = (AllowedClasses = "LevelSequenceActor"))
-	ALevelSequenceActor* HiddenBossSequenceActor;
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Cutscene")
+	TObjectPtr<ALevelSequenceActor> HiddenBossSequenceActor;
 
 	UPROPERTY(EditInstanceOnly, Category = "BGM")
 	AActor* AmbientBGMActor = nullptr;
@@ -84,7 +87,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "BGM")
 	UAudioComponent* AmbientBGMComp = nullptr;  
 
-	UPROPERTY(EditAnywhere, Category = "BGM")
+	UPROPERTY(EditInstanceOnly, Category = "BGM")
 	USoundBase* BossBGM = nullptr;
 
 	UPROPERTY()
@@ -107,5 +110,11 @@ public:
 	bool bSpawnHiddenBossThisRun = false;
 
 	UPROPERTY(Transient)
-	ALevelSequenceActor* PlayedSequenceActor = nullptr;
+	TObjectPtr<ALevelSequenceActor> PlayedSequenceActor = nullptr;
+
+	UPROPERTY(EditInstanceOnly, Category = "Cutscene|Resolve")
+	FName SequenceActorTag = TEXT("BossSequence");
+
+	UPROPERTY(EditInstanceOnly, Category = "Cutscene|Resolve")
+	FName HiddenSequenceActorTag = TEXT("HiddenBossSequence");
 };

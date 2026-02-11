@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Third_Person_RPG/Character/BossCharacter.h"
+#include "Sound/SoundBase.h"
+#include "Components/AudioComponent.h"
 #include "BossDragon.generated.h"
 
 /**
@@ -78,5 +80,17 @@ public:
 	void StartFalling();
 	void FlyTick(float DeltaSeconds);
 	void OnLand(const FVector& LandPos);
+
+	UPROPERTY(EditAnywhere, Category = "Audio|FlyPhase")
+	USoundBase* LandImpactSFX = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Audio|FlyPhase", meta = (ClampMin = "0.0"))
+	float LandImpactVolume = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Audio|FlyPhase", meta = (ClampMin = "0.1"))
+	float LandImpactPitch = 1.0f;
+
+	// 혹시 같은 프레임에 OnLand가 중복 호출될 가능성 방지
+	bool bPlayedLandImpactSFX = false;
 
 };

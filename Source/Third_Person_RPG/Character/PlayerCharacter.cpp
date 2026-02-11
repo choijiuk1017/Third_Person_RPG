@@ -30,6 +30,7 @@
 #include "Third_Person_RPG/UI/DialogueWidget.h"
 #include "Third_Person_RPG/Actor/NPC.h"
 #include "Third_Person_RPG/UI/Tutorial/TutorialWidget.h"
+#include "Third_Person_RPG/UI/pauseMenuWidget.h"
 
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
@@ -2145,4 +2146,26 @@ void APlayerCharacter::ForceStopActionsForCutscene()
 	bIsSkillActing = false;
 
 	GetCharacterMovement()->StopMovementImmediately();
+}
+
+void APlayerCharacter::TogglePauseMenu()
+{
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC) return;
+
+	if (!PauseMenuWidget && PauseMenuWidgetClass)
+	{
+		PauseMenuWidget = CreateWidget<UpauseMenuWidget>(PC, PauseMenuWidgetClass);
+	}
+
+	if (!PauseMenuWidget) return;
+
+	if (PauseMenuWidget->IsInViewport())
+	{
+		PauseMenuWidget->Close();
+	}
+	else
+	{
+		PauseMenuWidget->Open(PC);
+	}
 }
