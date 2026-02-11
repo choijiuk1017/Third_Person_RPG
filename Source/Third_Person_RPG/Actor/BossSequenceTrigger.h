@@ -45,7 +45,7 @@ public:
 	TSubclassOf<AActor> HiddenBossClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cutscene", meta = (AllowedClasses = "LevelSequenceActor"))
-	TSoftObjectPtr<ALevelSequenceActor> SequenceActor;
+	ALevelSequenceActor* SequenceActor;
 
 	void SetAllUIVisible(bool bVisible);
 
@@ -76,7 +76,7 @@ public:
 	bool bIsHiddenBoss = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cutscene", meta = (AllowedClasses = "LevelSequenceActor"))
-	TSoftObjectPtr<ALevelSequenceActor> HiddenBossSequenceActor;
+	ALevelSequenceActor* HiddenBossSequenceActor;
 
 	UPROPERTY(EditInstanceOnly, Category = "BGM")
 	AActor* AmbientBGMActor = nullptr;
@@ -102,4 +102,10 @@ public:
 	void StartBossBGM();
 
 	void StopBossBGMAndResumeAmbient();
+
+	UPROPERTY(Transient)
+	bool bSpawnHiddenBossThisRun = false;
+
+	UPROPERTY(Transient)
+	ALevelSequenceActor* PlayedSequenceActor = nullptr;
 };

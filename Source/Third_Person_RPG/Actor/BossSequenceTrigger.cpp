@@ -129,44 +129,54 @@ void ABossSequenceTrigger::OnTriggerOverlap(UPrimitiveComponent* OverlappedComp,
 			PC->ForceStopActionsForCutscene();
 		}
 
+		bSpawnHiddenBossThisRun = false;
+
+		ALevelSequenceActor* ChosenSequence = SequenceActor;
+
+		if (bIsHiddenBoss && HiddenBossSequenceActor)
+		{
+			UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			if (GI && GI->bHiddenBossUnlocked)
+			{
+				bSpawnHiddenBossThisRun = true;
+				ChosenSequence = HiddenBossSequenceActor;
+			}
+			else
+			{
+
+				bSpawnHiddenBossThisRun = false;
+				ChosenSequence = SequenceActor;
+			}
+		}
+
+		if (!ChosenSequence) return;
+
+		ULevelSequencePlayer* Player = ChosenSequence->GetSequencePlayer();
+		if (!Player) return;
+
 		bHasPlayed = true;
 
 		SetPlayerInputEnabled(false);
 		SetAllUIVisible(false);
 
-		if (bIsHiddenBoss && HiddenBossSequenceActor)
-		{
-			UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-			if (!GI) return;
-			if (GI->bHiddenBossUnlocked)
-			{
-				ULevelSequencePlayer* Player = HiddenBossSequenceActor->GetSequencePlayer();
-				if (Player)
-				{
-					Player->OnFinished.AddDynamic(this, &ABossSequenceTrigger::OnSequenceEnd);
-					StartBossBGM();
-					Player->Play();
-				}
-			}
-		}
-		else
-		{
-			if (SequenceActor)
-			{
-				ULevelSequencePlayer* Player = SequenceActor->GetSequencePlayer();
-				if (Player)
-				{
-					Player->OnFinished.AddDynamic(this, &ABossSequenceTrigger::OnSequenceEnd);
-					StartBossBGM();
-					Player->Play();
-				}
-			}	
-		}
+		PlayedSequenceActor = ChosenSequence;
+
+		Player->OnFinished.AddDynamic(this, &ABossSequenceTrigger::OnSequenceEnd);
+		StartBossBGM();
+		Player->Play();
 	}
 }
 
 void ABossSequenceTrigger::OnSequenceEnd()
 {
+	ALevelSequenceActor* SeqActorForTransform = PlayedSequenceActor ? PlayedSequenceActor : SequenceActor;
+	if (!SeqActorForTransform)
+	{
+		SetPlayerInputEnabled(true);
+		SetAllUIVisible(true);
+		Destroy();
+		return;
+	}
 
 	FTransform SpawnTransform = SequenceActor->GetTransform();
 	SpawnTransform.AddToTranslation(FVector(0, 0, 100.f));
@@ -196,14 +206,13 @@ void ABossSequenceTrigger::OnSequenceEnd()
 		}
 	}
 
-	if (bIsHiddenBoss)
+	if (bSpawnHiddenBossThisRun)
 	{
 		if (HiddenBossClass && SpawnTransform.IsValid())
 		{
 			FActorSpawnParameters Params;
 			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-			AActor* SpawnedBoss = GetWorld()->SpawnActor<AActor>(HiddenBossClass, SpawnTransform, Params);
+			GetWorld()->SpawnActor<AActor>(HiddenBossClass, SpawnTransform, Params);
 		}
 	}
 	else
@@ -212,8 +221,7 @@ void ABossSequenceTrigger::OnSequenceEnd()
 		{
 			FActorSpawnParameters Params;
 			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-			AActor* SpawnedBoss = GetWorld()->SpawnActor<AActor>(CombatBossClass, SpawnTransform, Params);
+			GetWorld()->SpawnActor<AActor>(CombatBossClass, SpawnTransform, Params);
 		}
 	}
 

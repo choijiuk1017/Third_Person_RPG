@@ -30,7 +30,7 @@ void ALastBoss::Tick(float DeltaTime)
 			CutSceneStartTimer,
 			this,
 			&ALastBoss::StartCutScene,
-			3.0f,
+			6.0f,
 			false
 		);
 	}

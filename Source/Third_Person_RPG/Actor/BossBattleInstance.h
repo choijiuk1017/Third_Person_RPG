@@ -26,7 +26,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Boss Battle")
 	ABossCharacter* BossRef;
 
-	UPROPERTY(EditAnywhere, Category = "Boss Battle")
+	UPROPERTY(EditInstanceOnly, Category = "Boss Battle")
 	ABossSequenceTrigger* BossSequenceTrigger;
 
 	UPROPERTY(EditAnywhere, Category = "BossRoom")

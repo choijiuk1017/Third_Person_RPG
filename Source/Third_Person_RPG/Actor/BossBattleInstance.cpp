@@ -84,6 +84,11 @@ void ABossBattleInstance::OnBossDiedHandler()
 		}
 	}
 
+	if (!IsValid(BossSequenceTrigger))
+    {
+        return;
+    }
+
 	BossSequenceTrigger->bHasClearedBoss = true;
 
 	if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(GetGameInstance()))
