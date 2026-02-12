@@ -37,6 +37,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void GetValidItemsByType(EItemType Type, TArray<UInventoryItem*>& OutItems) const;
 
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -51,4 +52,5 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	int32 MaxSlotCount = 30;
+
 };

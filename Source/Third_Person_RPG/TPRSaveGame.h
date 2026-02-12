@@ -69,4 +69,7 @@ public:
 
 	UPROPERTY()
 	TMap<FPrimaryAssetId, int32> ItemEnhanceLevels;
+
+	UPROPERTY()
+	FPrimaryAssetId EquippedWeaponAssetId;
 };

@@ -152,6 +152,10 @@ public:
 	UPROPERTY()
 	TMap<FPrimaryAssetId, int32> LoadedEnhanceLevels;
 
+	void CacheEquippedWeapon(UInventoryItem* EquippedWeaponItem);
+	FPrimaryAssetId GetCachedEquippedWeaponAssetId() const { return CachedEquippedWeaponAssetId; }
+
+
 protected:
 
 
@@ -169,5 +173,8 @@ private:
 	FPlayerStatSaveData CachedPlayerStat;
 
 	bool bHasLoadedStat = false;
+
+	UPROPERTY()
+	FPrimaryAssetId CachedEquippedWeaponAssetId;
 
 };

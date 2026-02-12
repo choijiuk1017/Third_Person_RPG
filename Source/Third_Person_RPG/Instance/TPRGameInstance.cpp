@@ -2,9 +2,12 @@
 
 
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "Third_Person_RPG/TPRSaveGame.h"
 #include "Third_Person_RPG/UI/Tutorial/TutorialWidget.h"
+#include "Third_Person_RPG/Inventory/InventoryItem.h"
+#include "Third_Person_RPG/Data/ItemData/WeaponItemData.h"
 
 void UTPRGameInstance::Init()
 {
@@ -78,6 +81,9 @@ void UTPRGameInstance::SaveGameData()
 		SaveGameInstance->bHiddenBossUnlocked = bHiddenBossUnlocked;
 
 		SaveGameInstance->ItemEnhanceLevels.Empty();
+
+		SaveGameInstance->EquippedWeaponAssetId = CachedEquippedWeaponAssetId;
+
 		for (const FInventoryItemSaveData& It : CachedInventoryItems)
 		{
 			if (!It.ItemData) continue;
@@ -117,6 +123,8 @@ bool UTPRGameInstance::LoadGameData()
 
 			LoadedEnhanceLevels = LoadedGame->ItemEnhanceLevels;
 
+			CachedEquippedWeaponAssetId = LoadedGame->EquippedWeaponAssetId;
+
 			return true;
 		}
 	}
@@ -126,6 +134,7 @@ bool UTPRGameInstance::LoadGameData()
 void UTPRGameInstance::CacheInventory(const TArray<UInventoryItem*>& Items)
 {
 	CachedInventoryItems.Empty();
+
 	for (UInventoryItem* Item : Items)
 	{
 		if (Item && Item->ItemData)
@@ -233,5 +242,16 @@ bool UTPRGameInstance::CheckAndUnlockHiddenBoss(const TArray<FPrimaryAssetId>& R
 	bHiddenBossUnlocked = true;
 
 	return true;
+}
+
+void UTPRGameInstance::CacheEquippedWeapon(UInventoryItem* EquippedWeaponItem)
+{
+	CachedEquippedWeaponAssetId = FPrimaryAssetId(); 
+
+	if (!EquippedWeaponItem || !EquippedWeaponItem->ItemData) return;
+
+	if (!Cast<UWeaponItemData>(EquippedWeaponItem->ItemData)) return;
+
+	CachedEquippedWeaponAssetId = EquippedWeaponItem->ItemData->GetPrimaryAssetId();
 }
 

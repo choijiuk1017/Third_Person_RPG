@@ -133,7 +133,7 @@ void UWorldTravelMenu::ConfirmSelection()
 			if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 			{
 				GI->RegisterPlayerStatFromPlayer(PC);
-
+				GI->CacheEquippedWeapon(Inventory->EquippedWeaponItem);
 				GI->CacheInventory(Inventory->GetAllItems());
 			}
 		}

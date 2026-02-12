@@ -8,7 +8,8 @@
 #include "Engine/LevelStreaming.h"
 #include "Third_Person_RPG/Instance/TPRGameInstance.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
-
+#include "Blueprint/UserWidget.h"
+#include "TimerManager.h"
 
 // Sets default values
 ALevelConvertTrigger::ALevelConvertTrigger()
@@ -43,6 +44,14 @@ void ALevelConvertTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 {
 	if (!OtherActor || !OtherActor->ActorHasTag("Player")) return;
 
+	if (bTransitioning) return;      
+	bTransitioning = true;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+
+
 	ULevelStreaming* StreamedLevel = UGameplayStatics::GetStreamingLevel(GetWorld(), NextLevelName);
 
 	if (APlayerCharacter* PC = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
@@ -52,6 +61,7 @@ void ALevelConvertTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 			if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 			{
 				GI->CacheInventory(Inventory->GetAllItems());
+				GI->CacheEquippedWeapon(Inventory->EquippedWeaponItem);
 				GI->RegisterPlayerStatFromPlayer(PC);
 			}
 		}
@@ -65,7 +75,40 @@ void ALevelConvertTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 		return;
 	}
 
-	UGameplayStatics::OpenLevel(GetWorld(), NextLevelName);
+	if (LoadingScreen)
+	{
+		LoadingScreenWidget = CreateWidget<UUserWidget>(GetWorld(), LoadingScreen);
+		if (LoadingScreenWidget)
+		{
+			LoadingScreenWidget->AddToViewport(9999);
+		}
+	}
+
+	TWeakObjectPtr<ALevelConvertTrigger> WeakThis(this);
+	const FName LevelToOpen = NextLevelName;
+
+	World->GetTimerManager().ClearTimer(LevelTransitionTimerHandle);
+	World->GetTimerManager().SetTimer(
+		LevelTransitionTimerHandle,
+		FTimerDelegate::CreateLambda([WeakThis, LevelToOpen]()
+			{
+				if (!WeakThis.IsValid()) return;
+
+				UGameplayStatics::OpenLevel(WeakThis.Get(), LevelToOpen);
+			}),
+		0.1f,
+		false
+	);
+	
 	UE_LOG(LogTemp, Warning, TEXT("Trying to convert level: %s"), *NextLevelName.ToString());
+
 }
 
+void ALevelConvertTrigger::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(LevelTransitionTimerHandle);
+	}
+	Super::EndPlay(EndPlayReason);
+}

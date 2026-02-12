@@ -154,16 +154,33 @@ void APlayerCharacter::BeginPlay()
 
 		if (InventoryComponent)
 		{
+			UInventoryItem* EquipTarget = nullptr;
+			const FPrimaryAssetId EquippedId = GI->GetCachedEquippedWeaponAssetId();
 			for (const FInventoryItemSaveData& SaveData : GI->GetCachedInventory())
 			{
-				bool bShouldEquip = SaveData.bEquipped;
-
-				UInventoryItem* AddedItem = InventoryComponent->AddItemByData(SaveData.ItemData, SaveData.Quantity, bShouldEquip);
+				UInventoryItem* AddedItem = InventoryComponent->AddItemByData(
+					SaveData.ItemData,
+					SaveData.Quantity,
+					/*bEquip=*/false
+				);
 
 				if (AddedItem)
 				{
-					AddedItem->EnhanceLevel = SaveData.EnhanceLevel; // 핵심
+					AddedItem->EnhanceLevel = SaveData.EnhanceLevel;
+
+					if (EquippedId.IsValid()
+						&& SaveData.ItemData
+						&& SaveData.ItemData->GetPrimaryAssetId() == EquippedId
+						&& Cast<UWeaponItemData>(SaveData.ItemData))
+					{
+						EquipTarget = AddedItem;
+					}
 				}
+			}
+
+			if (EquipTarget)
+			{
+				EquipWeapon_Implementation(EquipTarget);
 			}
 		}
 
@@ -1265,14 +1282,16 @@ void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
 {
 	if (!WeaponItem || !WeaponItem->ItemData) return;
 
-	const auto ItemData = Cast<UWeaponItemData>(WeaponItem->ItemData);
+	const UWeaponItemData* ItemData = Cast<UWeaponItemData>(WeaponItem->ItemData);
 	if (!ItemData || !ItemData->WeaponClass) return;
 
-	UTexture2D* WeaponIcon = nullptr;
-	
-	WeaponIcon = WeaponItem->GetItemTexture();
+	UInventoryItem* PrevEquipped = (InventoryComponent ? InventoryComponent->EquippedWeaponItem : nullptr);
 
-	// 이전에 들고 있던 무기 제거
+	if (PrevEquipped && PrevEquipped != WeaponItem)
+	{
+		PrevEquipped->bEquipped = false;
+	}
+
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
@@ -1280,8 +1299,6 @@ void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
 		CurrentWeapon = nullptr;
 		SkillData = nullptr;
 		WeaponComboData = nullptr;
-
-		InventoryComponent->EquippedWeaponItem = nullptr;
 	}
 
 	if (InventoryComponent)
@@ -1290,23 +1307,16 @@ void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
 	}
 	WeaponItem->bEquipped = true;
 
-	// 새 무기 생성
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	ATPRWeapon* NewWeapon = GetWorld()->SpawnActor<ATPRWeapon>(
-		ItemData->WeaponClass,
-		FVector::ZeroVector,
-		FRotator::ZeroRotator
-	);
+		ItemData->WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-	if (NewWeapon)
-	{
-		SetWeapon(NewWeapon);
-	}
+	if (NewWeapon) SetWeapon(NewWeapon);
 
-	RefreshCurrentEquipped_Weapon(WeaponIcon);
+	RefreshCurrentEquipped_Weapon(WeaponItem->GetItemTexture());
 }
 
 int32 APlayerCharacter::GetEquippedWeaponEnhanceLevel() const
@@ -1505,6 +1515,7 @@ void APlayerCharacter::TakeDamage(int32 DamageAmount)
 				if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 				{
 					GI->CacheInventory(Inventory->GetAllItems());
+					GI->CacheEquippedWeapon(Inventory->EquippedWeaponItem);
 					GI->RegisterPlayerStatFromPlayer(this);
 				}
 			}
