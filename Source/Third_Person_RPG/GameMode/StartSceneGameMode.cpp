@@ -7,9 +7,15 @@ AStartSceneGameMode::AStartSceneGameMode()
 {
 	DefaultPawnClass = nullptr;
 
-	static ConstructorHelpers::FClassFinder<APlayerController> ControllerClassRef(TEXT("/Script/Engine.Blueprint'/Game/BluePrint/Player_Controller.Player_Controller'"));
-	if (ControllerClassRef.Succeeded())
-	{
-		PlayerControllerClass = ControllerClassRef.Class;
-	}
+    static ConstructorHelpers::FClassFinder<APlayerController> ControllerClassRef(
+        TEXT("/Game/BluePrint/Player_Controller.Player_Controller_C")
+    );
+    if (ControllerClassRef.Succeeded())
+    {
+        PlayerControllerClass = ControllerClassRef.Class;
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to load Player_Controller class"));
+    }
 }

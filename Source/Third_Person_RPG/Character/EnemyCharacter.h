@@ -18,16 +18,16 @@ struct FEnemyStats
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	int32 MaxHP;
+	int32 MaxHP = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	int32 CurrentHP;
+	int32 CurrentHP = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	int32 AttackPower;
+	int32 AttackPower = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	int32 Defense;
+	int32 Defense = 0;
 };
 
 UCLASS()

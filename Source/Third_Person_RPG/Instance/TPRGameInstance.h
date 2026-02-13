@@ -20,16 +20,18 @@ struct FInventoryItemSaveData
 	GENERATED_BODY()
 
 	UPROPERTY()
-	UTPRItemData* ItemData;
+	UTPRItemData* ItemData = nullptr;
 
 	UPROPERTY()
-	int32 Quantity;
+	int32 Quantity = 0;
 
 	UPROPERTY()
 	bool bEquipped = false;
 
 	UPROPERTY()
 	int32 EnhanceLevel = 0;
+
+	FInventoryItemSaveData() = default;
 };
 
 USTRUCT(BlueprintType)

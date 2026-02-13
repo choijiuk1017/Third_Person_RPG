@@ -25,10 +25,16 @@ ATPRGameMode::ATPRGameMode()
 	}
 
 	//PlayerControllerClass ¼³Á¤
-	static ConstructorHelpers::FClassFinder<APlayerController> ControllerClassRef(TEXT("/Script/Engine.Blueprint'/Game/BluePrint/Player_Controller.Player_Controller'"));
+	static ConstructorHelpers::FClassFinder<APlayerController> ControllerClassRef(
+		TEXT("/Game/BluePrint/Player_Controller.Player_Controller_C")
+	);
 	if (ControllerClassRef.Succeeded())
 	{
 		PlayerControllerClass = ControllerClassRef.Class;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load Player_Controller class"));
 	}
 }
 

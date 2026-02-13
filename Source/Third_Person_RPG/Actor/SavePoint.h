@@ -12,22 +12,24 @@ struct FSavePointInfo
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName SavePointID;
+	FName SavePointID = NAME_None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName MapName;
+	FName MapName = NAME_None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector Location;
+	FVector Location = FVector::ZeroVector;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsDiscovered = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FText DisplayName;
+	FText DisplayName = FText::GetEmpty();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UTexture2D* PreviewImage;
+	UTexture2D* PreviewImage = nullptr;
+
+	FSavePointInfo() = default;
 };
 
 UCLASS()

@@ -83,14 +83,34 @@ void UTitleScreenWidget::ExecuteSelection()
 	switch (CurrentIndex)
 	{
 	case 0:
+	{
 		if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(GetGameInstance()))
 		{
 			GI->DeleteSaveData();
 		}
 
-		UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
-		break;
+		if (LoadingScreen)
+		{
+			LoadingScreenWidget = CreateWidget<UUserWidget>(GetWorld(), LoadingScreen);
+			if (LoadingScreenWidget)
+			{
+				LoadingScreenWidget->AddToViewport(9999);
+			}
+		}
 
+
+		FTimerHandle TimerHandle;
+		FTimerDelegate TimerDelegate;
+		TimerDelegate.BindLambda([=, this]()
+		{
+			UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
+			//UGameplayStatics::OpenLevel(GetWorld(), TEXT("Dungeon1"));
+		});
+
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.1f, false);
+
+		break;
+	}
 	case 1:
 	{
 		const FString SaveSlotName = TEXT("PlayerSaveSlot");
@@ -98,24 +118,93 @@ void UTitleScreenWidget::ExecuteSelection()
 
 		if (!UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
 		{
-			UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
+			if (LoadingScreen)
+			{
+				LoadingScreenWidget = CreateWidget<UUserWidget>(GetWorld(), LoadingScreen);
+				if (LoadingScreenWidget)
+				{
+					LoadingScreenWidget->AddToViewport(9999);
+				}
+			}
+
+
+			FTimerHandle TimerHandle;
+			FTimerDelegate TimerDelegate;
+			TimerDelegate.BindLambda([=, this]()
+				{
+					UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
+				});
+
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.1f, false);
 			break;
 		}
 
 		UTPRSaveGame* Loaded = Cast<UTPRSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
 		if (!Loaded)
 		{
-			UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
+			if (LoadingScreen)
+			{
+				LoadingScreenWidget = CreateWidget<UUserWidget>(GetWorld(), LoadingScreen);
+				if (LoadingScreenWidget)
+				{
+					LoadingScreenWidget->AddToViewport(9999);
+				}
+			}
+
+
+			FTimerHandle TimerHandle;
+			FTimerDelegate TimerDelegate;
+			TimerDelegate.BindLambda([=, this]()
+				{
+					UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
+				});
+
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.1f, false);
 			break;
 		}
 
 		if (!Loaded->LastSavedMapName.IsNone())
 		{
-			UGameplayStatics::OpenLevel(GetWorld(), Loaded->LastSavedMapName);
+			if (LoadingScreen)
+			{
+				LoadingScreenWidget = CreateWidget<UUserWidget>(GetWorld(), LoadingScreen);
+				if (LoadingScreenWidget)
+				{
+					LoadingScreenWidget->AddToViewport(9999);
+				}
+			}
+
+
+			FTimerHandle TimerHandle;
+			FTimerDelegate TimerDelegate;
+			TimerDelegate.BindLambda([=, this]()
+				{
+					UGameplayStatics::OpenLevel(GetWorld(), Loaded->LastSavedMapName);
+				});
+
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.1f, false);
+			
 		}
 		else
 		{
-			UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
+			if (LoadingScreen)
+			{
+				LoadingScreenWidget = CreateWidget<UUserWidget>(GetWorld(), LoadingScreen);
+				if (LoadingScreenWidget)
+				{
+					LoadingScreenWidget->AddToViewport(9999);
+				}
+			}
+
+
+			FTimerHandle TimerHandle;
+			FTimerDelegate TimerDelegate;
+			TimerDelegate.BindLambda([=, this]()
+				{
+					UGameplayStatics::OpenLevel(GetWorld(), TEXT("Start"));
+				});
+
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.1f, false);
 		}
 		break;
 	}

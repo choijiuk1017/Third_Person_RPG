@@ -13,64 +13,64 @@ struct FWeaponStatData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	FText WeaponName;
+	FText WeaponName = FText::GetEmpty();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	FText WeaponType; // 참격, 타격, 관통 등
+	FText WeaponType = FText::GetEmpty(); // 참격, 타격, 관통 등
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	float Weight;
+	float Weight = 0.f;
 
 	// 공격력
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Attack")
-	int32 Physical;
+	int32 Physical = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Attack")
-	int32 Magic;
+	int32 Magic = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Attack")
-	int32 Fire;
+	int32 Fire = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Attack")
-	int32 Lightning;
+	int32 Lightning = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Attack")
-	int32 Holy;
+	int32 Holy = 0;
 
 	// 스탯 보정
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Scaling")
-	FString StrengthScaling;
+	FString StrengthScaling = TEXT("");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Scaling")
-	FString DexterityScaling;
+	FString DexterityScaling = TEXT("");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Scaling")
-	FString IntelligenceScaling;
+	FString IntelligenceScaling = TEXT("");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Scaling")
-	FString FaithScaling;
+	FString FaithScaling = TEXT("");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Scaling")
-	FString ArcaneScaling;
+	FString ArcaneScaling = TEXT("");
 
 	// 요구 스탯
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Requirements")
-	int32 RequiredStrength;
+	int32 RequiredStrength = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Requirements")
-	int32 RequiredDexterity;
+	int32 RequiredDexterity = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Requirements")
-	int32 RequiredIntelligence;
+	int32 RequiredIntelligence = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Requirements")
-	int32 RequiredFaith;
+	int32 RequiredFaith = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Requirements")
-	int32 RequiredArcane;
+	int32 RequiredArcane = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Skill")
-	int32 FPCost;
+	int32 FPCost = 0;
 };
 
 /**

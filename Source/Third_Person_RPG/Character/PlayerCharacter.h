@@ -94,22 +94,22 @@ struct FCombatStats
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 CurrentHP;
+	int32 CurrentHP = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 CurrentFP;
+	int32 CurrentFP = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 CurrentStamina;
+	int32 CurrentStamina = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 AttackPower;
+	int32 AttackPower = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Defense;
+	int32 Defense = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Poise;
+	float Poise = 0;
 };
 
 class ANPC;

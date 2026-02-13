@@ -36,6 +36,12 @@ protected:
 	class UWidgetAnimation* StartAnim;
 
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> LoadingScreen;
+
+	UUserWidget* LoadingScreenWidget;
+
+
 	int32 CurrentIndex = 0;
 
 	void UpdateSelection();
