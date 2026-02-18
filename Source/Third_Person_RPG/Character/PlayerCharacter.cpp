@@ -1083,7 +1083,7 @@ void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterru
 		GI->RegisterSavePoint(OverlappingSavePoint->SavePointInfo);
 		GI->LastRestedSavePointID = OverlappingSavePoint->SavePointInfo.SavePointID;
 
-		//GI->SaveGameData();
+		GI->SaveGameData();
 	}
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
