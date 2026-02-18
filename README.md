@@ -14,3 +14,17 @@
 + 일반 몬스터 두 마리, 보스 몬스터 한 마리를 구현 - 몬스터, 보스 수 늘릴 예정 - 2026/01/31 현재 메인 보스 4마리, 엘리트 몬스터 2마리, 일반 몬스터 4마리 구현
 + 위 요소들을 합친 프로토타입 제작
 
+---
+2026/02/18
+프로토타입 완성
+#### 게임 제목: EBON CROWN
+#### 게임 장르: 3인칭 소울류 액션 RPG
+#### 사용 엔진: Unreal Engine 5.4.4 ver
+#### 플랫폼: Windows/PC
+#### 개발 인원: 1인 개발
+
+### 게임 설명 영상
+https://www.youtube.com/watch?v=MsGKZK74F1Q
+
+### 게임 다운로드
+https://drive.google.com/file/d/1uvUao4gt5VH47PPeQbxtw2QQU2604zZL/view
