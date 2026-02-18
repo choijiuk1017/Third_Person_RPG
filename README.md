@@ -23,6 +23,8 @@
 #### 플랫폼: Windows/PC
 #### 개발 인원: 1인 개발
 
+### 게임 설명 영상
 https://www.youtube.com/watch?v=MsGKZK74F1Q
 
+### 게임 다운로드
 https://drive.google.com/file/d/1uvUao4gt5VH47PPeQbxtw2QQU2604zZL/view
