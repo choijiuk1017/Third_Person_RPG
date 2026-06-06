@@ -20,6 +20,10 @@
 #include "PlayerCharacter.generated.h"
 
 class UPlayerStaminaComponent;
+class UPlayerUIComponent;
+class UPlayerSavePointComponent;
+class UPlayerInteractionComponent;
+class UPlayerStatComponent;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHPChanged, int32, int32); 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnFPChanged, int32, int32); 
@@ -118,6 +122,10 @@ class THIRD_PERSON_RPG_API APlayerCharacter : public ACharacter, public IAnimati
 
 	friend class UPlayerCombatComponent;
 	friend class UPlayerStaminaComponent;
+	friend class UPlayerUIComponent;
+	friend class UPlayerSavePointComponent;
+	friend class UPlayerInteractionComponent;
+	friend class UPlayerStatComponent;
 
 public:
 	// Sets default values for this character's properties
@@ -443,8 +451,6 @@ protected:
 	void CalculateDerivedStats();
 	void InitializeCombatStats();
 
-	float ConvertScalingToMultiplier(const FString& Scaling);
-
 	void ResetCombatStats();
 
 	void ConsumeStamina(int32 Amount);
@@ -589,4 +595,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UPlayerStaminaComponent> StaminaComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UPlayerUIComponent> UIComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UPlayerSavePointComponent> SavePointComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UPlayerInteractionComponent> InteractionComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UPlayerStatComponent> StatComponent;
 };

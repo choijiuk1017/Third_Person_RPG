@@ -33,6 +33,10 @@
 #include "Third_Person_RPG/UI/pauseMenuWidget.h"
 #include "Third_Person_RPG/Component/PlayerCombatComponent.h"
 #include "Third_Person_RPG/Component/PlayerStaminaComponent.h"
+#include "Third_Person_RPG/Component/PlayerUIComponent.h"
+#include "Third_Person_RPG/Component/PlayerSavePointComponent.h"
+#include "Third_Person_RPG/Component/PlayerInteractionComponent.h"
+#include "Third_Person_RPG/Component/PlayerStatComponent.h"
 
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
@@ -109,6 +113,13 @@ APlayerCharacter::APlayerCharacter()
 
 	StaminaComponent = CreateDefaultSubobject<UPlayerStaminaComponent>(TEXT("StaminaComponent"));
 
+	UIComponent = CreateDefaultSubobject<UPlayerUIComponent>(TEXT("UIComponent"));
+
+	SavePointComponent = CreateDefaultSubobject<UPlayerSavePointComponent>(TEXT("SavePointComponent"));
+
+	InteractionComponent = CreateDefaultSubobject<UPlayerInteractionComponent>(TEXT("InteractionComponent"));
+
+	StatComponent = CreateDefaultSubobject<UPlayerStatComponent>(TEXT("StatComponent"));
 }
 
 // Called when the game starts or when spawned
@@ -198,6 +209,26 @@ void APlayerCharacter::BeginPlay()
 		if (StaminaComponent)
 		{
 			StaminaComponent->InitializeStaminaComponent(this);
+		}
+
+		if (UIComponent)
+		{
+			UIComponent->InitializeUIComponent(this);
+		}
+
+		if (SavePointComponent)
+		{
+			SavePointComponent->InitializeSavePointComponent(this);
+		}
+
+		if (InteractionComponent)
+		{
+			InteractionComponent->InitializeInteractionComponent(this);
+		}
+
+		if (StatComponent)
+		{
+			StatComponent->InitializeStatComponent(this);
 		}
 
 		if (GI->bShouldRespawn)
@@ -290,35 +321,18 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 void APlayerCharacter::CalculateDerivedStats()
 {
-	DerivedStats.MaxHP = 300 + (CharacterAttributes.Vigor * 50);
-	DerivedStats.MaxFP = 50 + (CharacterAttributes.Mind * 10);
-	DerivedStats.MaxStamina = 80 + (CharacterAttributes.Endurance * 10);
-	DerivedStats.MaxEquipLoad = 30.f + (CharacterAttributes.Endurance * 1.5f);
-	DerivedStats.Poise = CharacterAttributes.Endurance * 1.2f;
-	DerivedStats.Discovery = CharacterAttributes.Arcane * 1.0f;
+	if (StatComponent)
+	{
+		StatComponent->CalculateDerivedStats();
+	}
 }
 
 void APlayerCharacter::InitializeCombatStats()
 {
-	CombatStats.CurrentHP = DerivedStats.MaxHP;
-	CombatStats.CurrentFP = DerivedStats.MaxFP;
-	CombatStats.CurrentStamina = DerivedStats.MaxStamina;
-
-	// 무기 장착 전 기본 공격력/방어력
-	CombatStats.AttackPower = 50 + (CharacterAttributes.Strength * 2);  // 베이스 값
-	CombatStats.Defense = 10 + FMath::RoundToInt(CharacterAttributes.Strength * 1.5f);
-	CombatStats.Poise = DerivedStats.Poise;
-}
-
-float APlayerCharacter::ConvertScalingToMultiplier(const FString& Scaling)
-{
-	if (Scaling == "S") return 1.0f;
-	if (Scaling == "A") return 0.8f;
-	if (Scaling == "B") return 0.6f;
-	if (Scaling == "C") return 0.4f;
-	if (Scaling == "D") return 0.2f;
-	if (Scaling == "E") return 0.1f;
-	return 0.0f; // 없음
+	if (StatComponent)
+	{
+		StatComponent->InitializeCombatStats();
+	}
 }
 
 //Combat Section
@@ -556,268 +570,67 @@ void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
 
 void APlayerCharacter::Interact()
 {
-	if (bIsRoll || bIsSkillActing || bIsAttacking || bIsInteracting) return;
-	if (bIsDead) return;
-	UE_LOG(LogTemp, Warning, TEXT("상호작용 키 입력됨"));
-
-	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
-
-
-	if (OverlappingItem && OverlappingItem->ItemData)
+	if (InteractionComponent)
 	{
-		FPrimaryAssetId AssetId = OverlappingItem->ItemData->GetPrimaryAssetId();
-
-		if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-		{
-			GI->RegisterCollectedItemAsset(AssetId);
-		}
-
-		//무기를 장착할 수 있을 경우에만 장착 애니메이션
-		if (OverlappingItem->WeaponClass && CanSetWeapon())
-		{
-			bIsInteracting = true;
-
-			GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-			if (AnimInstance && PickUpMontage)
-			{
-				AnimInstance->Montage_Play(PickUpMontage, 1.7f);
-				FOnMontageEnded EndDelegate;
-				EndDelegate.BindUObject(this, &APlayerCharacter::OnEquipAnimationEnd);
-				AnimInstance->Montage_SetEndDelegate(EndDelegate, PickUpMontage);
-				return; // 애니메이션 후 처리 예정
-			}
-		}
-		else
-		{
-			if (Inventory)
-			{
-				int32 OutQuantity = 1;
-				Inventory->AddItemByData(OverlappingItem->ItemData, OutQuantity);
-			}
-
-			OverlappingItem->Destroy();
-			OverlappingItem = nullptr;
-			bIsInteracting = false;
-		}
-	}
-
-	if (OverlappingSavePoint)
-	{
-		bIsInteracting = true;
-
-		if (CurrentWeapon)
-		{
-			CurrentWeapon->SetActorHiddenInGame(true);
-			CurrentWeapon->SetActorEnableCollision(false);
-		}
-
-		InteractionWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
-
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-
-		SetStatusHUDVisible(false);
-
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-		if (AnimInstance && KneelingDownMontage)
-		{
-			AnimInstance->Montage_Play(KneelingDownMontage, 1.0f);
-			bIsKneeling = true;
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &APlayerCharacter::InteractingSavePoint);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, KneelingDownMontage);
-			return;
-		}
-
-		if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-		{
-			GI->SaveGameData();
-		}
-	}
-
-	if (CurrentNPC)
-	{
-		CurrentNPC->StartTalk(this);
-		return;
+		InteractionComponent->Interact();
 	}
 }
 
 void APlayerCharacter::InteractingSavePoint(UAnimMontage* Montage, bool bInterrupted)
 {
-	UE_LOG(LogTemp, Warning, TEXT("세이브 포인트"));
-
-	if (!OverlappingSavePoint) return;
-	bIsInteracting = false;
-
-	OverlappingSavePoint->SavePointInfo.bIsDiscovered = true;
-
-	UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	if (GI)
+	if (SavePointComponent)
 	{
-		GI->RegisterSavePoint(OverlappingSavePoint->SavePointInfo);
-		GI->LastRestedSavePointID = OverlappingSavePoint->SavePointInfo.SavePointID;
-
-		GI->SaveGameData();
-	}
-
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-
-	HPPotionCount = MaxHPPotionCount;
-	FPPotionCount = MaxFPPotionCount;
-
-	CombatStats.CurrentHP = DerivedStats.MaxHP;
-	CombatStats.CurrentFP = DerivedStats.MaxFP;
-	CombatStats.CurrentStamina = DerivedStats.MaxStamina;
-
-
-	if (PlayerStatusWidgetInstance)
-	{
-		OnHPChanged.Broadcast(CombatStats.CurrentHP, DerivedStats.MaxHP);
-		OnFPChanged.Broadcast(CombatStats.CurrentFP, DerivedStats.MaxFP);
-		OnStaminaChanged.Broadcast(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
-	}
-		
-
-	if (!SavePointMenuInstance && SavePointMenuClass)
-	{
-		SavePointMenuInstance = CreateWidget<USavePointMenu>(GetWorld(), SavePointMenuClass);
-		if (SavePointMenuInstance)
-		{
-			SavePointMenuInstance->OwningActor = this;
-			SavePointMenuInstance->AddToViewport();
-
-			// UI용 입력 모드로 전환
-			APlayerController* PC = Cast<APlayerController>(GetController());
-			if (PC)
-			{
-				FInputModeUIOnly InputMode;
-				InputMode.SetWidgetToFocus(SavePointMenuInstance->TakeWidget());
-				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-
-				PC->SetInputMode(InputMode);
-				PC->bShowMouseCursor = true;
-
-				PC->SetIgnoreMoveInput(true);
-				PC->SetIgnoreLookInput(true);
-			}
-
-			if (!bPausedBySavePoint)
-			{
-				SavedGlobalTimeDilation = UGameplayStatics::GetGlobalTimeDilation(GetWorld());
-				UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
-				bPausedBySavePoint = true;
-			}
-		}
+		SavePointComponent->InteractingSavePoint(Montage, bInterrupted);
 	}
 }
 
-
 void APlayerCharacter::EndInteractSavePoint()
 {
-	if (bIsKneeling && OverlappingSavePoint)
+	if (SavePointComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("세이브 포인트 상호작용 종료"));
-
-		bIsKneeling = false;
-		bIsInteracting = false;
-
-		if (SavePointMenuInstance)
-		{
-			if (SavePointMenuInstance->IsInViewport())
-			{
-				SavePointMenuInstance->RemoveFromParent();
-			}
-			SavePointMenuInstance = nullptr;
-		}
-
-		if (bPausedBySavePoint)
-		{
-			if (!bPausedByInventory)
-			{
-				UGameplayStatics::SetGlobalTimeDilation(GetWorld(), SavedGlobalTimeDilation);
-			}
-			bPausedBySavePoint = false;
-		}
-
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
-
-		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
-		{
-			AnimInstance->StopAllMontages(0.2f);
-		}
-
-		if (CurrentWeapon)
-		{
-			CurrentWeapon->SetActorHiddenInGame(false);
-			CurrentWeapon->SetActorEnableCollision(true);
-		}
-
-		if (CurrentEquipedWidgetInstance)
-			CurrentEquipedWidgetInstance->UpdatePotionCounts(HPPotionCount, FPPotionCount);
-
-		APlayerController* PC = Cast<APlayerController>(GetController());
-		if (PC)
-		{
-			PC->SetIgnoreMoveInput(false);
-			PC->SetIgnoreLookInput(false);
-		}
-		SetStatusHUDVisible(true);
-
-
-		return;
-
+		SavePointComponent->EndInteractSavePoint();
 	}
 }
 
 void APlayerCharacter::OnEquipAnimationEnd(UAnimMontage* Montage, bool bInterrupted)
 {
-	UE_LOG(LogTemp, Warning, TEXT("장비 획득"));
-
-	if (!OverlappingItem || !OverlappingItem->ItemData)
+	if (InteractionComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OverlappingItem이 nullptr 또는 ItemData 없음"));
-		return;
+		InteractionComponent->OnEquipAnimationEnd(Montage, bInterrupted);
 	}
-
-	UWorld* World = GetWorld();
-	if (!World) return;
-
-	UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
-
-	if (Inventory)
-	{
-		int32 OutQuantity = 1;
-		Inventory->AddItemByData(OverlappingItem->ItemData, OutQuantity);
-	}
-
-	OverlappingItem->Destroy();
-	OverlappingItem = nullptr;
-
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
-	bIsInteracting = false;
 }
-
 void APlayerCharacter::SetOverlappingItem(AItem* Item)
 {
-	OverlappingItem = Item;
-}
-
-void APlayerCharacter::SetOverlappingSavePoint(ASavePoint* SavePoint)
-{
-	OverlappingSavePoint = SavePoint;
+	if (InteractionComponent)
+	{
+		InteractionComponent->SetOverlappingItem(Item);
+	}
 }
 
 void APlayerCharacter::ReSetOverlappingItem()
 {
-	OverlappingItem = nullptr;
+	if (InteractionComponent)
+	{
+		InteractionComponent->ReSetOverlappingItem();
+	}
+}
+
+void APlayerCharacter::SetOverlappingSavePoint(ASavePoint* SavePoint)
+{
+	if (SavePointComponent)
+	{
+		SavePointComponent->SetOverlappingSavePoint(SavePoint);
+	}
 }
 
 void APlayerCharacter::ReSetOverlappingSavePoint()
 {
-	OverlappingSavePoint = nullptr;
+	if (SavePointComponent)
+	{
+		SavePointComponent->ReSetOverlappingSavePoint();
+	}
 }
+
 
 
 
@@ -853,88 +666,26 @@ void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
 
 void APlayerCharacter::ToggleInventory()
 {
-	if (bIsDead) return;
-
-	if (bIsPopupInventory)
+	if (UIComponent)
 	{
-		CloseInventory();
-	}
-	else
-	{
-		PopUpInventory();
+		UIComponent->ToggleInventory();
 	}
 }
 
 void APlayerCharacter::PopUpInventory()
 {
-	if (!bPausedByInventory)
+	if (UIComponent)
 	{
-		SavedGlobalTimeDilation = UGameplayStatics::GetGlobalTimeDilation(GetWorld());
-		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
-		bPausedByInventory = true;
+		UIComponent->PopUpInventory();
 	}
-
-	if (!InventoryWidgetInstance && InventoryWidgetClass)
-	{
-		InventoryWidgetInstance = CreateWidget<UInventoryWidget>(GetWorld(), InventoryWidgetClass);
-		InventoryWidgetInstance->OwningActor = this;
-		InventoryWidgetInstance->AddToViewport();
-
-	}
-
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (PC)
-	{
-		FInputModeGameAndUI InputMode;
-		InputMode.SetWidgetToFocus(InventoryWidgetInstance->TakeWidget());
-		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-		InputMode.SetHideCursorDuringCapture(false);
-
-		PC->SetInputMode(InputMode);
-		PC->bShowMouseCursor = true;
-
-		PC->SetIgnoreMoveInput(true);
-		PC->SetIgnoreLookInput(true);
-	}
-
-	SetStatusHUDVisible(false);
-
-	bIsPopupInventory = true;
 }
 
 void APlayerCharacter::CloseInventory()
 {
-	if (bPausedByInventory)
+	if (UIComponent)
 	{
-		if (!bPausedBySavePoint)
-		{
-			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), SavedGlobalTimeDilation);
-		}
-		bPausedByInventory = false;
+		UIComponent->CloseInventory();
 	}
-
-	if (InventoryWidgetInstance)
-	{
-		InventoryWidgetInstance->RemoveFromParent();
-		InventoryWidgetInstance = nullptr;
-	}
-
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (PC)
-	{
-		// 게임 입력으로 복원
-		FInputModeGameOnly InputMode;
-		PC->SetInputMode(InputMode);
-		PC->bShowMouseCursor = false;
-
-		// 캐릭터 입력 다시 허용
-		PC->SetIgnoreMoveInput(false);
-		PC->SetIgnoreLookInput(false);
-	}
-
-	SetStatusHUDVisible(true);
-
-	bIsPopupInventory = false;
 }
 
 UInventoryComponent* APlayerCharacter::GetInventoryComponent()
@@ -944,93 +695,27 @@ UInventoryComponent* APlayerCharacter::GetInventoryComponent()
 
 void APlayerCharacter::ShowInteractionUI(const FText& InText)
 {
-	if (InteractionWidgetInstance)
+	if (UIComponent)
 	{
-		InteractionWidgetInstance->SetHelpText(InText.ToString());
-		InteractionWidgetInstance->SetIsEnabled(true);
-		InteractionWidgetInstance->SetRenderOpacity(1.0f);
-		InteractionWidgetInstance->SetVisibility(ESlateVisibility::Visible);
-	}
-}
-
-
-void APlayerCharacter::ShowWeaponInfo_Implementation(UWeaponItemData* WeaponData)
-{
-	if (InventoryWidgetInstance && WeaponData)
-	{
-		InventoryWidgetInstance->UpdateWeaponInfo(WeaponData);
+		UIComponent->ShowInteractionUI(InText);
 	}
 }
 
 void APlayerCharacter::HideInteractionUI()
 {
-	if (InteractionWidgetInstance)
+	if (UIComponent)
 	{
-		InteractionWidgetInstance->SetIsEnabled(false);
-		InteractionWidgetInstance->SetRenderOpacity(0.0f);
-		InteractionWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+		UIComponent->HideInteractionUI();
 	}
 }
 
-void APlayerCharacter::TakeDamage(int32 DamageAmount)
+
+
+void APlayerCharacter::ShowWeaponInfo_Implementation(UWeaponItemData* WeaponData)
 {
-	if (bIsDead) return;
-	if (CombatStats.CurrentHP <= 0)
-		return;
-
-	const int32 Defense = CombatStats.Defense;
-	const float DamageMultiplier = 100.f / (100.f + static_cast<float>(Defense));
-	const int32 FinalDamage = FMath::Max(1, FMath::RoundToInt(DamageAmount * DamageMultiplier));
-
-	CombatStats.CurrentHP = FMath::Clamp(CombatStats.CurrentHP - FinalDamage, 0, DerivedStats.MaxHP);
-
-
-	OnHPChanged.Broadcast(CombatStats.CurrentHP, DerivedStats.MaxHP);
-
-	if (CombatStats.CurrentHP <= 0)
+	if (UIComponent)
 	{
-		// 사망 처리
-		CombatStats.CurrentHP = 0;
-
-		bIsDead = true;
-
-		UE_LOG(LogTemp, Error, TEXT("플레이어 사망"));
-
-		DisableInput(Cast<ATPRPlayerController>(GetController()));
-
-		if (DeathScreenWidgetClass)
-		{
-			UUserWidget* DeathWidget = CreateWidget<UUserWidget>(GetWorld(), DeathScreenWidgetClass);
-			if (DeathWidget)
-			{
-				DeathWidget->AddToViewport();
-			}
-
-			if (UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>())
-			{
-				if (UTPRGameInstance* GI = Cast<UTPRGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-				{
-					GI->CacheInventory(Inventory->GetAllItems());
-					GI->CacheEquippedWeapon(Inventory->EquippedWeaponItem);
-					GI->RegisterPlayerStatFromPlayer(this);
-				}
-			}
-			
-		}
-
-		GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &APlayerCharacter::RespawnPlayer, 6.0f, false);
-
-		return;
-	}
-
-	// 경직 애니메이션
-	bIsRoll = false;
-	bIsAttacking = false;
-
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && HitReactMontage && !bIsSkillActing)
-	{
-		AnimInstance->Montage_Play(HitReactMontage);
+		UIComponent->ShowWeaponInfo(WeaponData);
 	}
 }
 
@@ -1076,23 +761,12 @@ bool APlayerCharacter::TryConsumeStamina(int32 Amount)
 
 void APlayerCharacter::SetStatusHUDVisible(bool bVisible)
 {
-	if (!PlayerStatusWidgetInstance) return;
-
-	if (!CurrentEquipedWidgetInstance) return;
-
-	if (bVisible)
+	if (UIComponent)
 	{
-		PlayerStatusWidgetInstance->SetVisibility(StatusHUDSavedVisibility);
-		CurrentEquipedWidgetInstance->SetVisibility(StatusHUDSavedVisibility);
-		CurrencyWidgetInstance->SetVisibility(StatusHUDSavedVisibility);
-	}
-	else
-	{
-		PlayerStatusWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
-		CurrentEquipedWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
-		CurrencyWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
+		UIComponent->SetStatusHUDVisible(bVisible);
 	}
 }
+
 
 
 void APlayerCharacter::SprintStaminaTick(float DeltaSeconds)
@@ -1143,40 +817,31 @@ int32 APlayerCharacter::GetCurrentSkillFPCost() const
 
 void APlayerCharacter::AddCurrency(int32 Amount)
 {
-	if (Amount <= 0) return;
-
-	const int64 NewCurrency = static_cast<int64>(Currency) + static_cast<int64>(Amount);
-	Currency = static_cast<int32>(FMath::Clamp<int64>(NewCurrency, 0, INT32_MAX));
-
-	OnCurrencyChanged.Broadcast(Currency);
+	if (StatComponent)
+	{
+		StatComponent->AddCurrency(Amount);
+	}
 }
 
 bool APlayerCharacter::SpendCurrency(int32 Amount)
 {
-	if (Amount <= 0) return true;
-	if (Currency < Amount) return false;
-
-	Currency -= Amount;
-	OnCurrencyChanged.Broadcast(Currency);
-	return true;
+	return StatComponent ? StatComponent->SpendCurrency(Amount) : false;
 }
 
 
 void APlayerCharacter::RefreshCurrentEquipped_Weapon(UTexture2D* WeaponIconTexture)
 {
-	CurrentWeaponIcon = WeaponIconTexture;
-	if (CurrentEquipedWidgetInstance)
+	if (UIComponent)
 	{
-		CurrentEquipedWidgetInstance->UpdateWeaponIcon(WeaponIconTexture);
+		UIComponent->RefreshCurrentEquipped_Weapon(WeaponIconTexture);
 	}
 }
 
 void APlayerCharacter::RefreshCurrentEquipped_Potion(UTexture2D* PotionIconTexture, int32 NewCount)
 {
-	HPPotionCount = NewCount;
-	if (CurrentEquipedWidgetInstance)
+	if (UIComponent)
 	{
-		CurrentEquipedWidgetInstance->UpdatePotion(NewCount);
+		UIComponent->RefreshCurrentEquipped_Potion(PotionIconTexture, NewCount);
 	}
 }
 
@@ -1250,87 +915,26 @@ void APlayerCharacter::UsePotion(UAnimMontage* Montage, bool bInterrupted)
 	}
 }
 
-void APlayerCharacter::RecalculateStatsAfterLevelUp(bool bRefillHPFPStamina /*= false*/)
+void APlayerCharacter::RecalculateStatsAfterLevelUp(bool bRefillHPFPStamina)
 {
-	// 기존 최대치 저장
-	const int32 OldMaxHP = DerivedStats.MaxHP;
-	const int32 OldMaxFP = DerivedStats.MaxFP;
-	const int32 OldMaxStamina = DerivedStats.MaxStamina;
-
-	// 파생치 재계산
-	CalculateDerivedStats();
-
-	// 현재 수치 동기화 (회복 or 비율 유지)
-	auto ScaleKeepRatio = [](int32 Curr, int32 OldMax, int32 NewMax)
-		{
-			if (OldMax <= 0) return FMath::Clamp(Curr, 0, NewMax);
-			const float Ratio = static_cast<float>(Curr) / static_cast<float>(OldMax);
-			return FMath::Clamp(FMath::RoundToInt(Ratio * static_cast<float>(NewMax)), 0, NewMax);
-		};
-
-	if (bRefillHPFPStamina)
+	if (StatComponent)
 	{
-		CombatStats.CurrentHP = DerivedStats.MaxHP;
-		CombatStats.CurrentFP = DerivedStats.MaxFP;
-		CombatStats.CurrentStamina = DerivedStats.MaxStamina;
-	}
-	else
-	{
-		CombatStats.CurrentHP = ScaleKeepRatio(CombatStats.CurrentHP, OldMaxHP, DerivedStats.MaxHP);
-		CombatStats.CurrentFP = ScaleKeepRatio(CombatStats.CurrentFP, OldMaxFP, DerivedStats.MaxFP);
-		CombatStats.CurrentStamina = ScaleKeepRatio(CombatStats.CurrentStamina, OldMaxStamina, DerivedStats.MaxStamina);
-	}
-
-	if (CurrentWeapon)
-	{
-		ApplyWeaponStats(CurrentWeapon);
-	}
-	else
-	{
-		ResetCombatStats();
-	}
-	CombatStats.Poise = DerivedStats.Poise;
-
-	if (PlayerStatusWidgetInstance)
-	{
-		PlayerStatusWidgetInstance->UpdateBarLengths(
-			DerivedStats.MaxHP,
-			DerivedStats.MaxFP,
-			DerivedStats.MaxStamina
-		);
-		OnHPChanged.Broadcast(CombatStats.CurrentHP, DerivedStats.MaxHP);
-		OnFPChanged.Broadcast(CombatStats.CurrentFP, DerivedStats.MaxFP);
-		OnStaminaChanged.Broadcast(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
+		StatComponent->RecalculateStatsAfterLevelUp(bRefillHPFPStamina);
 	}
 }
-
 void APlayerCharacter::FillSaveData(FPlayerStatSaveData& OutSaveData) const
 {
-	OutSaveData.BaseAttributes = CharacterAttributes;
-	OutSaveData.DerivedStats = DerivedStats;
-	//OutSaveData.CombatStats = CombatStats;
-	OutSaveData.Currency = Currency;
-	OutSaveData.SpentCurrencyOnStats = SpentCurrencyOnStats;
+	if (StatComponent)
+	{
+		StatComponent->FillSaveData(OutSaveData);
+	}
 }
 
 void APlayerCharacter::ApplySaveData(const FPlayerStatSaveData& InSaveData)
 {
-	CharacterAttributes = InSaveData.BaseAttributes;
-	Currency = InSaveData.Currency;
-	SpentCurrencyOnStats = InSaveData.SpentCurrencyOnStats;
-
-	CalculateDerivedStats();
-
-	CombatStats.CurrentHP = DerivedStats.MaxHP;
-	CombatStats.CurrentFP = DerivedStats.MaxFP;
-	CombatStats.CurrentStamina = DerivedStats.MaxStamina;
-
-	ResetCombatStats();
-	CombatStats.Poise = DerivedStats.Poise;
-
-	if (CurrentWeapon)
+	if (StatComponent)
 	{
-		ApplyWeaponStats(CurrentWeapon);
+		StatComponent->ApplySaveData(InSaveData);
 	}
 }
 
@@ -1368,7 +972,10 @@ void APlayerCharacter::EndRolling()
 
 void APlayerCharacter::SetCurrentNPC(ANPC* InNPC)
 {
-	CurrentNPC = InNPC;
+	if (InteractionComponent)
+	{
+		InteractionComponent->SetCurrentNPC(InNPC);
+	}
 }
 
 void APlayerCharacter::OnAdvanceDialogue()
@@ -1611,5 +1218,13 @@ void APlayerCharacter::TogglePauseMenu()
 	else
 	{
 		PauseMenuWidget->Open(PC);
+	}
+}
+
+void APlayerCharacter::TakeDamage(int32 DamageAmount)
+{
+	if (StatComponent)
+	{
+		StatComponent->TakeDamage(DamageAmount);
 	}
 }
