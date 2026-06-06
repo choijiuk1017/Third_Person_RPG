@@ -31,6 +31,8 @@
 #include "Third_Person_RPG/Actor/NPC.h"
 #include "Third_Person_RPG/UI/Tutorial/TutorialWidget.h"
 #include "Third_Person_RPG/UI/pauseMenuWidget.h"
+#include "Third_Person_RPG/Component/PlayerCombatComponent.h"
+#include "Third_Person_RPG/Component/PlayerStaminaComponent.h"
 
 #include "Blueprint/UserWidget.h" 
 #include "Kismet/GameplayStatics.h"
@@ -102,6 +104,10 @@ APlayerCharacter::APlayerCharacter()
 	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+
+	CombatComponent = CreateDefaultSubobject<UPlayerCombatComponent>(TEXT("CombatComponent"));
+
+	StaminaComponent = CreateDefaultSubobject<UPlayerStaminaComponent>(TEXT("StaminaComponent"));
 
 }
 
@@ -182,6 +188,16 @@ void APlayerCharacter::BeginPlay()
 			{
 				EquipWeapon_Implementation(EquipTarget);
 			}
+		}
+
+		if (CombatComponent)
+		{
+			CombatComponent->InitializeCombatComponent(this);
+		}
+
+		if (StaminaComponent)
+		{
+			StaminaComponent->InitializeStaminaComponent(this);
 		}
 
 		if (GI->bShouldRespawn)
@@ -265,9 +281,11 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	SprintStaminaTick(DeltaTime);
-
-	StaminaRegenTick(DeltaTime);
+	if (StaminaComponent)
+	{
+		StaminaComponent->SprintStaminaTick(DeltaTime);
+		StaminaComponent->StaminaRegenTick(DeltaTime);
+	}
 }
 
 void APlayerCharacter::CalculateDerivedStats()
@@ -303,64 +321,126 @@ float APlayerCharacter::ConvertScalingToMultiplier(const FString& Scaling)
 	return 0.0f; // 없음
 }
 
+//Combat Section
+
 void APlayerCharacter::ApplyWeaponStats(ATPRWeapon* Weapon)
 {
-	if (!Weapon || !Weapon->ItemData) return;
-
-	const UWeaponItemData* WeaponItemData = Cast<UWeaponItemData>(Weapon->ItemData);
-	if (!WeaponItemData) return;
-
-	const FWeaponStatData& Stat = WeaponItemData->WeaponStats;
-
-
-	ResetCombatStats(); // 무기 해제 시와 동일하게 초기화
-
-
-	// Physical = 근력 + 기량 보정
-	float PhysicalScaling =
-		ConvertScalingToMultiplier(Stat.StrengthScaling) * CharacterAttributes.Strength +
-		ConvertScalingToMultiplier(Stat.DexterityScaling) * CharacterAttributes.Dexterity;
-
-	// Magic = 지력 보정
-	float MagicScaling =
-		ConvertScalingToMultiplier(Stat.IntelligenceScaling) * CharacterAttributes.Intelligence;
-
-	// Fire = 신비 보정
-	float FireScaling =
-		ConvertScalingToMultiplier(Stat.ArcaneScaling) * CharacterAttributes.Arcane;
-
-	// Lightning / Holy = 신앙 보정
-	float LightningScaling =
-		ConvertScalingToMultiplier(Stat.FaithScaling) * CharacterAttributes.Faith;
-
-	float HolyScaling = LightningScaling; // 동일하게 신앙 보정 사용
-
-	int32 TotalPhysical = Stat.Physical + FMath::RoundToInt(PhysicalScaling);
-	int32 TotalMagic = Stat.Magic + FMath::RoundToInt(MagicScaling);
-	int32 TotalFire = Stat.Fire + FMath::RoundToInt(FireScaling);
-	int32 TotalLightning = Stat.Lightning + FMath::RoundToInt(LightningScaling);
-	int32 TotalHoly = Stat.Holy + FMath::RoundToInt(HolyScaling);
-
-	const int32 EnhanceLv = GetEquippedWeaponEnhanceLevel();
-	const float EnhanceMul = 1.0f + (EnhanceDamageRatePerLevel * (float)EnhanceLv);
-
-	TotalPhysical = FMath::RoundToInt((float)TotalPhysical * EnhanceMul);
-	TotalMagic = FMath::RoundToInt((float)TotalMagic * EnhanceMul);
-	TotalFire = FMath::RoundToInt((float)TotalFire * EnhanceMul);
-	TotalLightning = FMath::RoundToInt((float)TotalLightning * EnhanceMul);
-	TotalHoly = FMath::RoundToInt((float)TotalHoly * EnhanceMul);
-
-	const int32 TotalAttackPower = TotalPhysical + TotalMagic + TotalFire + TotalLightning + TotalHoly;
-	CombatStats.AttackPower = TotalAttackPower;
-
-	UE_LOG(LogTemp, Warning, TEXT("총 공격력: %d (물리 %d / 마법 %d / 화염 %d / 번개 %d / 신성 %d)"),
-		TotalAttackPower, TotalPhysical, TotalMagic, TotalFire, TotalLightning, TotalHoly);
+	if (CombatComponent)
+	{
+		CombatComponent->ApplyWeaponStats(Weapon);
+	}
 }
 
 void APlayerCharacter::ResetCombatStats()
 {
-	CombatStats.AttackPower = 50 + (CharacterAttributes.Strength * 2);  // 베이스 값
-	CombatStats.Defense = 10 + FMath::RoundToInt(CharacterAttributes.Strength * 1.5f);     // 기본값
+	if (CombatComponent)
+	{
+		CombatComponent->ResetCombatStats();
+	}
+}
+
+void APlayerCharacter::BasicAttack()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->BasicAttack();
+	}
+}
+
+void APlayerCharacter::SkillStart()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->SkillStart();
+	}
+}
+
+void APlayerCharacter::ComboStart()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->ComboStart();
+	}
+}
+
+void APlayerCharacter::ComboEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (CombatComponent)
+	{
+		CombatComponent->ComboEnd(Montage, bInterrupted);
+	}
+}
+
+void APlayerCharacter::ComboCheck()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->ComboCheck();
+	}
+}
+
+void APlayerCharacter::BaseAttackCheck()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->BaseAttackCheck();
+	}
+}
+
+void APlayerCharacter::EnableWeaponHitBox()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->EnableWeaponHitBox();
+	}
+}
+
+void APlayerCharacter::DisableWeaponHitBox()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->DisableWeaponHitBox();
+	}
+}
+
+void APlayerCharacter::SkillAttackCheck()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->SkillAttackCheck();
+	}
+}
+
+bool APlayerCharacter::CanSetWeapon()
+{
+	return CombatComponent ? CombatComponent->CanSetWeapon() : false;
+}
+
+void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
+{
+	if (CombatComponent)
+	{
+		CombatComponent->EquipWeapon(WeaponItem);
+	}
+}
+
+float APlayerCharacter::GetCurrentWeaponWeight() const
+{
+	return CombatComponent ? CombatComponent->GetCurrentWeaponWeight() : 0.f;
+}
+
+int32 APlayerCharacter::GetEquippedWeaponEnhanceLevel() const
+{
+	return CombatComponent ? CombatComponent->GetEquippedWeaponEnhanceLevel() : 0;
+}
+
+
+void APlayerCharacter::UnEquipWeapon_Implementation(UInventoryItem* WeaponItem)
+{
+	if (CombatComponent)
+	{
+		CombatComponent->UnEquipWeapon(WeaponItem);
+	}
 }
 
 void APlayerCharacter::BasicMove(const FInputActionValue& Value)
@@ -471,510 +551,6 @@ void APlayerCharacter::RollEnd(class UAnimMontage* Montage, bool IsEnded)
 {
 	// Roll UnCheck (구르기 비활성화)
 	bIsRoll = false;
-}
-
-void APlayerCharacter::BasicAttack()
-{
-	if (bIsInteracting || bIsRoll || bIsSkillActing || bIsInteracting || bIsKneeling || bIsPopupInventory) return;
-	if (bIsDead) return;
-	if (CurrentComboCount == 0)
-	{
-		ComboStart();
-		bIsAttacking = true;
-		return;
-	}
-
-	if (ComboTimerHandle.IsValid())
-	{
-		bHasComboInput = true;
-	}
-	else
-	{
-		bHasComboInput = false;
-	}
-}
-
-void APlayerCharacter::SkillStart()
-{
-	if (bIsInteracting || bIsRoll || !SkillData || !SkillData->SkillMontage || bIsSkillActing) return;
-	if (bIsDead) return;
-	if (CombatStats.CurrentStamina < StaminaCost_Skill) return;
-	ConsumeStamina(StaminaCost_Skill);
-
-	if (bSkillConsumesFP)
-	{
-		const int32 FPCost = GetCurrentSkillFPCost();
-		if (FPCost > 0)
-		{
-			if (!TryConsumeFP(FPCost))
-			{
-				return;
-			}
-		}
-	}
-
-
-	// 공격 시 플레이어 이동 불가
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-
-	// 애님 인스턴스 가져오기
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance)
-	{
-		bIsSkillActing = true;
-		bIsAttacking = true;
-
-		// 몽타주 재생
-		AnimInstance->Montage_Play(SkillData->SkillMontage, SkillData->SkillPlayRate);
-
-		// 몽타주 재생 종료 바인딩
-		FOnMontageEnded EndDelegate;
-
-		// RollMontage 종료 시 EndDelegate에 연동된 함수 호출
-		AnimInstance->Montage_SetEndDelegate(EndDelegate, SkillData->SkillMontage);
-
-	}
-}
-
-void APlayerCharacter::SpawnSkillEffect()
-{
-	if (!SkillData || !SkillData->SkillEffect) return;
-
-	FVector SpawnLocation = GetActorLocation();
-	FRotator SpawnRotation = GetActorRotation();
-
-	switch (SkillData->SpawnType)
-	{
-	case ESkillEffectSpawnType::Self:
-		SpawnLocation = GetActorLocation();
-		break;
-
-	case ESkillEffectSpawnType::Forward:
-		SpawnLocation = GetActorLocation() + GetActorForwardVector() * 200.0f;
-		break;
-
-	case ESkillEffectSpawnType::Ground:
-		SpawnLocation = GetActorLocation() - FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-		break;
-
-	case ESkillEffectSpawnType::Custom:
-		// 혹시 필요하다면 SkillData에 별도 커스텀 위치 변수 추가 가능
-		break;
-
-	default:
-		break;
-	}
-
-	UGameplayStatics::SpawnEmitterAtLocation(
-		GetWorld(),
-		SkillData->SkillEffect,
-		SpawnLocation,
-		SpawnRotation
-	);
-}
-
-void APlayerCharacter::ComboStart()
-{
-	if (!TryConsumeStamina(StaminaCost_Attack)) return;
-
-	if (CurrentWeapon)
-	{
-		CurrentComboCount = 1;
-
-		// 공격 시 플레이어 이동 불가
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-
-		// 애님 인스턴스 가져오기
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			// 몽타주 재생
-			AnimInstance->Montage_Play(WeaponComboData->ComboMontage, WeaponComboData->ComnboPlayRate);
-
-			// 몽타주 재생 종료 바인딩
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &APlayerCharacter::ComboEnd);
-
-			// BasicComboMontage가 종료되면 EndDelegate에 연동된 ComboEnd함수 호출
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, WeaponComboData->ComboMontage);
-
-			// 타이머 초기화
-			ComboTimerHandle.Invalidate();
-			// 타이머 설정
-			SetComboTimer();
-		}
-	}
-	else
-	{
-		CurrentComboCount = 1;
-
-		// 공격 시 플레이어 이동 불가
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-
-
-		// 애님 인스턴스 가져오기
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			// 몽타주 재생
-			AnimInstance->Montage_Play(BasicComboData->ComboMontage, BasicComboData->ComnboPlayRate);
-
-			// 몽타주 재생 종료 바인딩
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &APlayerCharacter::ComboEnd);
-
-			// BasicComboMontage가 종료되면 EndDelegate에 연동된 ComboEnd함수 호출
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, BasicComboData->ComboMontage);
-
-			// 타이머 초기화
-			ComboTimerHandle.Invalidate();
-			// 타이머 설정
-			SetComboTimer();
-		}
-	}
-	
-}
-
-void APlayerCharacter::ComboEnd(UAnimMontage* Montage, bool IsEnded)
-{
-	CurrentComboCount = 0;
-
-	bHasComboInput = false;
-
-	bIsAttacking = false;
-
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
-}
-
-void APlayerCharacter::ComboCheck()
-{
-	ComboTimerHandle.Invalidate();
-
-	auto ConsumePerHitOrStop = [this]() -> bool
-		{
-			if (!bRequireStaminaForComboContinue)
-			{
-				if (HasStamina(StaminaCost_AttackPerHit))
-				{
-					ConsumeStamina(StaminaCost_AttackPerHit);
-				}
-				return true;
-			}
-
-			if (!TryConsumeStamina(StaminaCost_AttackPerHit))
-			{
-				bHasComboInput = false;
-				bIsAttacking = false;
-				GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
-
-				return false;
-			}
-			return true;
-		};
-
-	if (CurrentWeapon)
-	{
-		if (bHasComboInput)
-		{
-			if (!ConsumePerHitOrStop()) return;
-
-			//콤보 수 증가
-			CurrentComboCount = FMath::Clamp(CurrentComboCount + 1, 1, WeaponComboData->MaxComboCount);
-
-			// 애님 인스턴스 가져오기
-			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-			if (AnimInstance)
-			{
-				// 다음 섹션의 이름
-				FName SectionName = *FString::Printf(TEXT("%s%d"), *WeaponComboData->SectionPrefix, CurrentComboCount);
-
-				// 다음 섹션으로 이동하기
-				AnimInstance->Montage_JumpToSection(SectionName, WeaponComboData->ComboMontage);
-
-				// 타이머 재설정
-				SetComboTimer();
-				// 콤보 입력 판별 초기화
-				bHasComboInput = false;
-			}
-		}
-	}
-	else
-	{
-		if (bHasComboInput)
-		{
-			if (!ConsumePerHitOrStop()) return;
-
-			//콤보 수 증가
-			CurrentComboCount = FMath::Clamp(CurrentComboCount + 1, 1, BasicComboData->MaxComboCount);
-
-			// 애님 인스턴스 가져오기
-			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-			if (AnimInstance)
-			{
-				// 다음 섹션의 이름
-				FName SectionName = *FString::Printf(TEXT("%s%d"), *BasicComboData->SectionPrefix, CurrentComboCount);
-
-				// 다음 섹션으로 이동하기
-				AnimInstance->Montage_JumpToSection(SectionName, BasicComboData->ComboMontage);
-
-				// 타이머 재설정
-				SetComboTimer();
-				// 콤보 입력 판별 초기화
-				bHasComboInput = false;
-			}
-		}
-	}
-	
-}
-
-void APlayerCharacter::SetComboTimer()
-{
-	// 인덱스 조정
-	// * 콤보 인덱스 : 1, 2, 3 
-	// * 배열 인덱스 : 0, 1, 2
-
-	if (CurrentWeapon)
-	{
-		int32 ComboIndex = CurrentComboCount - 1;
-
-		// 인덱스가 유효한지 체크
-		if (WeaponComboData->ComboFrame.IsValidIndex(ComboIndex))
-		{
-			// TODO : 공격 속도가 추가되면 값 가져와 지정하기
-			const float AttackSpeedRate = 1.0f;
-
-			// 실제 콤보가 입력될 수 있는 시간 구하기
-			float ComboAvailableTime = (WeaponComboData->ComboFrame[ComboIndex] / WeaponComboData->FrameRate) / AttackSpeedRate;
-
-			// 타이머 설정하기
-			if (ComboAvailableTime > 0.0f)
-			{
-				// ComboAvailableTime시간이 지나면 ComboCheck() 함수 호출
-				GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &APlayerCharacter::ComboCheck, ComboAvailableTime, false);
-			}
-		}
-	}
-	else
-	{
-		int32 ComboIndex = CurrentComboCount - 1;
-
-		// 인덱스가 유효한지 체크
-		if (BasicComboData->ComboFrame.IsValidIndex(ComboIndex))
-		{
-			// TODO : 공격 속도가 추가되면 값 가져와 지정하기
-			const float AttackSpeedRate = 1.0f;
-
-			// 실제 콤보가 입력될 수 있는 시간 구하기
-			float ComboAvailableTime = (BasicComboData->ComboFrame[ComboIndex] / BasicComboData->FrameRate) / AttackSpeedRate;
-
-			// 타이머 설정하기
-			if (ComboAvailableTime > 0.0f)
-			{
-				// ComboAvailableTime시간이 지나면 ComboCheck() 함수 호출
-				GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &APlayerCharacter::ComboCheck, ComboAvailableTime, false);
-			}
-		}
-	}
-	
-}
-
-void APlayerCharacter::BaseAttackCheck()
-{
-	if (CurrentWeapon == nullptr)
-	{
-		TArray<FOverlapResult> OverlapResults;
-
-		// 충돌 탐지를 위한 시작 지점
-		FVector Start = GetActorLocation() + (GetActorForwardVector() * GetCapsuleComponent()->GetScaledCapsuleRadius());
-
-		// 충돌 탐지 끝 지점
-		FVector End = Start + (GetActorForwardVector() * BasicComboData->AttackRange);
-
-		// 오버랩 파라미터 설정
-		FCollisionQueryParams Params(SCENE_QUERY_STAT(AttackOverlap), false, this);
-
-		// 충돌 셰이프 설정 (캡슐)
-		FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(BasicComboData->AttackRadius, BasicComboData->AttackRange * 0.5f);
-
-		// 캡슐 중심 위치 계산
-		FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
-		FQuat CapsuleRotation = FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat();
-
-		// 오버랩 수행
-		bool bHasHit = GetWorld()->OverlapMultiByChannel(
-			OverlapResults,
-			CapsuleOrigin,
-			CapsuleRotation,
-			CHANNEL_ACTION,  // ECollisionChannel::ECC_GameTraceChannel2
-			CollisionShape,
-			Params
-		);
-
-		// 판정 결과 처리
-		if (bHasHit)
-		{
-			TSet<AEnemyCharacter*> HitEnemies;
-			TSet<ABossCharacter*> HitBosses;
-
-			for (const FOverlapResult& Result : OverlapResults)
-			{
-				if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(Result.GetActor()))
-				{
-					if (!HitEnemies.Contains(Enemy))
-					{
-						
-
-						HitEnemies.Add(Enemy);
-						UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
-						Enemy->RegisterAttacker(this);
-						Enemy->TakeDamage(CombatStats.AttackPower);
-					}
-				}
-
-				if (ABossCharacter* Boss = Cast<ABossCharacter>(Result.GetActor()))
-				{
-
-					if (!HitBosses.Contains(Boss))
-					{
-
-
-						HitBosses.Add(Boss);
-						UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
-						Boss->RegisterAttacker(this);
-						Boss->TakeDamage(CombatStats.AttackPower);
-					}
-				}
-			}
-		}
-
-		// 디버그 캡슐 시각화
-		FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
-		DrawDebugCapsule(GetWorld(), CapsuleOrigin, BasicComboData->AttackRange * 0.5f, BasicComboData->AttackRadius, CapsuleRotation, DrawColor, false, 3.0f);
-	}
-	
-}
-
-void APlayerCharacter::EnableWeaponHitBox()
-{
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->EnableHitBox();
-	}
-}
-
-void APlayerCharacter::DisableWeaponHitBox()
-{
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->DisableHitBox();
-	}
-}
-
-
-void APlayerCharacter::SkillAttackCheck()
-{
-	if (!SkillData) return;
-
-	SpawnSkillEffect();
-
-	TArray<FOverlapResult> OverlapResults;
-
-	// 기본 값
-	FVector Start = GetActorLocation();
-	FVector End = Start;
-
-	// 방향 계산
-	FVector Forward = GetActorForwardVector();
-
-	switch (SkillData->SpawnType)
-	{
-	case ESkillEffectSpawnType::Forward:
-		Start = GetActorLocation() + Forward * 200.0f;
-		End = Start + Forward * SkillData->SkillRange;
-		break;
-
-	case ESkillEffectSpawnType::Self:
-		Start = GetActorLocation();
-		End = Start + Forward * SkillData->SkillRange;
-		break;
-
-	case ESkillEffectSpawnType::Ground:
-		Start = GetActorLocation() - FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-		End = Start + Forward * SkillData->SkillRange;
-		break;
-
-	case ESkillEffectSpawnType::Custom:
-		// 필요시 커스텀 위치 로직 추가
-		break;
-	}
-
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
-
-	bool bHasHit = GetWorld()->OverlapMultiByChannel(
-		OverlapResults,
-		Start,
-		FQuat::Identity,
-		CHANNEL_ACTION,
-		FCollisionShape::MakeSphere(SkillData->SkillRadius),
-		Params
-	);
-
-	if (bHasHit)
-	{
-		TSet<AEnemyCharacter*> HitEnemies;
-		TSet<ABossCharacter*> HitBosses;
-		for (const FOverlapResult& Result : OverlapResults)
-		{
-			if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(Result.GetActor()))
-			{
-				if (!HitEnemies.Contains(Enemy))
-				{
-					HitEnemies.Add(Enemy);
-					UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
-					Enemy->RegisterAttacker(this);
-					Enemy->TakeDamage(CombatStats.AttackPower);
-				}
-			}
-
-			if (ABossCharacter* Boss = Cast<ABossCharacter>(Result.GetActor()))
-			{
-
-				if (!HitBosses.Contains(Boss))
-				{
-
-
-					HitBosses.Add(Boss);
-					UE_LOG(LogTemp, Warning, TEXT("Monster Damaged via Overlap"));
-					Boss->RegisterAttacker(this);
-					Boss->TakeDamage(CombatStats.AttackPower);
-				}
-			}
-		}
-	}
-
-	// Capsule 디버그 시각화
-	FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
-	float CapsuleHalfHeight = SkillData->SkillRange * 0.5f;
-	FColor DrawColor = bHasHit ? FColor::Green : FColor::Red;
-
-	DrawDebugCapsule(
-		GetWorld(),
-		CapsuleOrigin,
-		CapsuleHalfHeight,
-		SkillData->SkillRadius,
-		FRotationMatrix::MakeFromZ(Forward).ToQuat(),
-		DrawColor,
-		false,
-		3.0f
-	);
-
-
-	bIsSkillActing = false;
-	bIsAttacking = false;
-
-	// 이동 다시 가능하게
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 }
 
 
@@ -1243,10 +819,7 @@ void APlayerCharacter::ReSetOverlappingSavePoint()
 	OverlappingSavePoint = nullptr;
 }
 
-bool APlayerCharacter::CanSetWeapon()
-{
-	return (nullptr == CurrentWeapon);
-}
+
 
 void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
 {
@@ -1278,83 +851,6 @@ void APlayerCharacter::SetWeapon(ATPRWeapon* NewWeapon)
 	UE_LOG(LogTemp, Warning, TEXT("무기 장착"));
 }
 
-void APlayerCharacter::EquipWeapon_Implementation(UInventoryItem* WeaponItem)
-{
-	if (!WeaponItem || !WeaponItem->ItemData) return;
-
-	const UWeaponItemData* ItemData = Cast<UWeaponItemData>(WeaponItem->ItemData);
-	if (!ItemData || !ItemData->WeaponClass) return;
-
-	UInventoryItem* PrevEquipped = (InventoryComponent ? InventoryComponent->EquippedWeaponItem : nullptr);
-
-	if (PrevEquipped && PrevEquipped != WeaponItem)
-	{
-		PrevEquipped->bEquipped = false;
-	}
-
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		CurrentWeapon->Destroy();
-		CurrentWeapon = nullptr;
-		SkillData = nullptr;
-		WeaponComboData = nullptr;
-	}
-
-	if (InventoryComponent)
-	{
-		InventoryComponent->EquippedWeaponItem = WeaponItem;
-	}
-	WeaponItem->bEquipped = true;
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	ATPRWeapon* NewWeapon = GetWorld()->SpawnActor<ATPRWeapon>(
-		ItemData->WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-	if (NewWeapon) SetWeapon(NewWeapon);
-
-	RefreshCurrentEquipped_Weapon(WeaponItem->GetItemTexture());
-}
-
-int32 APlayerCharacter::GetEquippedWeaponEnhanceLevel() const
-{
-	if (!InventoryComponent) return 0;
-	if (!InventoryComponent->EquippedWeaponItem) return 0;
-
-	return InventoryComponent->EquippedWeaponItem->EnhanceLevel;
-}
-
-void APlayerCharacter::UnEquipWeapon_Implementation(UInventoryItem* WeaponItem)
-{
-	UTexture2D* WeaponIcon = nullptr;
-
-
-	if (CurrentWeapon)
-	{
-		// 1. 먼저 무기를 소켓에서 분리
-		CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-
-		// 2. 월드에서 제거
-		CurrentWeapon->Destroy();
-
-		// 3. 참조 해제
-		CurrentWeapon = nullptr;
-		SkillData = nullptr;
-		WeaponComboData = nullptr;
-
-		InventoryComponent->EquippedWeaponItem = nullptr;
-
-		ResetCombatStats();
-
-		UE_LOG(LogTemp, Warning, TEXT("무기 해제됨"));
-	}
-
-	RefreshCurrentEquipped_Weapon(WeaponIcon);
-
-}
 void APlayerCharacter::ToggleInventory()
 {
 	if (bIsDead) return;
@@ -1540,83 +1036,43 @@ void APlayerCharacter::TakeDamage(int32 DamageAmount)
 
 void APlayerCharacter::ConsumeStamina(int32 Amount)
 {
-	CombatStats.CurrentStamina = FMath::Clamp(CombatStats.CurrentStamina - Amount, 0, DerivedStats.MaxStamina);
-	OnStaminaChanged.Broadcast(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
+	if (StaminaComponent)
+	{
+		StaminaComponent->ConsumeStamina(Amount);
+	}
 }
 
 void APlayerCharacter::RestoreStaminaTick(int32 AmountPerTick)
 {
-	CombatStats.CurrentStamina = FMath::Clamp(CombatStats.CurrentStamina + AmountPerTick, 0, DerivedStats.MaxStamina);
-	OnStaminaChanged.Broadcast(CombatStats.CurrentStamina, DerivedStats.MaxStamina);
+	if (StaminaComponent)
+	{
+		StaminaComponent->RestoreStaminaTick(AmountPerTick);
+	}
 }
 
 int32 APlayerCharacter::GetStaminaRegenPerSecond() const
 {
-	const float Half = DerivedStats.MaxEquipLoad * 0.5f;
-	const float W = GetCurrentWeaponWeight();
-
-	if (W <= Half - 5.f)
-	{
-		return StaminaRegen_Light;
-	}
-	if (W > Half - 5.f && W < Half + 5.f)
-	{
-		return StaminaRegen_Medium;
-	}
-	return StaminaRegen_Heavy;
-}
-
-float APlayerCharacter::GetCurrentWeaponWeight() const
-{
-	if (CurrentWeapon && CurrentWeapon->ItemData)
-	{
-		if (const UWeaponItemData* WData = Cast<UWeaponItemData>(CurrentWeapon->ItemData))
-		{
-			return WData->WeaponStats.Weight;
-		}
-	}
-	return 0.f;
+	return StaminaComponent ? StaminaComponent->GetStaminaRegenPerSecond() : 0;
 }
 
 void APlayerCharacter::StaminaRegenTick(float DeltaSeconds)
 {
-	// 비활성화면 종료
-	if (!bEnableFrameStaminaRegen) return;
-
-	if (bBlockRegenWhileSprinting && bIsSprinting) return;
-
-	// 이미 최대면 종료
-	if (CombatStats.CurrentStamina >= DerivedStats.MaxStamina) return;
-
-	// 초당 회복량(정수)을 프레임 환산
-	const int32 RegenPerSec = GetStaminaRegenPerSecond(); // (무게 조건에 따라 70/50/30 반환)
-	if (RegenPerSec <= 0) return;
-
-	// 누적: 초당 * Delta + 잔여분
-	StaminaRegenAccum += static_cast<float>(RegenPerSec) * DeltaSeconds;
-
-	// 정수 부분만 반영, 소수는 다음 프레임으로 이월
-	const int32 RegenWhole = FMath::FloorToInt(StaminaRegenAccum);
-	if (RegenWhole > 0)
+	if (StaminaComponent)
 	{
-		StaminaRegenAccum -= static_cast<float>(RegenWhole);
-
-		// 실제 정수만큼 회복 (UI 갱신 포함)
-		RestoreStaminaTick(RegenWhole);
+		StaminaComponent->StaminaRegenTick(DeltaSeconds);
 	}
 }
 
 bool APlayerCharacter::HasStamina(int32 Amount) const
 {
-	return CombatStats.CurrentStamina >= Amount;
+	return StaminaComponent ? StaminaComponent->HasStamina(Amount) : false;
 }
 
 bool APlayerCharacter::TryConsumeStamina(int32 Amount)
 {
-	if (!HasStamina(Amount)) return false;
-	ConsumeStamina(Amount); 
-	return true;
+	return StaminaComponent ? StaminaComponent->TryConsumeStamina(Amount) : false;
 }
+
 
 void APlayerCharacter::SetStatusHUDVisible(bool bVisible)
 {
@@ -1641,32 +1097,9 @@ void APlayerCharacter::SetStatusHUDVisible(bool bVisible)
 
 void APlayerCharacter::SprintStaminaTick(float DeltaSeconds)
 {
-	if (!bIsSprinting) return;
-
-	// 스태미너가 바닥나면 자동으로 스프린트 종료
-	if (CombatStats.CurrentStamina <= 0)
+	if (StaminaComponent)
 	{
-		EndSprint();
-		return;
-	}
-
-	// 초당 소모량을 프레임 단위로 누적
-	const int32 DrainPerSec = StaminaCost_SprintPerSecond;
-	if (DrainPerSec <= 0) return;
-
-	SprintDrainAccum += static_cast<float>(DrainPerSec) * DeltaSeconds;
-
-	// 정수 부분만 소모, 소수는 누적 유지
-	const int32 DrainWhole = FMath::FloorToInt(SprintDrainAccum);
-	if (DrainWhole > 0)
-	{
-		SprintDrainAccum -= static_cast<float>(DrainWhole);
-		ConsumeStamina(DrainWhole); // UI 자동 갱신됨
-
-		if (CombatStats.CurrentStamina <= 0)
-		{
-			EndSprint();
-		}
+		StaminaComponent->SprintStaminaTick(DeltaSeconds);
 	}
 }
 

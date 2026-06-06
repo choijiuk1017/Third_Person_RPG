@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
 #include "Third_Person_RPG/Character/PlayerCharacter.h"
+#include "Third_Person_RPG/Component/PlayerCombatComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 ATPRPlayerController::ATPRPlayerController()
@@ -86,56 +87,64 @@ void ATPRPlayerController::Input_Look(const FInputActionValue& Value)
 void ATPRPlayerController::Input_Sprint_Start()
 {
 	if (!CachedCharacter) return;
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->BeginSprint();
+	if (CachedCharacter && !CachedCharacter->bIsDead) CachedCharacter->BeginSprint();
 }
 
 void ATPRPlayerController::Input_Sprint_End()
 {
 	if (!CachedCharacter) return;
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->EndSprint();
-}
-
-void ATPRPlayerController::Input_Attack()
-{
-	if (!CachedCharacter) return;
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->BasicAttack();
+	if (CachedCharacter && !CachedCharacter->bIsDead) CachedCharacter->EndSprint();
 }
 
 void ATPRPlayerController::Input_Roll()
 {
 	if (!CachedCharacter) return;
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->RollStart();
+	if (CachedCharacter && !CachedCharacter->bIsDead) CachedCharacter->RollStart();
+}
+
+void ATPRPlayerController::Input_Attack()
+{
+	if (!CachedCharacter || CachedCharacter->bIsDead) return;
+
+	if (UPlayerCombatComponent* Combat = CachedCharacter->GetCombatComponent())
+	{
+		Combat->BasicAttack();
+	}
 }
 
 void ATPRPlayerController::Input_Skill()
 {
-	if (!CachedCharacter) return;
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->SkillStart();
+	if (!CachedCharacter || CachedCharacter->bIsDead) return;
+
+	if (UPlayerCombatComponent* Combat = CachedCharacter->GetCombatComponent())
+	{
+		Combat->SkillStart();
+	}
 }
 
 
 void ATPRPlayerController::Input_Interaction()
 {
 	if (!CachedCharacter) return;
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->Interact();
+	if (CachedCharacter && !CachedCharacter->bIsDead) CachedCharacter->Interact();
 }
 
 void ATPRPlayerController::Input_Inventory()
 {
 	if (!CachedCharacter) return;
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->ToggleInventory();
+	if (CachedCharacter && !CachedCharacter->bIsDead) CachedCharacter->ToggleInventory();
 }
 
 void ATPRPlayerController::Input_DrinkPotion()
 {
 	if (!CachedCharacter) return;
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->DrinkPotion();
+	if (CachedCharacter && !CachedCharacter->bIsDead) CachedCharacter->DrinkPotion();
 }
 
 void ATPRPlayerController::Input_ChangePotion()
 {
 	if (!CachedCharacter) return;
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->ChangePotion();
+	if (CachedCharacter && !CachedCharacter->bIsDead) CachedCharacter->ChangePotion();
 }
 
 void ATPRPlayerController::Input_Enter()
@@ -147,11 +156,11 @@ void ATPRPlayerController::Input_Enter()
 		UE_LOG(LogTemp, Error, TEXT("[PC] IA_Enter is NULL"));
 		return;
 	}
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->OnAdvanceDialogue();
+	if (CachedCharacter && !CachedCharacter->bIsDead) CachedCharacter->OnAdvanceDialogue();
 }
 
 void ATPRPlayerController::Input_ESC()
 {
 	if (!CachedCharacter) return;
-	if (CachedCharacter || !CachedCharacter->bIsDead) CachedCharacter->TogglePauseMenu();
+	if (CachedCharacter && !CachedCharacter->bIsDead) CachedCharacter->TogglePauseMenu();
 }

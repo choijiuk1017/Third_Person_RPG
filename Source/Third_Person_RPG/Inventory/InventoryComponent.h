@@ -22,7 +22,6 @@ public:
 
 	UInventoryItem* AddItemByData(UTPRItemData* Data, int32 Quantity, bool bShouldEquip = false);
 
-	// 인벤토리 조회
 	const TArray<UInventoryItem*>& GetItemsByType(EItemType Type) const;
 
 	UPROPERTY(BlueprintAssignable)

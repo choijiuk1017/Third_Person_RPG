@@ -14,8 +14,8 @@ public class Third_Person_RPG : ModuleRules
 			"InputCore", 
 			"EnhancedInput",
             "UMG",
-			"Slate",        // UI 사용 시 필요
-			"SlateCore" ,   // FSlateBrush 등 사용 시 반드시 필요
+			"Slate",       
+			"SlateCore" ,  
 
 			"NavigationSystem",
 			"AIModule",
@@ -27,12 +27,14 @@ public class Third_Person_RPG : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
-		// Uncomment if you are using Slate UI
-		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-		
-		// Uncomment if you are using online features
-		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
+        PublicIncludePaths.Add("Third_Person_RPG");
 
-		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
-	}
+        // Uncomment if you are using Slate UI
+        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+
+        // Uncomment if you are using online features
+        // PrivateDependencyModuleNames.Add("OnlineSubsystem");
+
+        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+    }
 }
