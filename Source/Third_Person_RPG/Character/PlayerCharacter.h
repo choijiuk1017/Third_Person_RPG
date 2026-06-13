@@ -606,4 +606,5 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UPlayerStatComponent> StatComponent;
+
 };

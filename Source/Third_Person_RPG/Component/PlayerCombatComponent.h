@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Particles/ParticleSystemComponent.h"
+
 #include "PlayerCombatComponent.generated.h"
 
 class APlayerCharacter;
@@ -58,5 +60,20 @@ public:
 	int32 GetEquippedWeaponEnhanceLevel() const;
 	float GetCurrentWeaponWeight() const;
 
+protected:
+	UPROPERTY()
+	TArray<UParticleSystemComponent*> SkillEffectPool;
+
+	UPROPERTY(EditAnywhere, Category = "Skill Effect Pool")
+	int32 SkillEffectPoolSize = 10;
+
+	UPROPERTY(EditAnywhere, Category = "Skill Effect Pool")
+	float SkillEffectLifeTime = 2.0f;
+
+	void InitializeSkillEffectPool();
+
+	UParticleSystemComponent* GetAvailableSkillEffect();
+
+	void ReturnSkillEffectToPool(UParticleSystemComponent* EffectComponent);
 		
 };

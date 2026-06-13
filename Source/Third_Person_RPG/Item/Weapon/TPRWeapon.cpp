@@ -27,15 +27,14 @@ ATPRWeapon::ATPRWeapon()
 	RootComponent = Weapon;
 
 	HitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox"));
-	HitBox->SetupAttachment(Weapon);  // Weapon Mesh¿¡ ºÙÀÌ±â
+	HitBox->SetupAttachment(Weapon);  
 	HitBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	HitBox->SetCollisionObjectType(ECC_WorldDynamic); // ¶Ç´Â Ä¿½ºÅÒ Ã¤³Î
+	HitBox->SetCollisionObjectType(ECC_WorldDynamic); 
 	HitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	HitBox->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Overlap);
 	HitBox->SetBoxExtent(FVector(10.0f, 20.0f, 50.0f));
-	HitBox->SetGenerateOverlapEvents(true); // ÀÌ°Å ²À ÀÖ¾î¾ß ÇÔ
+	HitBox->SetGenerateOverlapEvents(true);
 
-	// ¿¡µðÅÍ¿¡¼­ ¼³Á¤ÇÑ SkeletalMeshAssetÀ» ¿©±â¼­ »ç¿ë
 	if (SkeletalMeshAsset)
 	{
 		Weapon->SetSkeletalMesh(SkeletalMeshAsset);
@@ -70,7 +69,7 @@ void ATPRWeapon::Tick(float DeltaTime)
 		FVector Extent = HitBox->GetScaledBoxExtent();
 		FRotator Rotation = HitBox->GetComponentRotation();
 
-		// °ãÄ¡´Â ¾×ÅÍ°¡ ÀÖ´ÂÁö °Ë»ç (°£´ÜÈ­µÈ ¹æ½Ä)
+		// ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½Í°ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½ (ï¿½ï¿½ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½ï¿½)
 		bool bHasOverlap = false;
 
 		TArray<AActor*> OverlappingActors;
@@ -78,7 +77,6 @@ void ATPRWeapon::Tick(float DeltaTime)
 
 		for (AActor* Actor : OverlappingActors)
 		{
-			// Actor°¡ ¾×¼Ç Ã¤³ÎÀ» »ç¿ëÇÏ´ÂÁö È®ÀÎ
 			if (Actor && Actor != GetOwner())
 			{
 				UPrimitiveComponent* Comp = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
@@ -128,10 +126,9 @@ void ATPRWeapon::OnHitBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 
 	if (OtherActor && OtherActor != GetOwner())
 	{
-		// ÀÌ¹Ì ÇÇ°ÝµÈ ¾×ÅÍÀÎÁö È®ÀÎ
 		if (DamagedActors.Contains(OtherActor))
 		{
-			return; // ÀÌ¹Ì Ã³¸®ÇÑ ´ë»óÀÌ¸é ¹«½Ã
+			return; 
 		}
 
 		if (OtherActor->GetClass()->ImplementsInterface(UAnimationAttackInterface::StaticClass()))
@@ -146,7 +143,6 @@ void ATPRWeapon::OnHitBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 
 				Enemy->TakeDamage(PlayerOwner->CombatStats.AttackPower);
 
-				// ÇÇ°ÝµÈ ¾×ÅÍ·Î µî·Ï
 				DamagedActors.Add(OtherActor);
 			}
 
@@ -160,7 +156,6 @@ void ATPRWeapon::OnHitBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 
 				Boss->TakeDamage(PlayerOwner->CombatStats.AttackPower);
 
-				// ÇÇ°ÝµÈ ¾×ÅÍ·Î µî·Ï
 				DamagedActors.Add(OtherActor);
 			}
 		}

@@ -11,6 +11,8 @@
 #include "Third_Person_RPG/Inventory/InventoryComponent.h"
 #include "Third_Person_RPG/Inventory/InventoryItem.h"
 #include "Third_Person_RPG/Item/Weapon/TPRWeapon.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "TimerManager.h"
 
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -32,6 +34,8 @@ void UPlayerCombatComponent::BeginPlay()
 	{
 		OwnerPlayer = Cast<APlayerCharacter>(GetOwner());
 	}
+
+	InitializeSkillEffectPool();
 }
 
 void UPlayerCombatComponent::InitializeCombatComponent(APlayerCharacter* InOwner)
@@ -376,7 +380,18 @@ void UPlayerCombatComponent::SkillStart()
 
 void UPlayerCombatComponent::SpawnSkillEffect()
 {
-	if (!OwnerPlayer || !OwnerPlayer->SkillData || !OwnerPlayer->SkillData->SkillEffect) return;
+	if (!OwnerPlayer || !OwnerPlayer->SkillData || !OwnerPlayer->SkillData->SkillEffect)
+	{
+		return;
+	}
+
+	UParticleSystemComponent* EffectComponent = GetAvailableSkillEffect();
+
+	if (!EffectComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No available skill effect in pool."));
+		return;
+	}
 
 	FVector SpawnLocation = OwnerPlayer->GetActorLocation();
 	FRotator SpawnRotation = OwnerPlayer->GetActorRotation();
@@ -398,17 +413,32 @@ void UPlayerCombatComponent::SpawnSkillEffect()
 		break;
 
 	case ESkillEffectSpawnType::Custom:
+		SpawnLocation =
+			OwnerPlayer->GetActorLocation() +
+			OwnerPlayer->GetActorRotation().RotateVector(OwnerPlayer->SkillData->CustomSpawnOffset);
 		break;
 
 	default:
 		break;
 	}
 
-	UGameplayStatics::SpawnEmitterAtLocation(
-		OwnerPlayer->GetWorld(),
-		OwnerPlayer->SkillData->SkillEffect,
-		SpawnLocation,
-		SpawnRotation
+	EffectComponent->SetTemplate(OwnerPlayer->SkillData->SkillEffect);
+	EffectComponent->SetWorldLocation(SpawnLocation);
+	EffectComponent->SetWorldRotation(SpawnRotation);
+	EffectComponent->SetVisibility(true);
+	EffectComponent->ActivateSystem(true);
+
+	FTimerHandle ReturnTimerHandle;
+
+	OwnerPlayer->GetWorld()->GetTimerManager().SetTimer(
+		ReturnTimerHandle,
+		FTimerDelegate::CreateUObject(
+			this,
+			&UPlayerCombatComponent::ReturnSkillEffectToPool,
+			EffectComponent
+		),
+		SkillEffectLifeTime,
+		false
 	);
 }
 
@@ -651,3 +681,4 @@ float UPlayerCombatComponent::GetCurrentWeaponWeight() const
 
 	return 0.f;
 }
+
