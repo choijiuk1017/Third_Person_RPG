@@ -739,8 +739,3 @@ cd EBON_CROWN
 - UMG 기반 인벤토리, 성장, 대화 및 세이브 포인트 UI 구현
 - Level Sequence와 Trigger를 이용한 게임 진행 및 연출 구성
 
----
-
-# Repository
-
-https://github.com/choijiuk1017/EBON_CROWN
